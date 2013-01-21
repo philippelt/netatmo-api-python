@@ -272,8 +272,8 @@
 <ul class="ul2">
   <li class="li3"><b>rawData</b> : Full dictionary of the returned JSON DEVICELIST Netatmo API service</li>
   <li class="li3"><b>default_station</b> : Name of the first station returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 station).</li>
-  <li class="li3"><b>stations</b> : List of stations ID accessible to this user account</li>
-  <li class="li3"><b>modules</b> : List of modules ID accessible to the user account (whatever station there are plugged in)</li>
+  <li class="li3"><b>stations</b> : Dictionary of stations (indexed by ID) accessible to this user account</li>
+  <li class="li3"><b>modules</b> : Dictionary of modules (indexed by ID) accessible to the user account (whatever station there are plugged in)</li>
 </ul>
 <p class="p2"><br></p>
 <p class="p3">Methods :</p>
@@ -297,7 +297,7 @@
 <ul class="ul2">
   <li class="li6"><span class="s1"></span><b>moduleByName</b> (module, station=None) : Find a module by it's module name</li>
   <ul class="ul3">
-    <li class="li3">Input : module ID and optional station ID</li>
+    <li class="li3">Input : module name and optional station name</li>
     <li class="li3">Output : module dictionary or None</li>
   </ul>
 </ul>
@@ -308,7 +308,7 @@
   <li class="li6"><span class="s1"></span><b>moduleById</b> (mid, sid=None) : Find a module by it's ID and belonging station's ID</li>
   <ul class="ul3">
     <li class="li3">Input : module ID and optional Station ID</li>
-    <li class="li3">Output : station dictionary or None</li>
+    <li class="li3">Output : module dictionary or None</li>
   </ul>
 </ul>
 <p class="p2"><br></p>
@@ -343,7 +343,7 @@
 <p class="p3">At the time of this document, Available measures are :</p>
 <ul class="ul3">
   <ul class="ul3">
-    <li class="li3">For the station sensor : Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp)</li>
+    <li class="li3">For the station sensor : Temperature, Pressure, Noise, CO2, Humidity, When (measurement timestamp)</li>
     <li class="li3">For the external sensor : Temperature, Humidity, When (measurement timestamp)</li>
   </ul>
 </ul>
