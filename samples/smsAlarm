@@ -28,6 +28,13 @@ if curT < 5 : message.append("Temperature going below 5°C")
 someLost = devList.checkNotUpdated()
 if someLost and 'external' in someLost : message.append("Sensor is no longer active")
 
+# Condition 3 : The outdoor module battery is dying
+m = devList.moduleByName('external')
+Volts = m['battery_vp'] # I suspect that this is the total Voltage in mV, no documentation about API returned datas
+if Volts < 5000 : message.append("External module battery needs replacement") # I will adjust the threshold over time
+# You could record the tuple (timestamp, voltage) for battery lifetime analysis and prediction (I'm doing it)
+# with open('netatmo_battery.log','a') as f: f.write( "%s %s\n" % (time.time(), Volts))
+
 # If one condition is present, at least, send an alarm by SMS
 if message :
     if not os.path.exists(MARKER_FILE) :
