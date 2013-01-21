@@ -1,0 +1,461 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1187.34">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 24.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px Helvetica}
+    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Courier; min-height: 14.0px}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Courier}
+    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica}
+    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Courier}
+    li.li3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    li.li6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Courier}
+    span.s1 {font: 12.0px Helvetica}
+    table.t1 {border-collapse: collapse}
+    td.td1 {width: 58.1px; padding: 0.0px 5.0px 0.0px 5.0px}
+    td.td2 {width: 581.9px; background-color: #87dce0; border-style: solid; border-width: 2.0px 2.0px 2.0px 2.0px; border-color: #cbcbcb #cbcbcb #cbcbcb #cbcbcb; padding: 0.0px 5.0px 0.0px 5.0px}
+    td.td3 {width: 318.0px; padding: 0.0px 5.0px 0.0px 5.0px}
+    td.td4 {width: 581.9px; background-color: #87dde0; border-style: solid; border-width: 2.0px 2.0px 2.0px 2.0px; border-color: #cbcbcb #cbcbcb #cbcbcb #cbcbcb; padding: 0.0px 5.0px 0.0px 5.0px}
+    ol.ol1 {list-style-type: decimal}
+    ul.ul1 {list-style-type: disc}
+    ul.ul2 {list-style-type: square}
+    ul.ul3 {list-style-type: hyphen}
+  </style>
+</head>
+<body>
+<p class="p1"><b>Python Netatmo API programmers guide</b></p>
+<p class="p2"><br></p>
+<p class="p3">2013-01-21, philippelt@users.sourceforge.net</p>
+<p class="p2"><br></p>
+<p class="p3">No additional libraries other than standard Python library is required.</p>
+<p class="p2"><br></p>
+<p class="p3">Both Python2 and Python3 are supported without change.</p>
+<p class="p2"><br></p>
+<p class="p3">More information about the Netatmo REST API can be obtained from http://dev.netatmo.com/doc/</p>
+<p class="p2"><br></p>
+<p class="p3">This package support only user based authentication (i.e. must provide user credentials to access data).</p>
+<p class="p2"><br></p>
+<p class="p4"><b>1-Setup your environment from Netatmo</b></p>
+<p class="p2"><br></p>
+<p class="p3">Before being able to use the module you will need :</p>
+<p class="p2"><br></p>
+<ul class="ul1">
+  <li class="li3">At least one netatmo device properly setup</li>
+  <li class="li3">A Netatmo web user account having access to, at least, one station</li>
+  <li class="li3">An application registered from the user account (see http://dev.netatmo.com/dev/createapp) to obtain application credentials.</li>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">In the netatmo philosophy, both the application accessing and the user account used to gain access to a station have to be registered thus have authentication credentials.</p>
+<p class="p2"><br></p>
+<p class="p4"><b>2-Setup your library</b></p>
+<p class="p2"><br></p>
+<p class="p3">Copy the lnetatmo.py file in your work directory (or your platform choice of user libraries).</p>
+<p class="p2"><br></p>
+<p class="p3">To ease future uses, I suggest that you hardcode in the library your application and user credentials. This is not mandatory as this parameters can be explicitly passed at authentication phase.</p>
+<p class="p2"><br></p>
+<p class="p3">If you want to do it, just edit the file and provide required values for :</p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td2">
+        <p class="p6">_CLIENT_ID <span class="Apple-converted-space">    </span>= "&lt;your client_id&gt;"<span class="Apple-converted-space">            </span># From Netatmo app registration</p>
+        <p class="p6">_CLIENT_SECRET = "&lt;your client_secret&gt;"<span class="Apple-converted-space">        </span># <span class="Apple-converted-space">  </span>' <span class="Apple-converted-space">    </span>'</p>
+        <p class="p6">_USERNAME<span class="Apple-converted-space">      </span>= "&lt;netatmo username&gt;"</p>
+        <p class="p6">_PASSWORD<span class="Apple-converted-space">      </span>= "&lt;netatmo user password&gt;"</p>
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p5"><br></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p3">If you provide all the values, you can test that everything is working properly by simply running the package as a standalone program.</p>
+<p class="p3">This will run a full access test to the account and stations and return 0 as return code if everything works well.</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6">$ python3 lnetatmo.py</p>
+        <p class="p6">$ echo $?</p>
+        <p class="p6">0</p>
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p5"><br></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p4"><b>3-Package guide</b></p>
+<p class="p2"><br></p>
+<p class="p3">Most of the time, you will :</p>
+<p class="p2"><br></p>
+<ol class="ol1">
+  <li class="li3">Authenticate your program against Netatmo web server</li>
+  <li class="li3">Get the device list accessible to the user</li>
+  <li class="li3">Ask for data on one of these devices</li>
+</ol>
+<p class="p2"><br></p>
+<p class="p3">Example :</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6">#!/usr/bin/python3</p>
+        <p class="p6"># encoding=utf-8</p>
+        <p class="p5"><br></p>
+        <p class="p6">import lnetatmo</p>
+        <p class="p5"><br></p>
+        <p class="p6">authorization = lnetatmo.ClientAuth()</p>
+        <p class="p6">devList = lnetatmo.DeviceList(authorization)</p>
+        <p class="p5"><br></p>
+        <p class="p6">print ("Current temperature (inside/outside): %s / %s °C" %</p>
+        <p class="p6"><span class="Apple-converted-space">        </span>( devList.lastData['&lt;my internal sensor name&gt;']['Temperature'],</p>
+        <p class="p6"><span class="Apple-converted-space">          </span>devList.lastData['&lt;my external sensor name&gt;']['Temperature'])</p>
+        <p class="p6"><span class="Apple-converted-space">      </span>)</p>
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p5"><br></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p3">In this example, no init parameters are supplied to ClientAuth, the library is supposed to have been customized with the required values (see §2).</p>
+<p class="p2"><br></p>
+<p class="p3">The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).</p>
+<p class="p3">Sensor designed is not exactly the same and are not addresses the same way. This may probably evolved in the future with some clarification on the station role (the reporting device) and module role (getting environmental data). The fact that a sensor is physically built in the station should not interfere.</p>
+<p class="p2"><br></p>
+<p class="p3">The consequence is that, for the API, we will use terms of station data (for the sensors inside the station) and module data (for external(s) module). Lookup methods like moduleByName look for external modules and NOT station modules.</p>
+<p class="p2"><br></p>
+<p class="p3">Exception : to reflect again the API structure, the last data uploaded by the station are indexed by module name (internal and external).</p>
+<p class="p2"><br></p>
+<p class="p3">They are managed in the API using ID's (mac address for the station and an equivalent Zigbee mac or else for modules). The Netatmo web account management gives you the capability to associate names to station sensor and module (and to the station itself). This is by far more comfortable and the interface provides service to locate a station or a module by name or by Id depending of your taste. Module lookup by name includes the optional station name in case multiple stations would have similar module names.</p>
+<p class="p2"><br></p>
+<p class="p3">The results are Python data structures, mainly dictionaries as they mirror easily the JSON returned data. All supplied classes provides simple properties to use as well as access to full data returned by the netatmo web services (rawData property for most classes).</p>
+<p class="p2"><br></p>
+<p class="p4"><b>4-Package classes and functions</b></p>
+<p class="p2"><br></p>
+<p class="p7"><b>4-1-Global variables :</b></p>
+<p class="p2"><br></p>
+<p class="p3">_CLIENT_ID, _CLIENT_SECRET = Application ID and secret provided by Netatmo application registration in your user account</p>
+<p class="p2"><br></p>
+<p class="p3">_USERNAME, _PASSWORD : Username and password of your netatmo account</p>
+<p class="p2"><br></p>
+<p class="p3">_BASE_URL and _*_REQ : Various URL to access Netatmo web services. They are documented in http://dev.netatmo.com/doc/ They should not be changed unless Netatmo API changes.</p>
+<p class="p2"><br></p>
+<p class="p7"><b>4-2-ClientAuth class</b></p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6">Constructor</p>
+        <p class="p6">authorization = lnetatmo.ClientAuth( clientId = _CLIENT_ID,</p>
+        <p class="p6"><span class="Apple-converted-space">                                     </span>clientSecret = _CLIENT_SECRET,</p>
+        <p class="p6"><span class="Apple-converted-space">                                     </span>username = _USERNAME,</p>
+        <p class="p6"><span class="Apple-converted-space">                                     </span>password = _PASSWORD</p>
+        <p class="p6"><span class="Apple-converted-space">                                   </span>)</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p3">Requires : Application and User credentials to access Netatmo API. if all this parameters are put in global variables they are not required (in library source code or in the main program through lnetatmo._CLIENT_ID = …)</p>
+<p class="p2"><br></p>
+<p class="p3">Return : an authorization object that will supply the access token required by other web services. This class will handle the renewal of the access token if expiration is reached.</p>
+<p class="p2"><br></p>
+<p class="p3">Properties, all properties are read-only unless specified :</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li3"><b>accessToken</b> : Retrieve a valid access token (renewed if necessary)</li>
+  <li class="li3"><b>refreshToken</b> : The token used to renew the access token (normally should not be used)</li>
+  <li class="li3"><b>expiration</b> : The expiration time (epoch) of the current token</li>
+</ul>
+<p class="p2"><br></p>
+<p class="p7"><b>4-3-User class</b></p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6">Constructor</p>
+        <p class="p6">user = lnetatmo.User( authorization )</p>
+        <p class="p5"><span class="Apple-converted-space">                          </span></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p5"><br></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p3">Requires : an authorization object (ClientAuth instance)</p>
+<p class="p2"><br></p>
+<p class="p3">Return : a User object. This object provides multiple informations on the user account such as the mail address of the user, the preferred language, …</p>
+<p class="p2"><br></p>
+<p class="p3">Properties, all properties are read-only unless specified :</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li3"><b>rawData</b> : Full dictionary of the returned JSON GETUSER Netatmo API service</li>
+  <li class="li3"><b>id</b> : user Netatmo unique ID</li>
+  <li class="li3"><b>ownerMail</b> : eMail address associated to the user account</li>
+  <li class="li3"><b>devList</b> : List of Station's id accessible to the user account</li>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">In most cases, you will not need to use this class that is oriented toward an application that would use the other authentication method to an unknown user and then get information about him.</p>
+<p class="p2"><br></p>
+<p class="p7"><b>4-4-DeviceList class</b></p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6">Constructor</p>
+        <p class="p6">devList = lnetatmo.DeviceList( authorization )</p>
+        <p class="p5"><span class="Apple-converted-space">                          </span></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p5"><br></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p3">Requires : an authorization object (ClientAuth instance)</p>
+<p class="p2"><br></p>
+<p class="p3">Return : a DeviceList object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.</p>
+<p class="p2"><br></p>
+<p class="p3">Properties, all properties are read-only unless specified:</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li3"><b>rawData</b> : Full dictionary of the returned JSON DEVICELIST Netatmo API service</li>
+  <li class="li3"><b>default_station</b> : Name of the first station returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 station).</li>
+  <li class="li3"><b>stations</b> : List of stations ID accessible to this user account</li>
+  <li class="li3"><b>modules</b> : List of modules ID accessible to the user account (whatever station there are plugged in)</li>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">Methods :</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>stationByName</b> (station=None) : Find a station by it's station name</li>
+  <ul class="ul3">
+    <li class="li3">Input : Station name to lookup (str)</li>
+    <li class="li3">Output : station dictionary or None</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>stationById</b> (sid) : Find a station by it's Netatmo ID (mac address)</li>
+  <ul class="ul3">
+    <li class="li3">Input : Station ID</li>
+    <li class="li3">Output : station dictionary or None</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>moduleByName</b> (module, station=None) : Find a module by it's module name</li>
+  <ul class="ul3">
+    <li class="li3">Input : module ID and optional station ID</li>
+    <li class="li3">Output : module dictionary or None</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">The station name parameter, if provided, is used to check wether the module belongs to the appropriate station (in case multiple stations would have same module name).</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>moduleById</b> (mid, sid=None) : Find a module by it's ID and belonging station's ID</li>
+  <ul class="ul3">
+    <li class="li3">Input : module ID and optional Station ID</li>
+    <li class="li3">Output : station dictionary or None</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>lastData</b> (station=None) : Get the last data uploaded by the station</li>
+  <ul class="ul3">
+    <li class="li3">Input : station name OR id. If not provided default_station is used.</li>
+    <li class="li3">Output : Sensors data dictionary (Key is sensor name)</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">If you named the internal sensor 'internal' and the outdoor one 'external' (no imagination) for your station in the user Web account station properties, you will access the data by :</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p6"># Last data access example</p>
+        <p class="p6">theData = devList.lastData("&lt;optional station name&gt;")</p>
+        <p class="p6">theData['internal']['CO2'] <span class="Apple-converted-space">            </span># To get the last CO2 measure of station</p>
+        <p class="p6">theData['external']['Temperature'] <span class="Apple-converted-space">    </span># To get outside temperature</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p3">At the time of this document, Available measures are :</p>
+<ul class="ul3">
+  <ul class="ul3">
+    <li class="li3">For the station sensor : Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp)</li>
+    <li class="li3">For the external sensor : Temperature, Humidity, When (measurement timestamp)</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">See Netatmo API documentation for units</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>checkNotUpdated</b> (station=None, delay=3600) :</li>
+  <ul class="ul3">
+    <li class="li3">Input : optional station name (else default_station is used)</li>
+    <li class="li3">Output : list of modules name for which last data update is older than specified delay (default 1 hour). If the station itself is lost, the module_name of the station will be returned (the key item of lastData information).</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">For example (following the previous one)</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td colspan="2" valign="middle" class="td4">
+        <p class="p6"># Ensure data sanity</p>
+        <p class="p6">for m in devList.checkNotUpdated("&lt;optional station name&gt;"):</p>
+        <p class="p6"><span class="Apple-converted-space">    </span>print("Warning, sensor %s information is obsolete" % m)</p>
+        <p class="p6"><span class="Apple-converted-space">    </span>if moduleByName(m) == None :<span class="Apple-converted-space">    </span># Sensor is not an external module</p>
+        <p class="p6"><span class="Apple-converted-space">        </span>print("The station is lost")</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><span class="s1"></span><b>checkUpdated</b> (station=None, delay=3600) :</li>
+  <ul class="ul3">
+    <li class="li3">Input : optional station name (else default_station is used)</li>
+    <li class="li3">Output : list of modules name for which last data update is newer than specified delay (default 1 hour).</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">Complement of the previous service</p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li3"><b>getMeasure</b> (device_id, scale, mtype, module_id=None, date_begin=None, date_end=None, limit=None, optimize=False) :</li>
+  <ul class="ul3">
+    <li class="li3">Input : All parameters specified in the Netatmo API service GETMEASURE (type being a python reserved word as been replaced by mtype).</li>
+    <li class="li3">Output : A python dictionary reflecting the full service response. No transformation is applied.</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li3"><b>MinMaxTH</b> (station=None, module=None, frame="last24") : Return min and max temperature and humidity for the given station/module in the given timeframe</li>
+  <ul class="ul3">
+    <li class="li3">Input :</li>
+    <ul class="ul3">
+      <li class="li3">An optional station Name or ID, default_station is used if not supplied,</li>
+      <li class="li3">An optional module name or ID, default : station sensor data is used</li>
+      <li class="li3">A time frame that can be :</li>
+      <ul class="ul3">
+        <li class="li3">"last24" : For a shifting window of the last 24 hours</li>
+        <li class="li3">"day" : For all available data in the current day</li>
+      </ul>
+    </ul>
+    <li class="li3">Output :</li>
+    <ul class="ul3">
+      <li class="li3">A 4 values tuple (Temp mini, Temp maxi, Humid mini, Humid maxi)</li>
+    </ul>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<p class="p3">Note : I have been oblliged to determine the min and max manually, the built-in service in the API doesn't always provide the actual min and max. The double parameter (scale) and aggregation request (min, max) is not satisfying at all if you slip over two days as required in a shifting 24 hours window.</p>
+<p class="p2"><br></p>
+<p class="p7"><b>4-5-Utilities functions</b></p>
+<p class="p2"><br></p>
+<ul class="ul2">
+  <li class="li6"><b>toTimeString</b> (timestamp) : Convert a Netatmo time stamp to a readable date/time format.</li>
+  <li class="li6"><b>toEpoch</b>( dateString) : Convert a date string (form YYYY-MM-DD_HH:MM:SS) to timestamp</li>
+  <li class="li6"><b>todayStamps</b>() : Return a couple of epoch time (start, end) for the current day</li>
+</ul>
+<p class="p5"><br></p>
+<p class="p8"><b>4-6-All-in-One function</b></p>
+<p class="p5"><br></p>
+<p class="p6">If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :</p>
+<p class="p5"><br></p>
+<p class="p6"><b>getStationMinMaxTH</b>(station=None, module=None) :</p>
+<ul class="ul3">
+  <ul class="ul3">
+    <li class="li6">Input : optional station name and/or module name (if no station name is provided, default_station will be used, if no module name is provided, station sensor will be reported).</li>
+    <li class="li6">Output : A tuple of 6 values (Temperature, Humidity, minT, MaxT, minH, maxH)</li>
+  </ul>
+</ul>
+<p class="p2"><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p5"><br></p>
+      </td>
+      <td colspan="2" valign="middle" class="td4">
+        <p class="p6">&gt;&gt;&gt; import lnetatmo</p>
+        <p class="p6">&gt;&gt;&gt; print(lnetatmo.getStationMinMaxTH())</p>
+        <p class="p6">[20, 33, 18.1, 20, 30, 34]</p>
+        <p class="p6">&gt;&gt;&gt; print(lnetatmo.getStationMinMaxTH("My Station name", "external module"))</p>
+        <p class="p6">[2, 53, 1.2, 5.4, 51, 74]</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p2"><br></p>
+<p class="p5"><br></p>
+</body>
+</html>
