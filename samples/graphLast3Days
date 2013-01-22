@@ -23,8 +23,8 @@ now = time.time()
 start = now - 3 * 24 * 3600
 
 # Get Temperature and Humidity with GETMEASURE web service (1 sample every 30min)
-resp = dev.getMeasure( device_id='xxxx',
-                       module_id='xxxx',
+resp = dev.getMeasure( device_id='xxxx',                             # Replace with your values
+                       module_id='xxxx',                             #    "      "    "    "
                        scale="30min",
                        mtype="Temperature,Humidity",
                        date_begin=start,
