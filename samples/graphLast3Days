@@ -3,7 +3,7 @@
 
 # 2013-01 : philippelt@users.sourceforge.net 
 
-# This is an example of graphing Temperature and Humidity from a module on the last 5 days
+# This is an example of graphing Temperature and Humidity from a module on the last 3 days
 # The Matplotlib library is used and should be installed before running this sample program
 
 import sys, datetime, time
@@ -18,9 +18,9 @@ from matplotlib.ticker import FormatStrFormatter
 auth = lnetatmo.ClientAuth()
 dev  = lnetatmo.DeviceList(auth)
 
-# Time of information collection : 5*24hours windows to now
+# Time of information collection : 3*24hours windows to now
 now = time.time()
-start = now - 5 * 24 * 3600
+start = now - 3 * 24 * 3600
 
 # Get Temperature and Humidity with GETMEASURE web service (1 sample every 30min)
 resp = dev.getMeasure( device_id='xxxx',
