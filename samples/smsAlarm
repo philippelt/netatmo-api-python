@@ -29,8 +29,7 @@ someLost = devList.checkNotUpdated()
 if someLost and 'external' in someLost : message.append("Sensor is no longer active")
 
 # Condition 3 : The outdoor module battery is dying
-m = devList.moduleByName('external')
-volts = m['battery_vp'] # I suspect that this is the total Voltage in mV, no documentation about API returned datas
+volts = devList.moduleByName('external')['battery_vp'] # I suspect that this is the total Voltage in mV, no documentation about API returned datas
 if volts < 5000 : message.append("External module battery needs replacement") # I will adjust the threshold over time
 # You could record the tuple (timestamp, voltage) for battery lifetime analysis and prediction (I'm doing it)
 # with open('netatmo_battery.log','a') as f: f.write( "%s %s %s\n" % (time.time(), volts, curT))
