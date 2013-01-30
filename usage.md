@@ -243,24 +243,21 @@ Methods :
     * Input : station name OR id. If not provided default_station is used.
     * Output : Sensors data dictionary (Key is sensor name)
 
+     AT the time of this document, Available measures are :
+      * For the station sensor : Temperature, Pressure, Noise, CO2, Humidity, When (measurement timestamp)
+      * For the external sensor : Temperature, Humidity, When (measurement timestamp)
+
+     See Netatmo API documentation for units
 
      If you named the internal sensor 'internal' and the outdoor one 'external' (no imagination) for your station in the user Web account station properties, you will access the data by :
 
-      ```python
+```python
 # Last data access example
+
 theData = devList.lastData("<optional station name>")
 theData['internal']['CO2']          # To get the last CO2 measure of station
 theData['external']['Temperature']  # To get outside temperature
 ```
-
-
-      At the time of this document, Available measures are :
-
-          * For the station sensor : Temperature, Pressure, Noise, CO2, Humidity, When (measurement timestamp)
-          * For the external sensor : Temperature, Humidity, When (measurement timestamp)
-
-      See Netatmo API documentation for units
-
 
   * **checkNotUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)
@@ -269,12 +266,11 @@ theData['external']['Temperature']  # To get outside temperature
 
      For example (following the previous one)
 
-     ```python
+```python
 # Ensure data sanity
 
 for m in devList.checkNotUpdated("<optional station name>"):
     print("Warning, sensor %s information is obsolete" % m)
-
 if moduleByName(m) == None : # Sensor is not an external module
     print("The station is lost")
 ```
