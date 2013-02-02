@@ -3,7 +3,7 @@ Python Netatmo API programmers guide
 
 
 
->>2013-01-21, philippelt@users.sourceforge.net
+>2013-01-21, philippelt@users.sourceforge.net
 
 
 
@@ -62,7 +62,7 @@ $ echo $?
 
 
 
-### 3-Package guide ###
+### 3 Package guide ###
 
   
 
@@ -110,11 +110,11 @@ The results are Python data structures, mostly dictionaries as they mirror easil
 
 
 
-### 4-Package classes and functions ###
+### 4 Package classes and functions ###
 
 
 
-#### 4-1-Global variables ####
+#### 4-1 Global variables ####
 
   
 ```python
@@ -130,7 +130,7 @@ Netatmo API changes.
 
 
 
-#### 4-2-ClientAuth class ####
+#### 4-2 ClientAuth class ####
 
 
 
@@ -159,7 +159,7 @@ Properties, all properties are read-only unless specified :
 
   
 
-#### 4-3-User class ####
+#### 4-3 User class ####
 
 
 
@@ -178,6 +178,7 @@ Return : a User object. This object provides multiple informations on the user a
 
 Properties, all properties are read-only unless specified :
 
+
   * **rawData** : Full dictionary of the returned JSON GETUSER Netatmo API service
   * **id** : user Netatmo unique ID
   * **ownerMail** : eMail address associated to the user account
@@ -188,7 +189,7 @@ In most cases, you will not need to use this class that is oriented toward an ap
 
 
 
-#### 4-4-DeviceList class ####
+#### 4-4 DeviceList class ####
 
 
 
@@ -207,6 +208,7 @@ Return : a DeviceList object. This object contains most administration propertie
 
 Properties, all properties are read-only unless specified:
 
+
   * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
   * **default_station** : Name of the first station returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 station).
   * **stations** : Dictionary of stations (indexed by ID) accessible to this user account
@@ -219,32 +221,24 @@ Methods :
   * **stationByName** (station=None) : Find a station by it's station name
     * Input : Station name to lookup (str)
     * Output : station dictionary or None
-
-
   * **stationById** (sid) : Find a station by it's Netatmo ID (mac address)
     * Input : Station ID
     * Output : station dictionary or None
-
-
   * **moduleByName** (module, station=None) : Find a module by it's module name
     * Input : module name and optional station name
     * Output : module dictionary or None
 
-
      The station name parameter, if provided, is used to check wether the module belongs to the appropriate station (in case multiple stations would have same module name).
-
 
   * **moduleById** (mid, sid=None) : Find a module by it's ID and belonging station's ID
     * Input : module ID and optional Station ID
     * Output : module dictionary or None
-
-
   * **lastData** (station=None) : Get the last data uploaded by the station
     * Input : station name OR id. If not provided default_station is used.
     * Output : Sensors data dictionary (Key is sensor name)
 
      AT the time of this document, Available measures are :
-      * For the station sensor : Temperature, Pressure, Noise, CO2, Humidity, When (measurement timestamp)
+      * For the station sensor : Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp)
       * For the external sensor : Temperature, Humidity, When (measurement timestamp)
 
      See Netatmo API documentation for units
@@ -258,11 +252,9 @@ theData = devList.lastData("<optional station name>")
 theData['internal']['CO2']          # To get the last CO2 measure of station
 theData['external']['Temperature']  # To get outside temperature
 ```
-
   * **checkNotUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)
     * Output : list of modules name for which last data update is older than specified delay (default 1 hour). If the station itself is lost, the module_name of the station will be returned (the key item of lastData information).
-
 
      For example (following the previous one)
 
@@ -271,24 +263,18 @@ theData['external']['Temperature']  # To get outside temperature
 
 for m in devList.checkNotUpdated("<optional station name>"):
     print("Warning, sensor %s information is obsolete" % m)
-if moduleByName(m) == None : # Sensor is not an external module
-    print("The station is lost")
+    if moduleByName(m) == None : # Sensor is not an external module
+        print("The station is lost")
 ```
-
-
   * **checkUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)
     * Output : list of modules name for which last data update is newer than specified delay (default 1 hour).
 
-
      Complement of the previous service
-
 
   * **getMeasure** (device_id, scale, mtype, module_id=None, date_begin=None, date_end=None, limit=None, optimize=False) :
     * Input : All parameters specified in the Netatmo API service GETMEASURE (type being a python reserved word as been replaced by mtype).
     * Output : A python dictionary reflecting the full service response. No transformation is applied.
-
-
   * **MinMaxTH** (station=None, module=None, frame="last24") : Return min and max temperature and humidity for the given station/module in the given timeframe
     * Input :
       * An optional station Name or ID, default_station is used if not supplied,
@@ -303,7 +289,7 @@ if moduleByName(m) == None : # Sensor is not an external module
 at all if you slip over two days as required in a shifting 24 hours window.
 
 
-#### 4-5-Utilities functions ####
+#### 4-5 Utilities functions ####
 
 
   * **toTimeString** (timestamp) : Convert a Netatmo time stamp to a readable date/time format.
@@ -311,7 +297,7 @@ at all if you slip over two days as required in a shifting 24 hours window.
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
 
 
-#### 4-6-All-in-One function ####
+#### 4-6 All-in-One function ####
 
 
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
