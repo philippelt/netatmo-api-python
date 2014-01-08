@@ -84,8 +84,8 @@ import lnetatmo
 authorization = lnetatmo.ClientAuth()
 devList = lnetatmo.DeviceList(authorization)
 print ("Current temperature (inside/outside): %s / %s °C" %
-            ( devList.lastData['<my internal sensor name>']['Temperature'],
-              devList.lastData['<my external sensor name>']['Temperature'])
+            ( devList.lastData()['<my internal sensor name>']['Temperature'],
+              devList.lastData()['<my external sensor name>']['Temperature'])
 )
 ```
 
