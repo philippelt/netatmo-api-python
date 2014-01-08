@@ -13,7 +13,7 @@ authorization = lnetatmo.ClientAuth()
 devList = lnetatmo.DeviceList(authorization)
 
 print ("Current temperature (inside/outside): %s / %s °C" %
-        ( devList.lastData['internal']['Temperature'],
-          devList.lastData['external']['Temperature'])
+        ( devList.lastData()['internal']['Temperature'],
+          devList.lastData()['external']['Temperature'])
       )
 
