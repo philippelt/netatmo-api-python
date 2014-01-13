@@ -237,7 +237,7 @@ Methods :
     * Input : module ID and optional Station ID
     * Output : module dictionary or None
 
-  * **modulesNamesList** (station=None) : Get the list of modules names, incluing the station module name. Each of them should have a corrsponding entry in lastData. It is an equivalent (at lower cost) for lastData.keys()
+  * **modulesNamesList** (station=None) : Get the list of modules names, including the station module name. Each of them should have a corrsponding entry in lastData. It is an equivalent (at lower cost) for lastData.keys()
 
   * **lastData** (station=None, exclude=0) : Get the last data uploaded by the station, exclude sensors with measurement older than given value (default return all)
     * Input : station name OR id. If not provided default_station is used. Exclude is the delay in seconds from now to filter sensor readings.
