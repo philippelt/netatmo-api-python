@@ -4,7 +4,7 @@ Python Netatmo API programmers guide
 
 
 >2013-01-21, philippelt@users.sourceforge.net
-
+>2014-01-13, Revision to include new modules additionnal informations
 
 
 No additional libraries other than standard Python library is required.
@@ -39,12 +39,12 @@ Copy the lnetatmo.py file in your work directory (or your platform choice of use
 
 To ease future uses, I suggest that you hardcode in the library your application and user credentials. This is not mandatory as this parameters can be explicitly passed at authentication phase.
 
-If you want to do it, just edit the file and provide required values for :
+If you want to do it, just edit the source file and hard code required values for :
 
 
 ```python
-_CLIENT_ID     = "<your client_id>" # From Netatmo app registration
-_CLIENT_SECRET = "<your client_secret>" #  '  '
+_CLIENT_ID     = "<your client_id>"
+_CLIENT_SECRET = "<your client_secret>"
 _USERNAME      = "<netatmo username>"
 _PASSWORD      = "<netatmo user password>"
 ```
@@ -52,10 +52,11 @@ _PASSWORD      = "<netatmo user password>"
 
 If you provide all the values, you can test that everything is working properly by simply running the package as a standalone program.
 
-This will run a full access test to the account and stations and return 0 as return code if everything works well.
+This will run a full access test to the account and stations and return 0 as return code if everything works well. If run interactively, it will also display an OK message.
 
 ```bash
 $ python3 lnetatmo.py
+lnetatmo.py : OK
 $ echo $?
 0
 ```
@@ -93,8 +94,7 @@ In this example, no init parameters are supplied to ClientAuth, the library is s
 
 The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).
 
-Sensor designed is not exactly the same and are not addresses the same way. This may probably evolved in the future with some clarification on the station role (the reporting device) and module role (getting environmental data). The
-fact that a sensor is physically built in the station should not interfere.
+Sensor designed is not exactly the same and are not addresses the same way. This may probably evolved in the future with some clarification on the station role (the reporting device) and module role (getting environmental data). The fact that a sensor is physically built in the station should not interfere.
 
 The consequence is that, for the API, we will use terms of station data (for the sensors inside the station) and module data (for external(s) module). Lookup methods like moduleByName look for external modules and NOT station
 modules.
@@ -233,24 +233,25 @@ Methods :
   * **moduleById** (mid, sid=None) : Find a module by it's ID and belonging station's ID
     * Input : module ID and optional Station ID
     * Output : module dictionary or None
-  * **lastData** (station=None) : Get the last data uploaded by the station
-    * Input : station name OR id. If not provided default_station is used.
+  * **lastData** (station=None, exclude=0) : Get the last data uploaded by the station, exclude sensors with measurement older than given value (default return all)
+    * Input : station name OR id. If not provided default_station is used. Exclude is the delay in seconds from now to filter sensor readings.
     * Output : Sensors data dictionary (Key is sensor name)
 
-     AT the time of this document, Available measures are :
-      * For the station sensor : Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp)
-      * For the external sensor : Temperature, Humidity, When (measurement timestamp)
+     AT the time of this document, Available measures types are :
+      * a full or subset of Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp) for modules including station module
+      * battery_vp : likely to be total battery voltage for external sensors (running on batteries) in mV (undocumented)
+      * rf_status : likely to be the % of radio signal between the station and a module (undocumented)
 
-     See Netatmo API documentation for units
+     See Netatmo API documentation for units of regular measurements
 
-     If you named the internal sensor 'internal' and the outdoor one 'external' (no imagination) for your station in the user Web account station properties, you will access the data by :
+     If you named the internal sensor 'indoor' and the outdoor one 'outdoor' (simple is'n it ?) for your station in the user Web account station properties, you will access the data by :
 
 ```python
 # Last data access example
 
-theData = devList.lastData("<optional station name>")
-theData['internal']['CO2']          # To get the last CO2 measure of station
-theData['external']['Temperature']  # To get outside temperature
+theData = devList.lastData()
+theData['indoor']['Co2']          # To get the last CO2 measure of station
+theData['outdoor']['Temperature']  # To get outside temperature
 ```
   * **checkNotUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)

@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+# encoding=utf-8
+
+# 2014-01 : philippelt@users.sourceforge.net 
+
+# Just connect to a Netatmo account, and print all last informations available for
+# station and modules of the user account
+# (except if module data is more than one hour old that usually means module lost
+#  wether out of radio range or battery exhausted thus information is no longer
+#  significant)
+
+import time
+import lnetatmo
+
+authorization = lnetatmo.ClientAuth()
+devList = lnetatmo.DeviceList(authorization)
+
+# For each available module in the returned data that should not be older than one hour (3600 s) from now
+for module, moduleData in devList.lastData(exclude=3600).items() :
+   
+    # Name of the module (or station embedded module), the name you defined in the web netatmo account station management
+    print(module)
+    
+    # List key/values pair of sensor information (eg Humidity, Temperature, etc...)
+    for sensor, value in moduleData.items() :
+        # To ease reading, print measurement event in readable text (hh:mm:ss)
+        if sensor == "When" : value = time.strftime("%H:%M:%S",time.localtime(value))
+        print("%30s : %s" % (sensor, value))
+
+
+# OUTPUT SAMPLE :
+#
+# $ printAllLastData
+#
+# Serre
+#                     battery_vp : 5210
+#                      rf_status : 75
+#                       Humidity : 100
+#                    Temperature : 9.5
+#                           When : 12:34:42
+# Exterieur
+#                            Co2 : 575
+#                     battery_vp : 5638
+#                       Humidity : 88
+#                           When : 12:34:23
+#                    Temperature : 8.9
+#                      rf_status : 55
+# Bureau
+#                            Co2 : 645
+#                       Humidity : 45
+#                           When : 12:34:58
+#                          Noise : 46
+#                       Pressure : 995.9
+#                    Temperature : 20.2

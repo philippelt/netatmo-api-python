@@ -1,5 +1,6 @@
 # Published Jan 2013
-# Author : philippelt@users.sourceforge.net
+# Revised Jan 2014 (to add new modules data)
+# Author : Philippe Larduinat, philippelt@users.sourceforge.net
 # Public domain source code
 
 # This API provides access to the Netatmo (Internet weather station) devices
@@ -19,6 +20,20 @@ else:
     from urllib import urlencode
     import urllib2
 
+######################## USER SPECIFIC INFORMATION ######################
+
+# To be able to have a program accessing your netatmo data, you have to register your program as
+# a Netatmo app in your Netatmo account. All you have to do is to give it a name (whatever) and you will be
+# returned a client_id and secret that your app has to supply to access netatmo servers.
+
+_CLIENT_ID     = ""   # Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
+_CLIENT_SECRET = ""   # Your client app secret   '     '
+_USERNAME      = ""   # Your netatmo account username
+_PASSWORD      = ""   # Your netatmo account password
+
+#########################################################################
+
+
 # Common definitions
 
 _BASE_URL       = "http://api.netatmo.net/"
@@ -27,12 +42,20 @@ _GETUSER_REQ    = _BASE_URL + "api/getuser"
 _DEVICELIST_REQ = _BASE_URL + "api/devicelist"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
 
-# User-based specs
 
-_CLIENT_ID     = "<your client_id>"                         # From Netatmo app registration
-_CLIENT_SECRET = "<your client_secret>"                     #   '     '
-_USERNAME      = "<netatmo username>"
-_PASSWORD      = "<netatmo user password>"
+# Properties encoding (Netatmo protocol internals, undocumented)
+# Unfortunately, unavailable as instrospection data (unlike plain 'data_type') thus making a self adaptable
+# interface impossible in case new sensors information type would be added (like rain level for example)
+
+SENSOR_PROPERTIES = {
+        'Temperature' : 'a',
+        'Co2' : 'h',
+        'Humidity' : 'b',
+        'Noise' : 'S',
+        'Pressure' : 'e',
+        'When' : 'K'
+        }
+
 
 class ClientAuth:
     "Request authentication and keep access token available through token method. Renew it automatically if necessary"
@@ -60,7 +83,6 @@ class ClientAuth:
 
     @property
     def accessToken(self):
-        "Provide the current or renewed access token"
 
         if self.expiration < time.time(): # Token should be renewed
 
@@ -79,7 +101,6 @@ class ClientAuth:
         return self._accessToken
 
 class User:
-    "Access to user account information"
 
     def __init__(self, authData):
 
@@ -93,7 +114,6 @@ class User:
         self.ownerMail = self.rawData['mail']
 
 class DeviceList:
-    "Set of stations and modules attached to the user account"
 
     def __init__(self, authData):
 
@@ -134,17 +154,25 @@ class DeviceList:
         if mid in self.modules :
             return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
 
-    def lastData(self, station=None):
+    def lastData(self, station=None, exclude=0):
         if not station : station = self.default_station
         s = self.stationByName(station)
-        lastD = {}
-        if s :
-            ds = s['last_data_store'][s['_id']]
-            lastD[s['module_name']] = {"Temperature":ds['a'],"Pressure":ds['e'],"Noise":ds['S'],"Co2":ds['h'],"Humidity":ds['b'],"When":ds['K']}
-            for m in s['modules']:
-                ds = s['last_data_store'][m]
-                lastD[self.modules[m]['module_name']] = {"Temperature":ds['a'],"Humidity":ds['b'],"When":ds['K']}
-        return lastD if len(lastD) else None
+        if not s : return None
+        lastD = dict()
+        # Define oldest acceptable sensor measure event
+        limit = (time.time() - exclude) if exclude else 0
+        ds = s['last_data_store']
+        if ds[s['_id']][SENSOR_PROPERTIES['When']] > limit :
+            lastD[s['module_name']] = { k : ds[s['_id']][SENSOR_PROPERTIES[k]] for k in s['data_type'] }
+            lastD[s['module_name']]['When'] = ds[s['_id']][SENSOR_PROPERTIES['When']]
+        for mId, mod in self.modules.items() :
+            if ds[mod['_id']][SENSOR_PROPERTIES['When']] > limit :
+                lastD[mod['module_name']] = { k : ds[mId][SENSOR_PROPERTIES[k]] for k in mod['data_type'] }
+                lastD[mod['module_name']]['When'] = ds[mId][SENSOR_PROPERTIES['When']]
+                # For potential use, add battery and radio coverage information to module data if present
+                for i in ('battery_vp', 'rf_status') :
+                    if i in mod : lastD[mod['module_name']][i] = mod[i]
+        return lastD
 
     def checkNotUpdated(self, station=None, delay=3600):
         res = self.lastData(station)
@@ -183,7 +211,7 @@ class DeviceList:
             start = end - 24*3600 # 24 hours ago
         elif frame == "day":
             start, end = todayStamps()
-        if module:
+        if module and module != s['module_name']:
             m = self.moduleByName(module, s['station_name'])
             if not m :
                 m = self.moduleById(s['_id'], module)
@@ -242,24 +270,31 @@ def getStationMinMaxTH(station=None, module=None):
     authorization = ClientAuth()
     devList = DeviceList(authorization)
     if not station : station = devList.default_station
-    lastD = devList.lastData(station)
     if module :
         mname = module
     else :
         mname = devList.stationByName(station)['module_name']
-    if time.time()-lastD[mname]['When'] > 3600 : result = ["-", "-"]
-    else : result = [lastD[mname]['Temperature'], lastD[mname]['Humidity']]
-    result.extend(devList.MinMaxTH(station, module))
+    lastD = devList.lastData(station)
+    if mname == "*":
+        result = dict()
+        for m in lastD.keys():
+            if time.time()-lastD[m]['When'] > 3600 : continue
+            r = devList.MinMaxTH(module=m)
+            result[m] = (r[0], lastD[m]['Temperature'], r[1])
+    else:
+        if time.time()-lastD[mname]['When'] > 3600 : result = ["-", "-"]
+        else : result = [lastD[mname]['Temperature'], lastD[mname]['Humidity']]
+        result.extend(devList.MinMaxTH(station, mname))
     return result
 
 # auto-test when executed directly
 
 if __name__ == "__main__":
 
-    from sys import exit, stderr
+    from sys import exit, stdout, stderr
     
     if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
-           stderr.write("Missing arguments to check lnetatmo.py")
+           stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
     
     authorization = ClientAuth()                # Test authentication method
@@ -268,4 +303,9 @@ if __name__ == "__main__":
     devList.MinMaxTH()                          # Test GETMEASURE
     
     # If we reach this line, all is OK
+    
+    # If launched interactively, display OK message
+    if stdout.isatty():
+        print("lnetatmo.py : OK")
+    
     exit(0)
