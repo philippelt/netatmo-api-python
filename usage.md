@@ -4,6 +4,7 @@ Python Netatmo API programmers guide
 
 
 >2013-01-21, philippelt@users.sourceforge.net
+
 >2014-01-13, Revision to include new modules additionnal informations
 
 
