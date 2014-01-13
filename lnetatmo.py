@@ -123,11 +123,14 @@ class DeviceList:
                 }
         resp = postRequest(_DEVICELIST_REQ, postParams)
         self.rawData = resp['body']
-        self.stations = {}
-        for d in self.rawData['devices'] : self.stations[d['_id']] = d
-        self.modules = {}
-        for m in self.rawData['modules'] : self.modules[m['_id']] = m
+        self.stations = { d['_id'] : d for d in self.rawData['devices'] }
+        self.modules = { m['_id'] : m for m in self.rawData['modules'] }
         self.default_station = list(self.stations.values())[0]['station_name']
+
+    def modulesNamesList(self, station=None):
+        res = [m['module_name'] for m in self.modules.values()]
+        res.append(self.stationByName(station)['module_name'])
+        return res
 
     def stationByName(self, station=None):
         if not station : station = self.default_station
