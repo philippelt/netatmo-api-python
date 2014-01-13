@@ -86,12 +86,12 @@ import lnetatmo
 authorization = lnetatmo.ClientAuth()
 devList = lnetatmo.DeviceList(authorization)
 print ("Current temperature (inside/outside): %s / %s °C" %
-            ( devList.lastData()['<my internal sensor name>']['Temperature'],
-              devList.lastData()['<my external sensor name>']['Temperature'])
+            ( devList.lastData()['indoor']['Temperature'],
+              devList.lastData()['outdoor']['Temperature'])
 )
 ```
 
-In this example, no init parameters are supplied to ClientAuth, the library is supposed to have been customized with the required values (see §2).
+In this example, no init parameters are supplied to ClientAuth, the library is supposed to have been customized with the required values (see §2). The user must have nammed the sensors indoor and outdoor through the Web interface (or any other name as long as the program is requesting the same name).
 
 The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).
 
@@ -222,9 +222,11 @@ Methods :
   * **stationByName** (station=None) : Find a station by it's station name
     * Input : Station name to lookup (str)
     * Output : station dictionary or None
+
   * **stationById** (sid) : Find a station by it's Netatmo ID (mac address)
     * Input : Station ID
     * Output : station dictionary or None
+
   * **moduleByName** (module, station=None) : Find a module by it's module name
     * Input : module name and optional station name
     * Output : module dictionary or None
@@ -234,6 +236,9 @@ Methods :
   * **moduleById** (mid, sid=None) : Find a module by it's ID and belonging station's ID
     * Input : module ID and optional Station ID
     * Output : module dictionary or None
+
+  * **modulesNamesList** (station=None) : Get the list of modules names, incluing the station module name. Each of them should have a corrsponding entry in lastData. It is an equivalent (at lower cost) for lastData.keys()
+
   * **lastData** (station=None, exclude=0) : Get the last data uploaded by the station, exclude sensors with measurement older than given value (default return all)
     * Input : station name OR id. If not provided default_station is used. Exclude is the delay in seconds from now to filter sensor readings.
     * Output : Sensors data dictionary (Key is sensor name)
@@ -251,8 +256,9 @@ Methods :
 # Last data access example
 
 theData = devList.lastData()
-theData['indoor']['Co2']          # To get the last CO2 measure of station
-theData['outdoor']['Temperature']  # To get outside temperature
+print('Available modules data : ', theData.keys() )
+print('In-house CO2 level : ', theData['indoor']['Co2'] )
+print('Outside temperature : ', theData['outdoor']['Temperature'] )
 ```
   * **checkNotUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)
@@ -314,5 +320,5 @@ If you just need the current temperature and humidity reported by a sensor with 
 >>> print(lnetatmo.getStationMinMaxTH())
 [20, 33, 18.1, 20, 30, 34]
 >>>
->>> print(lnetatmo.getStationMinMaxTH("My Station name", "external module"))
+>>> print(lnetatmo.getStationMinMaxTH(module='outdoor'))
 [2, 53, 1.2, 5.4, 51, 74]
