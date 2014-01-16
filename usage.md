@@ -8,7 +8,7 @@ Python Netatmo API programmers guide
 >2014-01-13, Revision to include new modules additionnal informations
 
 
-No additional libraries other than standard Python library is required.
+No additional library other than standard Python library is required.
 
 Both Python2 and Python3 are supported without change.
 
@@ -18,17 +18,17 @@ This package support only user based authentication (i.e. must provide user cred
 
 
 
-### 1 Setup your environment from Netatmo ###
+### 1 Setup your environment from Netatmo Web interface ###
 
 
 
 
 Before being able to use the module you will need :
 
-  * A Netatmo web user account having access to, at least, one station
+  * A Netatmo user account having access to, at least, one station
   * An application registered from the user account (see http://dev.netatmo.com/dev/createapp) to obtain application credentials.
 
-In the netatmo philosophy, both the application accessing and the user account used to gain access to a station have to be registered thus have authentication credentials.
+In the netatmo philosophy, both the application itself and the user have to be registered thus have authentication credentials to be able to access any station. Registration is free for both.
 
 
 
@@ -36,9 +36,9 @@ In the netatmo philosophy, both the application accessing and the user account u
 
 
 
-Copy the lnetatmo.py file in your work directory (or your platform choice of user libraries).
+Copy the lnetatmo.py file in your work directory (or your platform choice of user libraries or virtualenv or ...).
 
-To ease future uses, I suggest that you hardcode in the library your application and user credentials. This is not mandatory as this parameters can be explicitly passed at authentication phase.
+To ease future uses, I suggest that you hardcode in the library your application and user credentials. This is not mandatory as this parameters can be explicitly passed at authentication phase but will save you parameters each time you write a new tool.
 
 If you want to do it, just edit the source file and hard code required values for :
 
@@ -56,7 +56,7 @@ If you provide all the values, you can test that everything is working properly 
 This will run a full access test to the account and stations and return 0 as return code if everything works well. If run interactively, it will also display an OK message.
 
 ```bash
-$ python3 lnetatmo.py
+$ python3 lnetatmo.py  # or python2 as well
 lnetatmo.py : OK
 $ echo $?
 0
@@ -72,7 +72,7 @@ Most of the time, the sequence of operations will be :
 
   1. Authenticate your program against Netatmo web server
   2. Get the device list accessible to the user
-  3. Ask for data on one of these devices
+  3. Request data on one of these devices or directly access last data sent by the station
 
 
 Example :
@@ -83,8 +83,13 @@ Example :
 
 import lnetatmo
 
+# 1 : Authenticate
 authorization = lnetatmo.ClientAuth()
+
+# 2 : Get devices list
 devList = lnetatmo.DeviceList(authorization)
+
+# 3 : Access most fresh data directly
 print ("Current temperature (inside/outside): %s / %s °C" %
             ( devList.lastData()['indoor']['Temperature'],
               devList.lastData()['outdoor']['Temperature'])
@@ -95,17 +100,17 @@ In this example, no init parameters are supplied to ClientAuth, the library is s
 
 The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).
 
-Sensor designed is not exactly the same and are not addresses the same way. This may probably evolved in the future with some clarification on the station role (the reporting device) and module role (getting environmental data). The fact that a sensor is physically built in the station should not interfere.
+Sensor design is not exactly the same and are not addressed the same way wether in the station or an external module. This is a design issue of the API that restrict the ability to write generic code that could work for station sensor the same way than other modules sensors. The station role (the reporting device) and module role (getting environmental data) should not have been mixed. The fact that a sensor is physically built in the station should not interfere with this two distincts objects.
 
-The consequence is that, for the API, we will use terms of station data (for the sensors inside the station) and module data (for external(s) module). Lookup methods like moduleByName look for external modules and NOT station
-modules.
-
-
->Exception : to reflect again the API structure, the last data uploaded by the station are indexed by module name (internal and external).
+The consequence is that, for the API, we will use terms of station data (for the sensors inside the station) and module data (for external(s) module). Lookup methods like moduleByName look for external modules and **NOT station
+modules**.
 
 
-Sensors (stations and modules) are managed in the API using ID's (mac address for the station and an equivalent Zigbee mac or else for modules). The Netatmo web account management gives you the capability to associate names to station sensor and module (and to the station itself). This is by far more comfortable and the interface provides service to locate a station or a module by name or by Id depending of your taste. Module lookup by name includes the optional station name in case
-multiple stations would have similar module names.
+>Exception : to reflect again the API structure, the last data uploaded by the station are indexed by module name (wether it is a station module or an external module).
+
+
+Sensors (stations and modules) are managed in the API using ID's (network hardware adresses). The Netatmo web account management gives you the capability to associate names to station sensor and module (and to the station itself). This is by far more comfortable and the interface provides service to locate a station or a module by name or by Id depending of your taste. Module lookup by name includes the optional station name in case
+multiple stations would have similar module names (if you monitor multiple stations/locations, it would not be a surprise that each of them would have an 'outdoor' module). This is a benefit in the sense it give you the ability to write generic code (for exemple, collect all 'outdoor' temperatures for all your stations).
 
 The results are Python data structures, mostly dictionaries as they mirror easily the JSON returned data. All supplied classes provides simple properties to use as well as access to full data returned by the netatmo web services (rawData property for most classes).
 
@@ -256,7 +261,7 @@ Methods :
 # Last data access example
 
 theData = devList.lastData()
-print('Available modules data : ', theData.keys() )
+print('Available modules : ', theData.keys() )
 print('In-house CO2 level : ', theData['indoor']['Co2'] )
 print('Outside temperature : ', theData['outdoor']['Temperature'] )
 ```
