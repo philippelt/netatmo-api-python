@@ -10,11 +10,11 @@ Python Netatmo API programmers guide
 
 No additional library other than standard Python library is required.
 
-Both Python2 and Python3 are supported without change.
+Both Python V2.7x and V3.x.x are supported without change.
 
 More information about the Netatmo REST API can be obtained from http://dev.netatmo.com/doc/
 
-This package support only user based authentication (i.e. must provide user credentials to access data).
+This package support only user based authentication.
 
 
 
@@ -100,13 +100,14 @@ In this example, no init parameters are supplied to ClientAuth, the library is s
 
 The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).
 
-Sensor design is not exactly the same and are not addressed the same way wether in the station or an external module. This is a design issue of the API that restrict the ability to write generic code that could work for station sensor the same way than other modules sensors. The station role (the reporting device) and module role (getting environmental data) should not have been mixed. The fact that a sensor is physically built in the station should not interfere with this two distincts objects.
+Sensor design is not exactly the same for station and external modules and they are not addressed the same way wether in the station or an external module. This is a design issue of the API that restrict the ability to write generic code that could work for station sensor the same way than other modules sensors. The station role (the reporting device) and module role (getting environmental data) should not have been mixed. The fact that a sensor is physically built in the station should not interfere with this two distincts objects.
 
 The consequence is that, for the API, we will use terms of station data (for the sensors inside the station) and module data (for external(s) module). Lookup methods like moduleByName look for external modules and **NOT station
 modules**.
 
+Having two roles, the station has a 'station_name' property as well as a 'module_name' for its internal sensor.
 
->Exception : to reflect again the API structure, the last data uploaded by the station are indexed by module name (wether it is a station module or an external module).
+>Exception : to reflect again the API structure, the last data uploaded by the station is indexed by module_name (wether it is a station module or an external module).
 
 
 Sensors (stations and modules) are managed in the API using ID's (network hardware adresses). The Netatmo web account management gives you the capability to associate names to station sensor and module (and to the station itself). This is by far more comfortable and the interface provides service to locate a station or a module by name or by Id depending of your taste. Module lookup by name includes the optional station name in case
@@ -264,6 +265,8 @@ theData = devList.lastData()
 print('Available modules : ', theData.keys() )
 print('In-house CO2 level : ', theData['indoor']['Co2'] )
 print('Outside temperature : ', theData['outdoor']['Temperature'] )
+print('External module battery : ', "OK" if int(theData['outdoor']['battery_vp']) > 5000 \
+                                     else "NEEDS TO BE REPLACED" )
 ```
   * **checkNotUpdated** (station=None, delay=3600) :
     * Input : optional station name (else default_station is used)
