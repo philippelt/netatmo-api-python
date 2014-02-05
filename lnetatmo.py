@@ -168,8 +168,9 @@ class DeviceList:
         if ds[s['_id']][SENSOR_PROPERTIES['When']] > limit :
             lastD[s['module_name']] = { k : ds[s['_id']][SENSOR_PROPERTIES[k]] for k in s['data_type'] }
             lastD[s['module_name']]['When'] = ds[s['_id']][SENSOR_PROPERTIES['When']]
-        for mId, mod in self.modules.items() :
-            if ds[mod['_id']][SENSOR_PROPERTIES['When']] > limit :
+        for mId in s["modules"] :
+            if ds[mId][SENSOR_PROPERTIES['When']] > limit :
+                mod = self.modules[mId]
                 lastD[mod['module_name']] = { k : ds[mId][SENSOR_PROPERTIES[k]] for k in mod['data_type'] }
                 lastD[mod['module_name']]['When'] = ds[mId][SENSOR_PROPERTIES['When']]
                 # For potential use, add battery and radio coverage information to module data if present
