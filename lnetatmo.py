@@ -4,7 +4,7 @@
 # Public domain source code
 
 # This API provides access to the Netatmo (Internet weather station) devices
-# This package can by run with Python2 or Python3 applications and do not
+# This package can be used with Python2 or Python3 applications and do not
 # require anything else than standard libraries
 
 # PythonAPI Netatmo REST data access
