@@ -70,7 +70,8 @@ class ClientAuth:
                 "client_id" : clientId,
                 "client_secret" : clientSecret,
                 "username" : username,
-                "password" : password
+                "password" : password,
+                "scope" : "read_station"
                 }
         resp = postRequest(_AUTH_REQ, postParams)
 
