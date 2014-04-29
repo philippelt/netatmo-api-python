@@ -194,7 +194,7 @@ class DeviceList:
             if time.time()-v['When'] < delay : ret.append(mn)
         return ret if ret else None
 
-    def getMeasure(self, device_id, scale, mtype, module_id=None, date_begin=None, date_end=None, limit=None, optimize=False):
+    def getMeasure(self, device_id, scale, mtype, module_id=None, date_begin=None, date_end=None, limit=None, optimize=False, real_time=False):
         postParams = { "access_token" : self.getAuthToken }
         postParams['device_id']  = device_id
         if module_id : postParams['module_id'] = module_id
@@ -204,6 +204,7 @@ class DeviceList:
         if date_end : postParams['date_end'] = date_end
         if limit : postParams['limit'] = limit
         postParams['optimize'] = "true" if optimize else "false"
+        postParams['real_time'] = "true" if real_time else "false"
         return postRequest(_GETMEASURE_REQ, postParams)
 
     def MinMaxTH(self, station=None, module=None, frame="last24"):
