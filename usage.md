@@ -250,7 +250,7 @@ Methods :
     * Output : Sensors data dictionary (Key is sensor name)
 
      AT the time of this document, Available measures types are :
-      * a full or subset of Temperature, Pressure, Noise, Co2, Humidity, When (measurement timestamp) for modules including station module
+      * a full or subset of Temperature, Pressure, Noise, Co2, Humidity, Rain, When (measurement timestamp) for modules including station module
       * battery_vp : likely to be total battery voltage for external sensors (running on batteries) in mV (undocumented)
       * rf_status : likely to be the % of radio signal between the station and a module (undocumented)
 

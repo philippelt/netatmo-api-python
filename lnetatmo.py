@@ -53,6 +53,7 @@ SENSOR_PROPERTIES = {
         'Humidity' : 'b',
         'Noise' : 'S',
         'Pressure' : 'e',
+        'Rain' : 'f',
         'When' : 'K'
         }
 
