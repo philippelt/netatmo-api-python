@@ -159,21 +159,21 @@ class DeviceList:
             return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
 
     def lastData(self, station=None, exclude=0):
-        if not station : station = self.default_station
         s = self.stationByName(station)
         if not s : return None
         lastD = dict()
         # Define oldest acceptable sensor measure event
-        limit = (time.time() - exclude) if exclude else 0
+        limit = (time() - exclude) if exclude else 0
         ds = s['last_data_store']
-        if ds[s['_id']][SENSOR_PROPERTIES['When']] > limit :
-            lastD[s['module_name']] = { k : ds[s['_id']][SENSOR_PROPERTIES[k]] for k in s['data_type'] }
-            lastD[s['module_name']]['When'] = ds[s['_id']][SENSOR_PROPERTIES['When']]
-        for mId in s["modules"] :
-            if ds[mId][SENSOR_PROPERTIES['When']] > limit :
+        if ds[SENSOR_PROPERTIES['When']] > limit :
+            lastD[s['module_name']] = { k : ds[SENSOR_PROPERTIES[k]] for k in s['data_type'] }
+            lastD[s['module_name']]['When'] = ds[SENSOR_PROPERTIES['When']]
+        for mId in s["modules"]:
+            ds = self.modules[mId]['last_data_store']
+            if ds[SENSOR_PROPERTIES['When']] > limit :
                 mod = self.modules[mId]
-                lastD[mod['module_name']] = { k : ds[mId][SENSOR_PROPERTIES[k]] for k in mod['data_type'] }
-                lastD[mod['module_name']]['When'] = ds[mId][SENSOR_PROPERTIES['When']]
+                lastD[mod['module_name']] = { k : ds[SENSOR_PROPERTIES[k]] for k in mod['data_type'] }
+                lastD[mod['module_name']]['When'] = ds[SENSOR_PROPERTIES['When']]
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('battery_vp', 'rf_status') :
                     if i in mod : lastD[mod['module_name']][i] = mod[i]
