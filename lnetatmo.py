@@ -159,11 +159,12 @@ class DeviceList:
             return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
 
     def lastData(self, station=None, exclude=0):
+        if not station : station = self.default_station
         s = self.stationByName(station)
         if not s : return None
         lastD = dict()
         # Define oldest acceptable sensor measure event
-        limit = (time() - exclude) if exclude else 0
+        limit = (time.time() - exclude) if exclude else 0
         ds = s['last_data_store']
         if ds[SENSOR_PROPERTIES['When']] > limit :
             lastD[s['module_name']] = { k : ds[SENSOR_PROPERTIES[k]] for k in s['data_type'] }
