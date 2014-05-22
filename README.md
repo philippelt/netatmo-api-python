@@ -8,4 +8,6 @@ I have no relation with the netatmo company, I wrote this because I needed it my
 and published it to save time to anyone who would have same needs.
 
 
-** NOTE ** Due to changes in progress in the Netatmo data storage, the API no longer works. Once theses changes will get stabilized and (we expect) a formal annoucement will be made on availability off these features, the library will be ehanced to support the new features.
+### Note ###
+
+this release is an interim release waiting for Netatmo dashboard finalization. As any work in progress, it can stop to work at any time if serious changes occurs.
