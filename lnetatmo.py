@@ -43,21 +43,6 @@ _DEVICELIST_REQ = _BASE_URL + "api/devicelist"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
 
 
-# Properties encoding (Netatmo protocol internals, undocumented)
-# Unfortunately, unavailable as instrospection data (unlike plain 'data_type') thus making a self adaptable
-# interface impossible in case new sensors information type would be added (like rain level for example)
-
-SENSOR_PROPERTIES = {
-        'Temperature' : 'a',
-        'Co2' : 'h',
-        'Humidity' : 'b',
-        'Noise' : 'S',
-        'Pressure' : 'e',
-        'Rain' : 'f',
-        'When' : 'K'
-        }
-
-
 class ClientAuth:
     "Request authentication and keep access token available through token method. Renew it automatically if necessary"
 
@@ -121,7 +106,8 @@ class DeviceList:
 
         self.getAuthToken = authData.accessToken
         postParams = {
-                "access_token" : self.getAuthToken
+                "access_token" : self.getAuthToken,
+                "app_type" : "app_station"
                 }
         resp = postRequest(_DEVICELIST_REQ, postParams)
         self.rawData = resp['body']
@@ -160,22 +146,21 @@ class DeviceList:
             return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
 
     def lastData(self, station=None, exclude=0):
-        if not station : station = self.default_station
         s = self.stationByName(station)
         if not s : return None
         lastD = dict()
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
-        ds = s['last_data_store']
-        if ds[SENSOR_PROPERTIES['When']] > limit :
-            lastD[s['module_name']] = { k : ds[SENSOR_PROPERTIES[k]] for k in s['data_type'] }
-            lastD[s['module_name']]['When'] = ds[SENSOR_PROPERTIES['When']]
+        ds = s['dashboard_data']
+        if ds['time_utc'] > limit :
+            lastD[s['module_name']] = ds.copy()
+            lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
         for mId in s["modules"]:
-            ds = self.modules[mId]['last_data_store']
-            if ds[SENSOR_PROPERTIES['When']] > limit :
+            ds = self.modules[mId]['dashboard_data']
+            if ds['time_utc'] > limit :
                 mod = self.modules[mId]
-                lastD[mod['module_name']] = { k : ds[SENSOR_PROPERTIES[k]] for k in mod['data_type'] }
-                lastD[mod['module_name']]['When'] = ds[SENSOR_PROPERTIES['When']]
+                lastD[mod['module_name']] = ds.copy()
+                lastD[mod['module_name']]['When'] = lastD[mod['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('battery_vp', 'rf_status') :
                     if i in mod : lastD[mod['module_name']][i] = mod[i]
