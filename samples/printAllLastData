@@ -32,23 +32,35 @@ for module, moduleData in devList.lastData(exclude=3600).items() :
 #
 # $ printAllLastData
 #
-# Serre
-#                     battery_vp : 5210
-#                      rf_status : 75
-#                       Humidity : 100
-#                    Temperature : 9.5
-#                           When : 12:34:42
-# Exterieur
-#                            Co2 : 575
-#                     battery_vp : 5638
-#                       Humidity : 88
-#                           When : 12:34:23
-#                    Temperature : 8.9
-#                      rf_status : 55
-# Bureau
-#                            Co2 : 645
-#                       Humidity : 45
-#                           When : 12:34:58
-#                          Noise : 46
-#                       Pressure : 995.9
-#                    Temperature : 20.2
+#Office
+#    AbsolutePressure : 988.7
+#                 CO2 : 726
+#       date_max_temp : 1400760301
+#       date_min_temp : 1400736146
+#            Humidity : 60
+#            max_temp : 19.6
+#            min_temp : 17.9
+#               Noise : 46
+#            Particle : 12768
+#            Pressure : 988.7
+#         Temperature : 19.6
+#                When : 14:10:01
+#Outdoor
+#          battery_vp : 5200
+#                 CO2 : 555
+#       date_max_temp : 1400759951
+#       date_min_temp : 1400732524
+#            Humidity : 75
+#            max_temp : 17.9
+#            min_temp : 10.3
+#           rf_status : 57
+#         Temperature : 17.9
+#                When : 14:09:25
+#Greenhouse
+#      date_min_temp : 1400732204
+#            Humidity : 89
+#            max_temp : 19.9
+#            min_temp : 9.1
+#           rf_status : 83
+#         Temperature : 19.9
+#                When : 14:09:12
