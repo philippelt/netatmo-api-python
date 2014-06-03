@@ -155,6 +155,7 @@ class DeviceList:
         if ds['time_utc'] > limit :
             lastD[s['module_name']] = ds.copy()
             lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
+            lastD[s['module_name']]['wifi_status'] = s['wifi_status']
         for mId in s["modules"]:
             ds = self.modules[mId]['dashboard_data']
             if ds['time_utc'] > limit :
