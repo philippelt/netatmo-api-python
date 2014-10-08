@@ -29,11 +29,11 @@ class install_scripts_and_symlinks(install_scripts):
 
 setup(
     name='lnetatmo',
-    version='0.2', # Should be updated with new versions
+    version='0.3.0.dev1', # Should be updated with new versions
     author='Philippe Larduinat',
     author_email='philippelt@users.sourceforge.net',
     packages=find_packages(),
-    scripts=[ 'lnetatmo.py' ],
+    scripts=[ ],
     data_files=[ ],
     url='https://github.com/philippelt/netatmo-api-python',
     license='Open Source',
