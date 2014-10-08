@@ -9,7 +9,7 @@ and published it to save time to anyone who would have same needs.
 
 ### Install ###
 
-To install lnetatmo simple run:
+To install lnetatmo simply run:
 
     python setup.py install
 
