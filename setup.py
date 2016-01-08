@@ -10,7 +10,7 @@ from distutils.core import setup
 class install_scripts_and_symlinks(install_scripts):
     '''Like install_scripts, but also replicating nonexistent symlinks'''
     def run(self):
-      print "=============install_scripts_and_symlinks run"
+      print ("=============install_scripts_and_symlinks run")
       install_scripts.run(self)
       # Replicate symlinks if they don't exist
       print self
