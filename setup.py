@@ -12,7 +12,7 @@ setup(
     version='0.4.0', # Should be updated with new versions
     author='Philippe Larduinat',
     author_email='philippelt@users.sourceforge.net',
-    packages=['lnetatmo'],
+    py_modules=['lnetatmo'],
     scripts=[],
     data_files=[],
     url='https://github.com/philippelt/netatmo-api-python',
