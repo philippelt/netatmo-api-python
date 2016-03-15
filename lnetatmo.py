@@ -235,16 +235,17 @@ class DeviceList:
 # Utilities routines
 
 def postRequest(url, params):
+    # Netatmo response body size limited to 64k (should be under 16k)
     if version_info.major == 3:
         req = urllib.request.Request(url)
         req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
         params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params).readall().decode("utf-8")
+        resp = urllib.request.urlopen(req, params).read(65535).decode("utf-8")
     else:
         params = urlencode(params)
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req).read()
+        resp = urllib2.urlopen(req).read(65535)
     return json.loads(resp)
 
 def toTimeString(value):
