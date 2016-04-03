@@ -1,0 +1,8 @@
+
+build/
+
+dist/
+
+lnetatmo.egg-info/
+
+*.pyc
