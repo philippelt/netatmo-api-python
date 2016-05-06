@@ -38,9 +38,8 @@ _PASSWORD      = ""   # Your netatmo account password
 
 _BASE_URL       = "https://api.netatmo.net/"
 _AUTH_REQ       = _BASE_URL + "oauth2/token"
-_GETUSER_REQ    = _BASE_URL + "api/getuser"
-_DEVICELIST_REQ = _BASE_URL + "api/devicelist"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
+_GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata" 
 
 
 class ClientAuth:
@@ -94,13 +93,13 @@ class User:
         postParams = {
                 "access_token" : authData.accessToken
                 }
-        resp = postRequest(_GETUSER_REQ, postParams)
+        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']
-        self.id = self.rawData['_id']
         self.devList = self.rawData['devices']
-        self.ownerMail = self.rawData['mail']
+        self.ownerMail = self.rawData['user']['mail']
 
-class DeviceList:
+#List the Weather Station devices (stations and modules)
+class WS_DeviceList:
 
     def __init__(self, authData):
 
@@ -109,10 +108,13 @@ class DeviceList:
                 "access_token" : self.getAuthToken,
                 "app_type" : "app_station"
                 }
-        resp = postRequest(_DEVICELIST_REQ, postParams)
-        self.rawData = resp['body']
-        self.stations = { d['_id'] : d for d in self.rawData['devices'] }
-        self.modules = { m['_id'] : m for m in self.rawData['modules'] }
+        user = User(authData)
+        self.rawData = user.rawData['devices']
+        self.stations = { d['_id'] : d for d in self.rawData }
+        self.modules = dict()
+        for i in range(len(self.rawData)):
+            for m in self.rawData[i]['modules']:
+                self.modules[ m['_id'] ] = m
         self.default_station = list(self.stations.values())[0]['station_name']
 
     def modulesNamesList(self, station=None):
@@ -123,7 +125,8 @@ class DeviceList:
     def stationByName(self, station=None):
         if not station : station = self.default_station
         for i,s in self.stations.items():
-            if s['station_name'] == station : return self.stations[i]
+            if s['station_name'] == station :
+                return self.stations[i]
         return None
 
     def stationById(self, sid):
@@ -143,7 +146,12 @@ class DeviceList:
     def moduleById(self, mid, sid=None):
         s = self.stationById(sid) if sid else None
         if mid in self.modules :
-            return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
+            if s:
+                for module in s['modules']:
+                    if module['_id'] == mid:
+                        return module
+            else:
+                return self.modules[mid]
 
     def lastData(self, station=None, exclude=0):
         s = self.stationByName(station)
@@ -156,15 +164,14 @@ class DeviceList:
             lastD[s['module_name']] = ds.copy()
             lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
-        for mId in s["modules"]:
-            ds = self.modules[mId]['dashboard_data']
+        for module in s["modules"]:
+            ds = module['dashboard_data']
             if ds['time_utc'] > limit :
-                mod = self.modules[mId]
-                lastD[mod['module_name']] = ds.copy()
-                lastD[mod['module_name']]['When'] = lastD[mod['module_name']].pop("time_utc")
+                lastD[module['module_name']] = ds.copy()
+                lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('battery_vp', 'rf_status') :
-                    if i in mod : lastD[mod['module_name']][i] = mod[i]
+                    if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
     def checkNotUpdated(self, station=None, delay=3600):
@@ -295,7 +302,11 @@ if __name__ == "__main__":
     authorization = ClientAuth()                # Test authentication method
     user = User(authorization)                  # Test GETUSER
     devList = DeviceList(authorization)         # Test DEVICELIST
-    devList.MinMaxTH()                          # Test GETMEASURE
+    print devList.MinMaxTH()                          # Test GETMEASURE
+
+    print "modulesNamesList => {0}".format(devList.modulesNamesList('netatmo Appartement'))
+    print "stationById => {0}".format(devList.stationById('70:ee:50:05:7f:96'))
+    print "moduleById => {0}".format(devList.moduleById('03:00:00:02:07:e6'))
     
     # If we reach this line, all is OK
     
