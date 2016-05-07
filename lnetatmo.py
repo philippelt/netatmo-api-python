@@ -39,7 +39,8 @@ _PASSWORD      = ""   # Your netatmo account password
 _BASE_URL       = "https://api.netatmo.net/"
 _AUTH_REQ       = _BASE_URL + "oauth2/token"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
-_GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata" 
+_GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
+_GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
 
 
 class ClientAuth:
@@ -56,7 +57,7 @@ class ClientAuth:
                 "client_secret" : clientSecret,
                 "username" : username,
                 "password" : password,
-                "scope" : "read_station"
+                "scope" : "read_station read_camera access_camera"
                 }
         resp = postRequest(_AUTH_REQ, postParams)
 
@@ -99,15 +100,11 @@ class User:
         self.ownerMail = self.rawData['user']['mail']
 
 #List the Weather Station devices (stations and modules)
-class WS_DeviceList:
+class DeviceList:
 
     def __init__(self, authData):
 
         self.getAuthToken = authData.accessToken
-        postParams = {
-                "access_token" : self.getAuthToken,
-                "app_type" : "app_station"
-                }
         user = User(authData)
         self.rawData = user.rawData['devices']
         self.stations = { d['_id'] : d for d in self.rawData }
@@ -289,6 +286,31 @@ def getStationMinMaxTH(station=None, module=None):
         result.extend(devList.MinMaxTH(station, mname))
     return result
 
+
+class WelcomeData:
+
+    def __init__(self, authData):
+
+        postParams = {
+            "access_token" : authData.accessToken
+            }
+        resp = postRequest(_GETHOMEDATA_REQ, postParams)
+        self.rawData = resp['body']
+        self.homes = { d['id'] : d for d in self.rawData['homes'] }
+        self.persons = dict()
+        self.events = dict()
+        self.cameras = dict()
+        for i in range(len(self.rawData['homes'])):
+            for p in self.rawData['homes'][i]['persons']:
+                self.persons[ p['id'] ] = p
+            for e in self.rawData['homes'][i]['events']:
+                self.events[ e['id'] ] = e
+            for c in self.rawData['homes'][i]['cameras']:
+                self.cameras[ c['id'] ] = c
+
+        self.default_home = list(self.homes.values())[0]['name']
+
+
 # auto-test when executed directly
 
 if __name__ == "__main__":
@@ -302,11 +324,11 @@ if __name__ == "__main__":
     authorization = ClientAuth()                # Test authentication method
     user = User(authorization)                  # Test GETUSER
     devList = DeviceList(authorization)         # Test DEVICELIST
-    print devList.MinMaxTH()                          # Test GETMEASURE
+    devList.MinMaxTH()                          # Test GETMEASUR
 
-    print "modulesNamesList => {0}".format(devList.modulesNamesList('netatmo Appartement'))
-    print "stationById => {0}".format(devList.stationById('70:ee:50:05:7f:96'))
-    print "moduleById => {0}".format(devList.moduleById('03:00:00:02:07:e6'))
+    authorization2 = ClientAuth()
+    Camera = WelcomeData(authorization2)
+    devList.MinMaxTH()
     
     # If we reach this line, all is OK
     
