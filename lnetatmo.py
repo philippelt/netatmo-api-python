@@ -50,7 +50,6 @@ class ClientAuth:
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
                        password=_PASSWORD):
-
         postParams = {
                 "grant_type" : "password",
                 "client_id" : clientId,
@@ -60,7 +59,6 @@ class ClientAuth:
                 "scope" : "read_station read_camera access_camera"
                 }
         resp = postRequest(_AUTH_REQ, postParams)
-
         self._clientId = clientId
         self._clientSecret = clientSecret
         self._accessToken = resp['access_token']
@@ -72,7 +70,6 @@ class ClientAuth:
     def accessToken(self):
 
         if self.expiration < time.time(): # Token should be renewed
-
             postParams = {
                     "grant_type" : "refresh_token",
                     "refresh_token" : self.refreshToken,
@@ -80,17 +77,14 @@ class ClientAuth:
                     "client_secret" : self._clientSecret
                     }
             resp = postRequest(_AUTH_REQ, postParams)
-
             self._accessToken = resp['access_token']
             self.refreshToken = resp['refresh_token']
             self.expiration = int(resp['expire_in'] + time.time())
-
         return self._accessToken
 
 class User:
 
     def __init__(self, authData):
-
         postParams = {
                 "access_token" : authData.accessToken
                 }
@@ -103,7 +97,6 @@ class User:
 class DeviceList:
 
     def __init__(self, authData):
-
         self.getAuthToken = authData.accessToken
         user = User(authData)
         self.rawData = user.rawData['devices']
@@ -304,7 +297,7 @@ class WelcomeData:
             for p in self.rawData['homes'][i]['persons']:
                 self.persons[ p['id'] ] = p
             for e in self.rawData['homes'][i]['events']:
-                self.events[ e['id'] ] = e
+                self.events[ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[ c['id'] ] = c
 
@@ -316,11 +309,11 @@ class WelcomeData:
 if __name__ == "__main__":
 
     from sys import exit, stdout, stderr
-    
+
     if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
-    
+
     authorization = ClientAuth()                # Test authentication method
     user = User(authorization)                  # Test GETUSER
     devList = DeviceList(authorization)         # Test DEVICELIST
@@ -331,9 +324,9 @@ if __name__ == "__main__":
     devList.MinMaxTH()
     
     # If we reach this line, all is OK
-    
+
     # If launched interactively, display OK message
     if stdout.isatty():
         print("lnetatmo.py : OK")
-    
+
     exit(0)
