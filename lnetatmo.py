@@ -320,8 +320,11 @@ class WelcomeData:
                         return cam
         return None
 
-    def cameraUrl(self, camera=None, home=None):
-        camera_data=self.cameraByName(camera=camera, home=home)
+    def cameraUrl(self, camera=None, home=None, cid=None):
+        if cid:
+            camera_data=self.cameraById(cid)
+        else:
+            camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
             return camera_data['vpn_url']
         else:
