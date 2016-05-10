@@ -283,9 +283,9 @@ def getStationMinMaxTH(station=None, module=None):
 class WelcomeData:
 
     def __init__(self, authData):
-
+        self.getAuthToken = authData.accessToken
         postParams = {
-            "access_token" : authData.accessToken
+            "access_token" : self.getAuthToken
             }
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
@@ -300,8 +300,39 @@ class WelcomeData:
                 self.events[ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[ c['id'] ] = c
-
+        print self.cameras
+        self.lastEvent=self.events[sorted(self.events)[-1]]
+        print self.lastEvent
         self.default_home = list(self.homes.values())[0]['name']
+        self.default_camera= list(self.cameras.values())[0]
+        print self.default_home
+
+    def cameraById(self, cid):
+        return None if cid not in self.cameras else self.cameras[cid]
+
+    def cameraByName(self, camera=None, home=None):
+        if not camera: return self.default_camera
+        if not home: home = self.default_home
+        for key,value in self.homes.iteritems():
+            if value['name'] == home:
+                for cam in value['cameras']:
+                    if cam['name'] == camera:
+                        return cam
+        return None
+
+    def cameraUrl(self, camera=None, home=None):
+        camera_data=self.cameraByName(camera=camera, home=home)
+        if camera_data:
+            return camera_data['vpn_url']
+        else:
+            return None
+
+    def lastEvent(self, home=None):
+        pass
+
+    def someoneKnownSeen(self):
+        pass
+
 
 
 # auto-test when executed directly
@@ -322,7 +353,13 @@ if __name__ == "__main__":
     authorization2 = ClientAuth()
     Camera = WelcomeData(authorization2)
     devList.MinMaxTH()
-    
+
+    print Camera.cameraByName(home='Appartement')
+    print Camera.cameraByName(camera='Salon',home='Appatement')
+    print Camera.cameraById('70:ee:50:16:cc:61')
+
+    print Camera.cameraUrl(camera='Salon',home='Appartement')
+
     # If we reach this line, all is OK
 
     # If launched interactively, display OK message
