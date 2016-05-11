@@ -41,6 +41,7 @@ _AUTH_REQ       = _BASE_URL + "oauth2/token"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
 _GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
 _GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
+_GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
 
 
 class ClientAuth:
@@ -231,19 +232,22 @@ class DeviceList:
 
 # Utilities routines
 
-def postRequest(url, params):
+def postRequest(url, params, json_resp=True, body_size=65535):
     # Netatmo response body size limited to 64k (should be under 16k)
     if version_info.major == 3:
         req = urllib.request.Request(url)
         req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
         params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params).read(65535).decode("utf-8")
+        resp = urllib.request.urlopen(req, params).read(body_size).decode("utf-8")
     else:
         params = urlencode(params)
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req).read(65535)
-    return json.loads(resp)
+        resp = urllib2.urlopen(req).read(body_size)
+    if json_resp:
+        return json.loads(resp)
+    else:
+        return resp
 
 def toTimeString(value):
     return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(int(value)))
@@ -307,17 +311,26 @@ class WelcomeData:
         self.default_camera= list(self.cameras.values())[0]
         print self.default_home
 
+    def homeById(self, hid):
+        return None if hid not in self.homes else self.homes[hid]
+
+    def homeByName(self, home=None):
+        if not home: home = self.default_home
+        for key,value in self.homes.iteritems():
+            if value['name'] == home:
+                return self.homes[key]
+
     def cameraById(self, cid):
         return None if cid not in self.cameras else self.cameras[cid]
 
     def cameraByName(self, camera=None, home=None):
         if not camera: return self.default_camera
         if not home: home = self.default_home
-        for key,value in self.homes.iteritems():
-            if value['name'] == home:
-                for cam in value['cameras']:
-                    if cam['name'] == camera:
-                        return cam
+        home_data = self.homeByName(home)
+        if home_data:
+            for cam in home_data['cameras']:
+                if cam['name'] == camera:
+                    return cam
         return None
 
     def cameraUrl(self, camera=None, home=None, cid=None):
@@ -330,13 +343,29 @@ class WelcomeData:
         else:
             return None
 
-    def lastEvent(self, home=None):
-        pass
+    def personsAtHome(self, home=None):
+        if not home: home = self.default_home
+        home_data = self.homeByName(home)
+        atHome = []
+        for p in home_data['persons']:
+            #Only check known persons
+            if 'pseudo' in p:
+                if not p["out_of_sight"]:
+                    atHome.append(p['pseudo'])
+        return atHome
+
+    def getCameraPicture(self, image_id, key):
+        postParams = {
+            "access_token" : self.getAuthToken,
+            "image_id" : image_id,
+            "key" : key
+            }
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False, body_size=131070)
+        return resp
 
     def someoneKnownSeen(self):
+        #Check in the last event is someone known has been seen
         pass
-
-
 
 # auto-test when executed directly
 
@@ -357,12 +386,13 @@ if __name__ == "__main__":
     Camera = WelcomeData(authorization2)
     devList.MinMaxTH()
 
-    print Camera.cameraByName(home='Appartement')
     print Camera.cameraByName(camera='Salon',home='Appatement')
     print Camera.cameraById('70:ee:50:16:cc:61')
 
     print Camera.cameraUrl(camera='Salon',home='Appartement')
 
+    print Camera.personsAtHome()
+    image = Camera.getCameraPicture('Redacted','Redacted')
     # If we reach this line, all is OK
 
     # If launched interactively, display OK message
