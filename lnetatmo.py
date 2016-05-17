@@ -43,6 +43,7 @@ _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
 _GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
 _GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
+_GETEVENTSUNTIL_REQ = _BASE_URL + "api/geteventsuntil"
 
 
 class ClientAuth:
@@ -244,17 +245,22 @@ class WelcomeData:
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
+        self.lastEvent=dict()
         for i in range(len(self.rawData['homes'])):
+            nameHome=self.rawData['homes'][i]['name']
+            if nameHome not in self.events:
+                self.events[nameHome]=dict()
             for p in self.rawData['homes'][i]['persons']:
                 self.persons[ p['id'] ] = p
             for e in self.rawData['homes'][i]['events']:
-                self.events[ e['time'] ] = e
+                self.events[nameHome][ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[ c['id'] ] = c
         print self.cameras
-        self.lastEvent=self.events[sorted(self.events)[-1]]
-        print self.lastEvent
+        for home in self.events:
+            self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
+        print self.lastEvent
         self.default_camera= list(self.cameras.values())[0]
         print self.default_home
 
@@ -307,9 +313,31 @@ class WelcomeData:
             "image_id" : image_id,
             "key" : key
             }
-        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False, body_size=131070)
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False, body_size=None)
         image_type = imghdr.what('NONE.FILE',resp)
         return resp, image_type
+
+    def getProfileImage(self, name):
+        for p in self.persons:
+            if 'pseudo' in self.persons[p]:
+                if name == self.persons[p]['pseudo']:
+                    image_id = self.persons[p]['face']['id']
+                    key = self.persons[p]['face']['key']
+                    return self.getCameraPicture(image_id, key)
+        return None, None
+
+    def updateEvent(self, event=None, home=None):
+        if not home: home=self.default_home
+        if not event: event=self.lastEvent[home]
+        print event
+        home_data = self.homeByName(home)
+        postParams = {
+            "access_token" : self.getAuthToken,
+            "home_id" : home_data['id'],
+            "event_id" : event['id']
+        }
+        resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
+        print "===> {0}".format(resp)
 
     def someoneKnownSeen(self):
         #Check in the last event is someone known has been seen
@@ -329,7 +357,6 @@ def postRequest(url, params, json_resp=True, body_size=65535):
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
         resp = urllib2.urlopen(req).read(body_size)
-
     if json_resp:
         return json.loads(resp)
     else:
@@ -394,7 +421,13 @@ if __name__ == "__main__":
     print Camera.cameraUrl(camera='Salon',home='Appartement')
 
     print Camera.personsAtHome()
-    image = Camera.getCameraPicture('Redacted','Redacted')
+
+    for p in Camera.personsAtHome():
+        image, ext = Camera.getProfileImage(p)
+        f=open('.'.join((p,ext)),'wb')
+        f.write(image)
+        f.close()
+    Camera.updateEvent()
     # If we reach this line, all is OK
 
     # If launched interactively, display OK message
