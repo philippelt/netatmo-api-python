@@ -337,7 +337,10 @@ class WelcomeData:
             "event_id" : event['id']
         }
         resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
-        print "===> {0}".format(resp)
+        eventList = resp['body']['events_list']
+        for e in eventList:
+            self.events[home][ e['time'] ] = e
+        self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
 
     def someoneKnownSeen(self):
         #Check in the last event is someone known has been seen
