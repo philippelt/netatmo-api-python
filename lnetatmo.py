@@ -428,6 +428,8 @@ if __name__ == "__main__":
     print Camera.cameraUrl(camera='Salon',home='Appartement')
 
     print Camera.personsAtHome()
+    print Camera.lastEvent['Appartement']
+    print Camera.persons
 
     for p in Camera.personsAtHome():
         image, ext = Camera.getProfileImage(p)
