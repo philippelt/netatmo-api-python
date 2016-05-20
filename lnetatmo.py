@@ -13,6 +13,7 @@
 from sys import version_info
 import json, time
 import imghdr
+import warnings
 
 # HTTP libraries depends upon Python 2 or 3
 if version_info.major == 3 :
@@ -52,14 +53,15 @@ class ClientAuth:
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
-                       password=_PASSWORD):
+                       password=_PASSWORD,
+                       scope="read_station"):
         postParams = {
                 "grant_type" : "password",
                 "client_id" : clientId,
                 "client_secret" : clientSecret,
                 "username" : username,
                 "password" : password,
-                "scope" : "read_station read_camera access_camera"
+                "scope" : scope
                 }
         resp = postRequest(_AUTH_REQ, postParams)
         self._clientId = clientId
@@ -85,6 +87,7 @@ class ClientAuth:
             self.expiration = int(resp['expire_in'] + time.time())
         return self._accessToken
 
+
 class User:
 
     def __init__(self, authData):
@@ -97,12 +100,15 @@ class User:
         self.ownerMail = self.rawData['user']['mail']
 
 #List the Weather Station devices (stations and modules)
-class DeviceList:
+class WeatherStationData:
 
     def __init__(self, authData):
         self.getAuthToken = authData.accessToken
-        user = User(authData)
-        self.rawData = user.rawData['devices']
+        postParams = {
+                "access_token" : self.getAuthToken
+                }
+        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
+        self.rawData = resp['body']['devices']
         self.stations = { d['_id'] : d for d in self.rawData }
         self.modules = dict()
         for i in range(len(self.rawData)):
@@ -231,6 +237,11 @@ class DeviceList:
             return min(T), max(T), min(H), max(H)
         else:
             return None
+
+class DeviceList(WeatherStationData):
+    warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
+            DeprecationWarning )
+    pass
 
 class WelcomeData:
 
@@ -405,14 +416,11 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth()                # Test authentication method
-    user = User(authorization)                  # Test GETUSER
+    authorization = ClientAuth(scope="read_station read_camera access_camera")                # Test authentication method
     devList = DeviceList(authorization)         # Test DEVICELIST
     devList.MinMaxTH()                          # Test GETMEASUR
 
-    authorization2 = ClientAuth()
-    Camera = WelcomeData(authorization2)
-    devList.MinMaxTH()
+    Camera = WelcomeData(authorization)
 
     print Camera.cameraByName(camera='Salon',home='Appatement')
     print Camera.cameraById('70:ee:50:16:cc:61')
