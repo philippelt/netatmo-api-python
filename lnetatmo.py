@@ -256,13 +256,10 @@ class WelcomeData:
                 self.events[nameHome][ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[ c['id'] ] = c
-        print self.cameras
         for home in self.events:
             self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
-        print self.lastEvent
         self.default_camera= list(self.cameras.values())[0]
-        print self.default_home
 
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
@@ -329,7 +326,6 @@ class WelcomeData:
     def updateEvent(self, event=None, home=None):
         if not home: home=self.default_home
         if not event: event=self.lastEvent[home]
-        print event
         home_data = self.homeByName(home)
         postParams = {
             "access_token" : self.getAuthToken,
