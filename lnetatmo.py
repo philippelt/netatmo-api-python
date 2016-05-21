@@ -422,25 +422,14 @@ if __name__ == "__main__":
 
     Camera = WelcomeData(authorization)
 
-    print Camera.cameraByName(camera='Salon',home='Appatement')
-    print Camera.cameraById('70:ee:50:16:cc:61')
-
-    print Camera.cameraUrl(camera='Salon',home='Appartement')
-
-    print Camera.personsAtHome()
-    print Camera.lastEvent['Appartement']
-    print Camera.persons
-
-    for p in Camera.personsAtHome():
-        image, ext = Camera.getProfileImage(p)
-        f=open('.'.join((p,ext)),'wb')
-        f.write(image)
-        f.close()
-    Camera.updateEvent()
     # If we reach this line, all is OK
 
     # If launched interactively, display OK message
     if stdout.isatty():
+        print Camera.cameraUrl(camera='Salon',home='Appartement')
+        print Camera.personsAtHome()
+        print Camera.lastEvent['Appartement']
+        print Camera.persons
         print("lnetatmo.py : OK")
 
     exit(0)
