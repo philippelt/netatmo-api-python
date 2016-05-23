@@ -306,7 +306,14 @@ class WelcomeData:
         else:
             camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
-            return camera_data['vpn_url']
+            if camera_data['is_local']:
+                resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
+                local_url=resp['local_url']
+                resp = postRequest('{0}/command/ping'.format(local_url),dict())
+                if local_url == resp['local_url']:
+                    return local_url
+            else:
+                return camera_data['vpn_url']
         else:
             return None
 
