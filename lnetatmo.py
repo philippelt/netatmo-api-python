@@ -321,6 +321,13 @@ class WelcomeData:
                     atHome.append(p['pseudo'])
         return atHome
 
+    def knownPersons(self):
+        known_persons = dict()
+        for p_id,p in self.persons.iteritems():
+            if 'pseudo' in p:
+                known_persons[ p_id ] = p
+        return known_persons
+
     def getCameraPicture(self, image_id, key):
         postParams = {
             "access_token" : self.getAuthToken,
@@ -355,9 +362,21 @@ class WelcomeData:
             self.events[home][ e['time'] ] = e
         self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
 
-    def someoneKnownSeen(self):
+    def someoneKnownSeen(self, home=None):
+        if not home: home=self.default_home
         #Check in the last event is someone known has been seen
-        pass
+        if self.lastEvent[home]['type'] == 'person':
+            if self.lastEvent[home]['person_id'] in self.knownPersons():
+                return True
+        return False
+
+    def someoneUnknownSeen(self, home=None):
+        if not home: home=self.default_home
+        #Check in the last event is someone known has been seen
+        if self.lastEvent[home]['type'] == 'person':
+            if self.lastEvent[home]['person_id'] not in self.knownPersons():
+                return True
+        return False
 
 # Utilities routines
 
@@ -432,10 +451,11 @@ if __name__ == "__main__":
 
     # If launched interactively, display OK message
     if stdout.isatty():
-        print Camera.cameraUrl(camera='Salon',home='Appartement')
-        print Camera.personsAtHome()
-        print Camera.lastEvent['Appartement']
-        print Camera.persons
+        print(Camera.cameraUrl(camera='Salon',home='Appartement'))
+        print(Camera.personsAtHome())
+        print(Camera.lastEvent['Appartement'])
+        print(Camera.someoneKnownSeen())
+        print(Camera.someoneUnknownSeen())
         print("lnetatmo.py : OK")
 
     exit(0)
