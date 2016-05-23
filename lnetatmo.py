@@ -378,6 +378,12 @@ class WelcomeData:
                 return True
         return False
 
+    def motionDetected(self, home=None):
+        if not home: home=self.default_home
+        if self.lastEvent[home]['type'] == 'movement':
+            return True
+        return False
+
 # Utilities routines
 
 def postRequest(url, params, json_resp=True, body_size=65535):
