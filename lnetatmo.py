@@ -286,12 +286,18 @@ class WelcomeData:
 
     def cameraByName(self, camera=None, home=None):
         if not camera: return self.default_camera
-        if not home: home = self.default_home
-        home_data = self.homeByName(home)
-        if home_data:
-            for cam in home_data['cameras']:
-                if cam['name'] == camera:
-                    return cam
+        if home:
+            home_data = self.homeByName(home)
+            if home_data:
+                for cam in home_data['cameras']:
+                    if cam['name'] == camera:
+                        return cam
+            else:
+                return None
+        else:
+            for key,value in self.cameras.iteritems():
+                if value['name'] == camera:
+                    return self.cameras[key]
         return None
 
     def cameraUrl(self, camera=None, home=None, cid=None):
