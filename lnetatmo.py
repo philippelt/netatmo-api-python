@@ -277,7 +277,7 @@ class WelcomeData:
 
     def homeByName(self, home=None):
         if not home: home = self.default_home
-        for key,value in self.homes.iteritems():
+        for key,value in self.homes.items():
             if value['name'] == home:
                 return self.homes[key]
 
@@ -295,7 +295,7 @@ class WelcomeData:
             else:
                 return None
         else:
-            for key,value in self.cameras.iteritems():
+            for key,value in self.cameras.items():
                 if value['name'] == camera:
                     return self.cameras[key]
         return None
@@ -323,7 +323,7 @@ class WelcomeData:
 
     def knownPersons(self):
         known_persons = dict()
-        for p_id,p in self.persons.iteritems():
+        for p_id,p in self.persons.items():
             if 'pseudo' in p:
                 known_persons[ p_id ] = p
         return known_persons
