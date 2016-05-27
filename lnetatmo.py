@@ -256,7 +256,7 @@ class WelcomeData:
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
-        self.lastEvent=dict()
+        self.lastEvent = dict()
         for i in range(len(self.rawData['homes'])):
             nameHome=self.rawData['homes'][i]['name']
             if nameHome not in self.events:
@@ -300,22 +300,22 @@ class WelcomeData:
                     return self.cameras[key]
         return None
 
-    def cameraUrl(self, camera=None, home=None, cid=None):
+    def cameraUrls(self, camera=None, home=None, cid=None):
+        local_url = None
+        vpn_url = None
         if cid:
             camera_data=self.cameraById(cid)
         else:
             camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
+            vpn_url = camera_data['vpn_url']
             if camera_data['is_local']:
                 resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
-                local_url=resp['local_url']
-                resp = postRequest('{0}/command/ping'.format(local_url),dict())
-                if local_url == resp['local_url']:
-                    return local_url
-            else:
-                return camera_data['vpn_url']
-        else:
-            return None
+                temp_local_url=resp['local_url']
+                resp = postRequest('{0}/command/ping'.format(temp_local_url),dict())
+                if temp_local_url == resp['local_url']:
+                    local_url = temp_local_url
+        return vpn_url, local_url
 
     def personsAtHome(self, home=None):
         if not home: home = self.default_home
@@ -464,7 +464,7 @@ if __name__ == "__main__":
 
     # If launched interactively, display OK message
     if stdout.isatty():
-        print(Camera.cameraUrl(camera='Salon',home='Appartement'))
+        print(Camera.cameraUrls(camera='Salon',home='Appartement'))
         print(Camera.personsAtHome())
         print(Camera.lastEvent['Appartement'])
         print(Camera.someoneKnownSeen())
