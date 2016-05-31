@@ -244,7 +244,6 @@ class DeviceList(WeatherStationData):
     pass
 
 class WelcomeData:
-
     def __init__(self, authData):
         self.getAuthToken = authData.accessToken
         postParams = {
@@ -328,13 +327,6 @@ class WelcomeData:
                     atHome.append(p['pseudo'])
         return atHome
 
-    def knownPersons(self):
-        known_persons = dict()
-        for p_id,p in self.persons.items():
-            if 'pseudo' in p:
-                known_persons[ p_id ] = p
-        return known_persons
-
     def getCameraPicture(self, image_id, key):
         postParams = {
             "access_token" : self.getAuthToken,
@@ -369,11 +361,34 @@ class WelcomeData:
             self.events[home][ e['time'] ] = e
         self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
 
+    def personSeenByCamera(self, name, home=None, camera=None):
+        if not home: home=self.default_home
+        if not camera: camera = self.default_camera['name']
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        #Check in the last event is someone known has been seen
+        if self.lastEvent[home]['type'] == 'person' and self.lastEvent[home]['camera_id'] == cam_id:
+            person_id = self.lastEvent[home]['person_id']
+            if 'pseudo' in self.persons[person_id]:
+                if self.persons[person_id]['pseudo'] == name:
+                    return True
+        return False
+
+    def _knownPersons(self):
+        known_persons = dict()
+        for p_id,p in self.persons.items():
+            if 'pseudo' in p:
+                known_persons[ p_id ] = p
+        return known_persons
+
     def someoneKnownSeen(self, home=None):
         if not home: home=self.default_home
         #Check in the last event is someone known has been seen
         if self.lastEvent[home]['type'] == 'person':
-            if self.lastEvent[home]['person_id'] in self.knownPersons():
+            if self.lastEvent[home]['person_id'] in self._knownPersons():
                 return True
         return False
 
@@ -381,7 +396,7 @@ class WelcomeData:
         if not home: home=self.default_home
         #Check in the last event is someone known has been seen
         if self.lastEvent[home]['type'] == 'person':
-            if self.lastEvent[home]['person_id'] not in self.knownPersons():
+            if self.lastEvent[home]['person_id'] not in self._knownPersons():
                 return True
         return False
 
@@ -464,11 +479,13 @@ if __name__ == "__main__":
 
     # If launched interactively, display OK message
     if stdout.isatty():
+        print(Camera.cameraByName())
         print(Camera.cameraUrls(camera='Salon',home='Appartement'))
         print(Camera.personsAtHome())
         print(Camera.lastEvent['Appartement'])
         print(Camera.someoneKnownSeen())
         print(Camera.someoneUnknownSeen())
+        print(Camera.personSeenByCamera('Hugo', camera='Salon'))
         print("lnetatmo.py : OK")
 
     exit(0)
