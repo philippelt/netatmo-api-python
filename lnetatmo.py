@@ -479,13 +479,6 @@ if __name__ == "__main__":
 
     # If launched interactively, display OK message
     if stdout.isatty():
-        print(Camera.cameraByName())
-        print(Camera.cameraUrls(camera='Salon',home='Appartement'))
-        print(Camera.personsAtHome())
-        print(Camera.lastEvent['Appartement'])
-        print(Camera.someoneKnownSeen())
-        print(Camera.someoneUnknownSeen())
-        print(Camera.personSeenByCamera('Hugo', camera='Salon'))
         print("lnetatmo.py : OK")
 
     exit(0)
