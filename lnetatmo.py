@@ -2,14 +2,14 @@
 # Revised Jan 2014 (to add new modules data)
 # Author : Philippe Larduinat, philippelt@users.sourceforge.net
 # Public domain source code
+"""
+This API provides access to the Netatmo weather station or/and the Welcome camera
+This package can be used with Python2 or Python3 applications and do not
+require anything else than standard libraries
 
-# This API provides access to the Netatmo (Internet weather station) devices
-# This package can be used with Python2 or Python3 applications and do not
-# require anything else than standard libraries
-
-# PythonAPI Netatmo REST data access
-# coding=utf-8
-
+PythonAPI Netatmo REST data access
+coding=utf-8
+"""
 from sys import version_info
 import json, time
 import imghdr
@@ -48,7 +48,20 @@ _GETEVENTSUNTIL_REQ = _BASE_URL + "api/geteventsuntil"
 
 
 class ClientAuth:
-    "Request authentication and keep access token available through token method. Renew it automatically if necessary"
+    """
+    Request authentication and keep access token available through token method. Renew it automatically if necessary
+
+    Args:
+        clientId (str): Application clientId delivered by Netatmo on dev.netatmo.com
+        clientSecret (str): Application Secret key delivered by Netatmo on dev.netatmo.com
+        username (str)
+        password (str)
+        scope (Optional[str]): Default value is 'read_station'
+            read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
+            read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
+            access_camera: to access the camera, the videos and the live stream.
+            Several value can be used at the same time, ie: 'read_station read_camera'
+    """
 
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
@@ -89,7 +102,12 @@ class ClientAuth:
 
 
 class User:
+    """
+    This class returns basic information about the user
 
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
     def __init__(self, authData):
         postParams = {
                 "access_token" : authData.accessToken
@@ -99,9 +117,13 @@ class User:
         self.devList = self.rawData['devices']
         self.ownerMail = self.rawData['user']['mail']
 
-#List the Weather Station devices (stations and modules)
 class WeatherStationData:
+    """
+    List the Weather Station devices (stations and modules)
 
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
     def __init__(self, authData):
         self.getAuthToken = authData.accessToken
         postParams = {
@@ -239,11 +261,20 @@ class WeatherStationData:
             return None
 
 class DeviceList(WeatherStationData):
+    """
+    This class is now deprecated. Use WeatherStationData directly instead
+    """
     warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
             DeprecationWarning )
     pass
 
 class WelcomeData:
+    """
+    List the Netatmo Welcome cameras informations (Homes, cameras, events, persons)
+
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
     def __init__(self, authData):
         self.getAuthToken = authData.accessToken
         postParams = {
@@ -307,6 +338,10 @@ class WelcomeData:
         return None
 
     def cameraUrls(self, camera=None, home=None, cid=None):
+        """
+        Return the vpn_url and the local_url (if available) of a given camera
+        in order to access to its live feed
+        """
         local_url = None
         vpn_url = None
         if cid:
@@ -324,6 +359,9 @@ class WelcomeData:
         return vpn_url, local_url
 
     def personsAtHome(self, home=None):
+        """
+        Return the list of known persons who are currently at home
+        """
         if not home: home = self.default_home
         home_data = self.homeByName(home)
         atHome = []
@@ -335,6 +373,9 @@ class WelcomeData:
         return atHome
 
     def getCameraPicture(self, image_id, key):
+        """
+        Download a specific image (of an event or user face) from the camera
+        """
         postParams = {
             "access_token" : self.getAuthToken,
             "image_id" : image_id,
@@ -345,6 +386,9 @@ class WelcomeData:
         return resp, image_type
 
     def getProfileImage(self, name):
+        """
+        Retrieve the face of a given person
+        """
         for p in self.persons:
             if 'pseudo' in self.persons[p]:
                 if name == self.persons[p]['pseudo']:
@@ -354,6 +398,9 @@ class WelcomeData:
         return None, None
 
     def updateEvent(self, event=None, home=None):
+        """
+        Update the list of event with the latest ones
+        """
         if not home: home=self.default_home
         if not event:
             #If not event is provided we need to retrieve the oldest of the last event seen by each camera
@@ -376,6 +423,9 @@ class WelcomeData:
             self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
 
     def personSeenByCamera(self, name, home=None, camera=None):
+        """
+        Return True if a specific person has been seen by a camera
+        """
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
@@ -397,6 +447,9 @@ class WelcomeData:
         return known_persons
 
     def someoneKnownSeen(self, home=None, camera=None):
+        """
+        Return True if someone known has been seen
+        """
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
@@ -409,6 +462,9 @@ class WelcomeData:
         return False
 
     def someoneUnknownSeen(self, home=None, camera=None):
+        """
+        Return True if someone unknown has been seen
+        """
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
@@ -421,6 +477,9 @@ class WelcomeData:
         return False
 
     def motionDetected(self, home=None, camera=None):
+        """
+        Return True if movement has been detected
+        """
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:

@@ -1,15 +1,12 @@
 
 # python setup.py --dry-run --verbose install
 
-import os.path
-from setuptools import setup, find_packages
-from distutils.command.install_scripts import install_scripts
 from distutils.core import setup
 
 
 setup(
     name='lnetatmo',
-    version='0.4.0', # Should be updated with new versions
+    version='0.5.0', # Should be updated with new versions
     author='Philippe Larduinat',
     author_email='philippelt@users.sourceforge.net',
     py_modules=['lnetatmo'],
