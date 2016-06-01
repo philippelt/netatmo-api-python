@@ -10,7 +10,7 @@
 import lnetatmo
 
 authorization = lnetatmo.ClientAuth()
-devList = lnetatmo.DeviceList(authorization)
+devList = lnetatmo.WeatherStationData(authorization)
 
 print ("Current temperature (inside/outside): %s / %s °C" %
         ( devList.lastData()['internal']['Temperature'],

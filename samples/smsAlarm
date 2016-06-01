@@ -8,7 +8,7 @@
 # peoples (here phone1 and phone2 are two mobile phone numbers)
 # Note : lsms is my personnal library to send SMS using a GSM modem, you have to use your method/library
 
-import sys
+import sys, os
 import lnetatmo,lsms
 
 MARKER_FILE = "/<somewhere>/TempAlarm"   # This flag file will be used to avoid sending multiple SMS on the same event
@@ -16,7 +16,7 @@ MARKER_FILE = "/<somewhere>/TempAlarm"   # This flag file will be used to avoid 
 
 # Access the station
 authorization = lnetatmo.ClientAuth()
-devList = lnetatmo.DeviceList(authorization)
+devList = lnetatmo.WeatherStationData(authorization)
 
 message = []
 

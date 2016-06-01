@@ -13,7 +13,7 @@ import time
 import lnetatmo
 
 authorization = lnetatmo.ClientAuth()
-devList = lnetatmo.DeviceList(authorization)
+devList = lnetatmo.WeatherStationData(authorization)
 
 # For each available module in the returned data that should not be older than one hour (3600 s) from now
 for module, moduleData in devList.lastData(exclude=3600).items() :
