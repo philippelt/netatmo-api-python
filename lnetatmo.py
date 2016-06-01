@@ -258,18 +258,20 @@ class WelcomeData:
         self.lastEvent = dict()
         for i in range(len(self.rawData['homes'])):
             nameHome=self.rawData['homes'][i]['name']
-            if nameHome not in self.events:
-                self.events[nameHome]=dict()
+            if nameHome not in self.cameras:
+                self.cameras[nameHome]=dict()
             for p in self.rawData['homes'][i]['persons']:
                 self.persons[ p['id'] ] = p
             for e in self.rawData['homes'][i]['events']:
-                self.events[nameHome][ e['time'] ] = e
+                if e['camera_id'] not in self.events:
+                    self.events[ e['camera_id'] ] = dict()
+                self.events[ e['camera_id'] ][ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
-                self.cameras[ c['id'] ] = c
-        for home in self.events:
-            self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
+                self.cameras[nameHome][ c['id'] ] = c
+        for camera in self.events:
+            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
-        self.default_camera= list(self.cameras.values())[0]
+        self.default_camera = list(self.cameras[self.default_home].values())[0]
 
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
@@ -281,22 +283,27 @@ class WelcomeData:
                 return self.homes[key]
 
     def cameraById(self, cid):
-        return None if cid not in self.cameras else self.cameras[cid]
+        for home,cam in self.cameras.items():
+            if cid in self.cameras[home]:
+                return self.cameras[home][cid]
+        return None
 
     def cameraByName(self, camera=None, home=None):
-        if not camera: return self.default_camera
-        if home:
-            home_data = self.homeByName(home)
-            if home_data:
-                for cam in home_data['cameras']:
-                    if cam['name'] == camera:
-                        return cam
-            else:
+        if not camera and not home:
+            return self.default_camera
+        elif home and camera:
+            if home not in self.cameras:
                 return None
+            for cam_id in self.cameras[home]:
+                if self.cameras[home][cam_id]['name'] == camera:
+                    return self.cameras[home][cam_id]
+        elif not home and camera:
+            for home, cam_ids in self.cameras.items():
+                for cam_id in cam_ids:
+                    if self.cameras[home][cam_id]['name'] == camera:
+                        return self.cameras[home][cam_id]
         else:
-            for key,value in self.cameras.items():
-                if value['name'] == camera:
-                    return self.cameras[key]
+            return list(self.cameras[home].values())[0]
         return None
 
     def cameraUrls(self, camera=None, home=None, cid=None):
@@ -348,7 +355,13 @@ class WelcomeData:
 
     def updateEvent(self, event=None, home=None):
         if not home: home=self.default_home
-        if not event: event=self.lastEvent[home]
+        if not event:
+            #If not event is provided we need to retrieve the oldest of the last event seen by each camera
+            listEvent = dict()
+            for cam_id in self.lastEvent:
+                listEvent[self.lastEvent[cam_id]['time']] = self.lastEvent[cam_id]
+            event = listEvent[sorted(listEvent)[0]]
+
         home_data = self.homeByName(home)
         postParams = {
             "access_token" : self.getAuthToken,
@@ -358,20 +371,19 @@ class WelcomeData:
         resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
         eventList = resp['body']['events_list']
         for e in eventList:
-            self.events[home][ e['time'] ] = e
-        self.lastEvent[home]=self.events[home][sorted(self.events[home])[-1]]
+            self.events[ e['camera_id'] ][ e['time'] ] = e
+        for camera in self.events:
+            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
 
     def personSeenByCamera(self, name, home=None, camera=None):
-        if not home: home=self.default_home
-        if not camera: camera = self.default_camera['name']
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
             print("personSeenByCamera: Camera name or home is unknown")
             return False
         #Check in the last event is someone known has been seen
-        if self.lastEvent[home]['type'] == 'person' and self.lastEvent[home]['camera_id'] == cam_id:
-            person_id = self.lastEvent[home]['person_id']
+        if self.lastEvent[cam_id]['type'] == 'person':
+            person_id = self.lastEvent[cam_id]['person_id']
             if 'pseudo' in self.persons[person_id]:
                 if self.persons[person_id]['pseudo'] == name:
                     return True
@@ -384,25 +396,37 @@ class WelcomeData:
                 known_persons[ p_id ] = p
         return known_persons
 
-    def someoneKnownSeen(self, home=None):
-        if not home: home=self.default_home
+    def someoneKnownSeen(self, home=None, camera=None):
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
         #Check in the last event is someone known has been seen
-        if self.lastEvent[home]['type'] == 'person':
-            if self.lastEvent[home]['person_id'] in self._knownPersons():
+        if self.lastEvent[cam_id]['type'] == 'person':
+            if self.lastEvent[cam_id]['person_id'] in self._knownPersons():
                 return True
         return False
 
-    def someoneUnknownSeen(self, home=None):
-        if not home: home=self.default_home
+    def someoneUnknownSeen(self, home=None, camera=None):
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
         #Check in the last event is someone known has been seen
-        if self.lastEvent[home]['type'] == 'person':
-            if self.lastEvent[home]['person_id'] not in self._knownPersons():
+        if self.lastEvent[cam_id]['type'] == 'person':
+            if self.lastEvent[cam_id]['person_id'] not in self._knownPersons():
                 return True
         return False
 
-    def motionDetected(self, home=None):
-        if not home: home=self.default_home
-        if self.lastEvent[home]['type'] == 'movement':
+    def motionDetected(self, home=None, camera=None):
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        if self.lastEvent[cam_id]['type'] == 'movement':
             return True
         return False
 
