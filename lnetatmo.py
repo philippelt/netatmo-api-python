@@ -38,7 +38,7 @@ _PASSWORD      = ""   # Your netatmo account password
 
 # Common definitions
 
-_BASE_URL       = "https://api.netatmo.net/"
+_BASE_URL       = "https://api.netatmo.com/"
 _AUTH_REQ       = _BASE_URL + "oauth2/token"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
 _GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
