@@ -7,6 +7,8 @@ Python Netatmo API programmers guide
 
 >2014-01-13, Revision to include new modules additionnal informations
 
+>2016-06-25 Update documentation for Netatmo Welcome
+
 
 No additional library other than standard Python library is required.
 
@@ -87,12 +89,12 @@ import lnetatmo
 authorization = lnetatmo.ClientAuth()
 
 # 2 : Get devices list
-devList = lnetatmo.DeviceList(authorization)
+weatherData = lnetatmo.WeatherStationData(authorization)
 
 # 3 : Access most fresh data directly
 print ("Current temperature (inside/outside): %s / %s °C" %
-            ( devList.lastData()['indoor']['Temperature'],
-              devList.lastData()['outdoor']['Temperature'])
+            ( weatherData.lastData()['indoor']['Temperature'],
+              weatherData.lastData()['outdoor']['Temperature'])
 )
 ```
 
@@ -187,7 +189,6 @@ Properties, all properties are read-only unless specified :
 
 
   * **rawData** : Full dictionary of the returned JSON GETUSER Netatmo API service
-  * **id** : user Netatmo unique ID
   * **ownerMail** : eMail address associated to the user account
   * **devList** : List of Station's id accessible to the user account
 
@@ -196,21 +197,21 @@ In most cases, you will not need to use this class that is oriented toward an ap
 
 
 
-#### 4-4 DeviceList class ####
+#### 4-4 WeatherStationData class ####
 
 
 
 Constructor
 
 ```python
-    devList = lnetatmo.DeviceList( authorization )
+    weatherData = lnetatmo.WeatherStationData( authorization )
 ```
 
 
 Requires : an authorization object (ClientAuth instance)
 
 
-Return : a DeviceList object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.
+Return : a WeatherStationData object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.
 
 
 Properties, all properties are read-only unless specified:
@@ -261,7 +262,7 @@ Methods :
 ```python
 # Last data access example
 
-theData = devList.lastData()
+theData = weatherData.lastData()
 print('Available modules : ', theData.keys() )
 print('In-house CO2 level : ', theData['indoor']['Co2'] )
 print('Outside temperature : ', theData['outdoor']['Temperature'] )
@@ -277,7 +278,7 @@ print('External module battery : ', "OK" if int(theData['outdoor']['battery_vp']
 ```python
 # Ensure data sanity
 
-for m in devList.checkNotUpdated("<optional station name>"):
+for m in weatherData.checkNotUpdated("<optional station name>"):
     print("Warning, sensor %s information is obsolete" % m)
     if moduleByName(m) == None : # Sensor is not an external module
         print("The station is lost")
@@ -304,6 +305,80 @@ for m in devList.checkNotUpdated("<optional station name>"):
      >Note : I have been oblliged to determine the min and max manually, the built-in service in the API doesn't always provide the actual min and max. The double parameter (scale) and aggregation request (min, max) is not satisfying
 at all if you slip over two days as required in a shifting 24 hours window.
 
+
+#### 4-5 WelcomeData class ####
+
+
+
+Constructor
+
+```python
+    welcomeData = lnetatmo.WelcomeData( authorization )
+```
+
+
+Requires : an authorization object (ClientAuth instance)
+
+
+Return : a WelcomeData object. This object contains most administration properties of Welcome cameras accessible to the user and the last data pushed by the cameras to the Netatmo servers.
+
+
+Properties, all properties are read-only unless specified:
+
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+  * **default_home** : Name of the first home returned by the web service (warning, this is mainly for the ease of use of peoples having cameras in only 1 house).
+  * **default_camera** : Data of the first camera in the default home returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 camera).
+  * **homes** : Dictionary of homes (indexed by ID) accessible to this user account
+  * **cameras** : Dictionnary of cameras (indexed by home name and cameraID) accessible to this user
+  * **persons** : Dictionary of persons (indexed by ID) accessible to the user account
+  * **events** : Dictionary of events (indexed by cameraID and timestamp) seen by cameras
+
+
+Methods :
+
+  * **homeById** (hid) : Find a home by its Netatmo ID
+    * Input : Home ID
+    * Output : home dictionary or None
+
+  * **homeByName** (home=None) : Find a home by it's home name
+    * Input : home name to lookup (str)
+    * Output : home dictionary or None
+
+  * **cameraById** (hid) : Find a camera by its Netatmo ID
+    * Input : camera ID
+    * Output : camera dictionary or None
+
+  * **cameraByName** (camera=None, home=None) : Find a camera by it's camera name
+    * Input : camera name and home name to lookup (str)
+    * Output : camera dictionary or None
+
+  * **cameraUrls** (camera=None, home=None, cid=None) : return Urls to access camera live feed
+    * Input : camera name and home name or cameraID to lookup (str)
+    * Output : tuple with the vpn_url (for remote access) and local url to access the camera live feed
+
+  * **personsAtHome** (home=None) : return the list of known persons who are at home
+    * Input : home name to lookup (str)
+    * Output : list of persons seen
+
+  * **getCameraPicture** (image_id, key): Download a specific image (of an event or user face) from the camera
+    * Input : image_id and key of an events or person face
+    * Output: Tuple with image data (to be stored in a file) and image type (jpg, png...)
+
+  * **getProfileImage** (name) : Retreive the face of a given person
+    * Input : person name (str)
+    * Output: **getCameraPicture** data
+
+  * **updateEvent** (event=None, home=None): Update the list of events
+    * Input: Id of the latest event and home name to update event list
+
+  * **personSeenByCamera** (name, home=None, camera=None): Return true is a specific person has been seen by the camera in the last event
+
+  * **someoneKnownSeen** (home=None, camera=None) : Return true is a known person has been in the last event
+
+  * **someoneUnknownSeen** (home=None, camera=None) : Return true is an unknown person has been seen in the last event
+
+  * **motionDetected** (home=None, camera=None) : Return true is a movement has been detected in the last event
 
 #### 4-5 Utilities functions ####
 
