@@ -149,7 +149,8 @@ Constructor
     authorization = lnetatmo.ClientAuth( clientId = _CLIENT_ID,
                                          clientSecret = _CLIENT_SECRET,
                                          username = _USERNAME,
-                                         password = _PASSWORD
+                                         password = _PASSWORD,
+                                         scope = "read_station"
                                         )
 ```
 
@@ -165,6 +166,14 @@ Properties, all properties are read-only unless specified :
   * **accessToken** : Retrieve a valid access token (renewed if necessary)
   * **refreshToken** : The token used to renew the access token (normally should not be used)
   * **expiration** : The expiration time (epoch) of the current token
+  * **scope** : The scope of the required access token (what will it be used for) default to read_station to provide backward compatibility.
+ 
+Possible values for scope are :
+ - read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
+ - read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
+ - access_camera: to access the camera, the videos and the live stream.
+
+Several value can be used at the same time, ie: 'read_station read_camera'
 
   
 
