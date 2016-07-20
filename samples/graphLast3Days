@@ -6,7 +6,7 @@
 # This is an example of graphing Temperature and Humidity from a module on the last 3 days
 # The Matplotlib library is used and should be installed before running this sample program
 
-import sys, datetime, time
+import datetime, time
 
 import lnetatmo
 

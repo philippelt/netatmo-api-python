@@ -2,16 +2,18 @@
 # Revised Jan 2014 (to add new modules data)
 # Author : Philippe Larduinat, philippelt@users.sourceforge.net
 # Public domain source code
+"""
+This API provides access to the Netatmo weather station or/and the Welcome camera
+This package can be used with Python2 or Python3 applications and do not
+require anything else than standard libraries
 
-# This API provides access to the Netatmo (Internet weather station) devices
-# This package can be used with Python2 or Python3 applications and do not
-# require anything else than standard libraries
-
-# PythonAPI Netatmo REST data access
-# coding=utf-8
-
+PythonAPI Netatmo REST data access
+coding=utf-8
+"""
 from sys import version_info
 import json, time
+import imghdr
+import warnings
 
 # HTTP libraries depends upon Python 2 or 3
 if version_info.major == 3 :
@@ -36,31 +38,45 @@ _PASSWORD      = ""   # Your netatmo account password
 
 # Common definitions
 
-_BASE_URL       = "https://api.netatmo.net/"
+_BASE_URL       = "https://api.netatmo.com/"
 _AUTH_REQ       = _BASE_URL + "oauth2/token"
-_GETUSER_REQ    = _BASE_URL + "api/getuser"
-_DEVICELIST_REQ = _BASE_URL + "api/devicelist"
 _GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
+_GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
+_GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
+_GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
+_GETEVENTSUNTIL_REQ = _BASE_URL + "api/geteventsuntil"
 
 
 class ClientAuth:
-    "Request authentication and keep access token available through token method. Renew it automatically if necessary"
+    """
+    Request authentication and keep access token available through token method. Renew it automatically if necessary
+
+    Args:
+        clientId (str): Application clientId delivered by Netatmo on dev.netatmo.com
+        clientSecret (str): Application Secret key delivered by Netatmo on dev.netatmo.com
+        username (str)
+        password (str)
+        scope (Optional[str]): Default value is 'read_station'
+            read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
+            read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
+            access_camera: to access the camera, the videos and the live stream.
+            Several value can be used at the same time, ie: 'read_station read_camera'
+    """
 
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
-                       password=_PASSWORD):
-
+                       password=_PASSWORD,
+                       scope="read_station"):
         postParams = {
                 "grant_type" : "password",
                 "client_id" : clientId,
                 "client_secret" : clientSecret,
                 "username" : username,
                 "password" : password,
-                "scope" : "read_station"
+                "scope" : scope
                 }
         resp = postRequest(_AUTH_REQ, postParams)
-
         self._clientId = clientId
         self._clientSecret = clientSecret
         self._accessToken = resp['access_token']
@@ -72,7 +88,6 @@ class ClientAuth:
     def accessToken(self):
 
         if self.expiration < time.time(): # Token should be renewed
-
             postParams = {
                     "grant_type" : "refresh_token",
                     "refresh_token" : self.refreshToken,
@@ -80,39 +95,47 @@ class ClientAuth:
                     "client_secret" : self._clientSecret
                     }
             resp = postRequest(_AUTH_REQ, postParams)
-
             self._accessToken = resp['access_token']
             self.refreshToken = resp['refresh_token']
             self.expiration = int(resp['expire_in'] + time.time())
-
         return self._accessToken
 
+
 class User:
+    """
+    This class returns basic information about the user
 
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
     def __init__(self, authData):
-
         postParams = {
                 "access_token" : authData.accessToken
                 }
-        resp = postRequest(_GETUSER_REQ, postParams)
+        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']
-        self.id = self.rawData['_id']
         self.devList = self.rawData['devices']
-        self.ownerMail = self.rawData['mail']
+        self.ownerMail = self.rawData['user']['mail']
 
-class DeviceList:
+class WeatherStationData:
+    """
+    List the Weather Station devices (stations and modules)
 
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
     def __init__(self, authData):
-
         self.getAuthToken = authData.accessToken
         postParams = {
-                "access_token" : self.getAuthToken,
-                "app_type" : "app_station"
+                "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_DEVICELIST_REQ, postParams)
-        self.rawData = resp['body']
-        self.stations = { d['_id'] : d for d in self.rawData['devices'] }
-        self.modules = { m['_id'] : m for m in self.rawData['modules'] }
+        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
+        self.rawData = resp['body']['devices']
+        self.stations = { d['_id'] : d for d in self.rawData }
+        self.modules = dict()
+        for i in range(len(self.rawData)):
+            for m in self.rawData[i]['modules']:
+                self.modules[ m['_id'] ] = m
         self.default_station = list(self.stations.values())[0]['station_name']
 
     def modulesNamesList(self, station=None):
@@ -123,7 +146,8 @@ class DeviceList:
     def stationByName(self, station=None):
         if not station : station = self.default_station
         for i,s in self.stations.items():
-            if s['station_name'] == station : return self.stations[i]
+            if s['station_name'] == station :
+                return self.stations[i]
         return None
 
     def stationById(self, sid):
@@ -143,7 +167,12 @@ class DeviceList:
     def moduleById(self, mid, sid=None):
         s = self.stationById(sid) if sid else None
         if mid in self.modules :
-            return self.modules[mid] if not s or self.modules[mid]['main_device'] == s['_id'] else None
+            if s:
+                for module in s['modules']:
+                    if module['_id'] == mid:
+                        return module
+            else:
+                return self.modules[mid]
 
     def lastData(self, station=None, exclude=0):
         s = self.stationByName(station)
@@ -156,15 +185,14 @@ class DeviceList:
             lastD[s['module_name']] = ds.copy()
             lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
-        for mId in s["modules"]:
-            ds = self.modules[mId]['dashboard_data']
+        for module in s["modules"]:
+            ds = module['dashboard_data']
             if ds['time_utc'] > limit :
-                mod = self.modules[mId]
-                lastD[mod['module_name']] = ds.copy()
-                lastD[mod['module_name']]['When'] = lastD[mod['module_name']].pop("time_utc")
+                lastD[module['module_name']] = ds.copy()
+                lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('battery_vp', 'rf_status') :
-                    if i in mod : lastD[mod['module_name']][i] = mod[i]
+                    if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
     def checkNotUpdated(self, station=None, delay=3600):
@@ -232,21 +260,253 @@ class DeviceList:
         else:
             return None
 
+class DeviceList(WeatherStationData):
+    """
+    This class is now deprecated. Use WeatherStationData directly instead
+    """
+    warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
+            DeprecationWarning )
+    pass
+
+class WelcomeData:
+    """
+    List the Netatmo Welcome cameras informations (Homes, cameras, events, persons)
+
+    Args:
+        authData (ClientAuth): Authentication information with a working access Token
+    """
+    def __init__(self, authData):
+        self.getAuthToken = authData.accessToken
+        postParams = {
+            "access_token" : self.getAuthToken
+            }
+        resp = postRequest(_GETHOMEDATA_REQ, postParams)
+        self.rawData = resp['body']
+        self.homes = { d['id'] : d for d in self.rawData['homes'] }
+        self.persons = dict()
+        self.events = dict()
+        self.cameras = dict()
+        self.lastEvent = dict()
+        for i in range(len(self.rawData['homes'])):
+            nameHome=self.rawData['homes'][i]['name']
+            if nameHome not in self.cameras:
+                self.cameras[nameHome]=dict()
+            for p in self.rawData['homes'][i]['persons']:
+                self.persons[ p['id'] ] = p
+            for e in self.rawData['homes'][i]['events']:
+                if e['camera_id'] not in self.events:
+                    self.events[ e['camera_id'] ] = dict()
+                self.events[ e['camera_id'] ][ e['time'] ] = e
+            for c in self.rawData['homes'][i]['cameras']:
+                self.cameras[nameHome][ c['id'] ] = c
+        for camera in self.events:
+            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
+        self.default_home = list(self.homes.values())[0]['name']
+        self.default_camera = list(self.cameras[self.default_home].values())[0]
+
+    def homeById(self, hid):
+        return None if hid not in self.homes else self.homes[hid]
+
+    def homeByName(self, home=None):
+        if not home: home = self.default_home
+        for key,value in self.homes.items():
+            if value['name'] == home:
+                return self.homes[key]
+
+    def cameraById(self, cid):
+        for home,cam in self.cameras.items():
+            if cid in self.cameras[home]:
+                return self.cameras[home][cid]
+        return None
+
+    def cameraByName(self, camera=None, home=None):
+        if not camera and not home:
+            return self.default_camera
+        elif home and camera:
+            if home not in self.cameras:
+                return None
+            for cam_id in self.cameras[home]:
+                if self.cameras[home][cam_id]['name'] == camera:
+                    return self.cameras[home][cam_id]
+        elif not home and camera:
+            for home, cam_ids in self.cameras.items():
+                for cam_id in cam_ids:
+                    if self.cameras[home][cam_id]['name'] == camera:
+                        return self.cameras[home][cam_id]
+        else:
+            return list(self.cameras[home].values())[0]
+        return None
+
+    def cameraUrls(self, camera=None, home=None, cid=None):
+        """
+        Return the vpn_url and the local_url (if available) of a given camera
+        in order to access to its live feed
+        """
+        local_url = None
+        vpn_url = None
+        if cid:
+            camera_data=self.cameraById(cid)
+        else:
+            camera_data=self.cameraByName(camera=camera, home=home)
+        if camera_data:
+            vpn_url = camera_data['vpn_url']
+            if camera_data['is_local']:
+                resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
+                temp_local_url=resp['local_url']
+                resp = postRequest('{0}/command/ping'.format(temp_local_url),dict())
+                if temp_local_url == resp['local_url']:
+                    local_url = temp_local_url
+        return vpn_url, local_url
+
+    def personsAtHome(self, home=None):
+        """
+        Return the list of known persons who are currently at home
+        """
+        if not home: home = self.default_home
+        home_data = self.homeByName(home)
+        atHome = []
+        for p in home_data['persons']:
+            #Only check known persons
+            if 'pseudo' in p:
+                if not p["out_of_sight"]:
+                    atHome.append(p['pseudo'])
+        return atHome
+
+    def getCameraPicture(self, image_id, key):
+        """
+        Download a specific image (of an event or user face) from the camera
+        """
+        postParams = {
+            "access_token" : self.getAuthToken,
+            "image_id" : image_id,
+            "key" : key
+            }
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False, body_size=None)
+        image_type = imghdr.what('NONE.FILE',resp)
+        return resp, image_type
+
+    def getProfileImage(self, name):
+        """
+        Retrieve the face of a given person
+        """
+        for p in self.persons:
+            if 'pseudo' in self.persons[p]:
+                if name == self.persons[p]['pseudo']:
+                    image_id = self.persons[p]['face']['id']
+                    key = self.persons[p]['face']['key']
+                    return self.getCameraPicture(image_id, key)
+        return None, None
+
+    def updateEvent(self, event=None, home=None):
+        """
+        Update the list of event with the latest ones
+        """
+        if not home: home=self.default_home
+        if not event:
+            #If not event is provided we need to retrieve the oldest of the last event seen by each camera
+            listEvent = dict()
+            for cam_id in self.lastEvent:
+                listEvent[self.lastEvent[cam_id]['time']] = self.lastEvent[cam_id]
+            event = listEvent[sorted(listEvent)[0]]
+
+        home_data = self.homeByName(home)
+        postParams = {
+            "access_token" : self.getAuthToken,
+            "home_id" : home_data['id'],
+            "event_id" : event['id']
+        }
+        resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
+        eventList = resp['body']['events_list']
+        for e in eventList:
+            self.events[ e['camera_id'] ][ e['time'] ] = e
+        for camera in self.events:
+            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
+
+    def personSeenByCamera(self, name, home=None, camera=None):
+        """
+        Return True if a specific person has been seen by a camera
+        """
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        #Check in the last event is someone known has been seen
+        if self.lastEvent[cam_id]['type'] == 'person':
+            person_id = self.lastEvent[cam_id]['person_id']
+            if 'pseudo' in self.persons[person_id]:
+                if self.persons[person_id]['pseudo'] == name:
+                    return True
+        return False
+
+    def _knownPersons(self):
+        known_persons = dict()
+        for p_id,p in self.persons.items():
+            if 'pseudo' in p:
+                known_persons[ p_id ] = p
+        return known_persons
+
+    def someoneKnownSeen(self, home=None, camera=None):
+        """
+        Return True if someone known has been seen
+        """
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        #Check in the last event is someone known has been seen
+        if self.lastEvent[cam_id]['type'] == 'person':
+            if self.lastEvent[cam_id]['person_id'] in self._knownPersons():
+                return True
+        return False
+
+    def someoneUnknownSeen(self, home=None, camera=None):
+        """
+        Return True if someone unknown has been seen
+        """
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        #Check in the last event is someone known has been seen
+        if self.lastEvent[cam_id]['type'] == 'person':
+            if self.lastEvent[cam_id]['person_id'] not in self._knownPersons():
+                return True
+        return False
+
+    def motionDetected(self, home=None, camera=None):
+        """
+        Return True if movement has been detected
+        """
+        try:
+            cam_id = self.cameraByName(camera=camera, home=home)['id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+        if self.lastEvent[cam_id]['type'] == 'movement':
+            return True
+        return False
+
 # Utilities routines
 
-def postRequest(url, params):
+def postRequest(url, params, json_resp=True, body_size=65535):
     # Netatmo response body size limited to 64k (should be under 16k)
     if version_info.major == 3:
         req = urllib.request.Request(url)
         req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
         params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params).read(65535).decode("utf-8")
+        resp = urllib.request.urlopen(req, params).read(body_size).decode("utf-8")
     else:
         params = urlencode(params)
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req).read(65535)
-    return json.loads(resp)
+        resp = urllib2.urlopen(req).read(body_size)
+    if json_resp:
+        return json.loads(resp)
+    else:
+        return resp
 
 def toTimeString(value):
     return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(int(value)))
@@ -287,20 +547,21 @@ def getStationMinMaxTH(station=None, module=None):
 if __name__ == "__main__":
 
     from sys import exit, stdout, stderr
-    
+
     if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
-    
-    authorization = ClientAuth()                # Test authentication method
-    user = User(authorization)                  # Test GETUSER
+
+    authorization = ClientAuth(scope="read_station read_camera access_camera")                # Test authentication method
     devList = DeviceList(authorization)         # Test DEVICELIST
-    devList.MinMaxTH()                          # Test GETMEASURE
-    
+    devList.MinMaxTH()                          # Test GETMEASUR
+
+    Camera = WelcomeData(authorization)
+
     # If we reach this line, all is OK
-    
+
     # If launched interactively, display OK message
     if stdout.isatty():
         print("lnetatmo.py : OK")
-    
+
     exit(0)
