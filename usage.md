@@ -222,6 +222,7 @@ Requires : an authorization object (ClientAuth instance)
 
 Return : a WeatherStationData object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.
 
+Raise a lnetatmo.NoDevice exception if no weather station is available for the given account.
 
 Properties, all properties are read-only unless specified:
 
@@ -331,6 +332,7 @@ Requires : an authorization object (ClientAuth instance)
 
 Return : a WelcomeData object. This object contains most administration properties of Welcome cameras accessible to the user and the last data pushed by the cameras to the Netatmo servers.
 
+Raise a lnetatmo.NoDevice exception if no camera is available for the given account.
 
 Properties, all properties are read-only unless specified:
 

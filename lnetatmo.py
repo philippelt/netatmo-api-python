@@ -47,6 +47,10 @@ _GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ = _BASE_URL + "api/geteventsuntil"
 
 
+class NoDevice( Exception ):
+    pass
+
+
 class ClientAuth:
     """
     Request authentication and keep access token available through token method. Renew it automatically if necessary
@@ -131,6 +135,7 @@ class WeatherStationData:
                 }
         resp = postRequest(_GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
+        if not self.rawData : raise NoDevice("No weather station available")
         self.stations = { d['_id'] : d for d in self.rawData }
         self.modules = dict()
         for i in range(len(self.rawData)):
@@ -283,6 +288,7 @@ class WelcomeData:
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
+        if not self.homes : raise NoDevice("No camera available")
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
@@ -552,11 +558,22 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth(scope="read_station read_camera access_camera")                # Test authentication method
-    devList = DeviceList(authorization)         # Test DEVICELIST
-    devList.MinMaxTH()                          # Test GETMEASUR
+    authorization = ClientAuth(scope="read_station read_camera access_camera")  # Test authentication method
+    
+    try:
+        devList = DeviceList(authorization)         # Test DEVICELIST
+    except NoDevice:
+        if stdout.isatty():
+            print("lnetatmo.py : warning, no weather station available for testing")
+    else:
+        devList.MinMaxTH()                          # Test GETMEASUR
 
-    Camera = WelcomeData(authorization)
+
+    try:
+        Camera = WelcomeData(authorization)
+    except NoDevice :
+        if stdout.isatty():
+            print("lnetatmo.py : warning, no camera available for testing")
 
     # If we reach this line, all is OK
 
