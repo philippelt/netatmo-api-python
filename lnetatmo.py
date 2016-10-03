@@ -194,6 +194,13 @@ class WeatherStationData:
             else:
                 return self.modules[mid]
 
+    def monitoredConditions(self, module):
+        mod = self.moduleByName(module)
+        conditions = []
+        for cond in mod['data_type']:
+            conditions.append(cond.lower())
+        return conditions
+
     def lastData(self, station=None, exclude=0):
         s = self.stationByName(station)
         if not s : return None
