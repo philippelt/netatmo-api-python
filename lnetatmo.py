@@ -145,11 +145,16 @@ class WeatherStationData:
         for i in range(len(self.rawData)):
             for m in self.rawData[i]['modules']:
                 self.modules[ m['_id'] ] = m
+                self.modules[ m['_id'] ][ 'main_device' ] = self.rawData[i]['_id']
         self.default_station = list(self.stations.values())[0]['station_name']
 
     def modulesNamesList(self, station=None):
         res = [m['module_name'] for m in self.modules.values()]
-        res.append(self.stationByName(station)['module_name'])
+        if station:
+            res.append(self.stationByName(station)['module_name'])
+        else:
+            for id,station in self.stations.items():
+                res.append(station['module_name'])
         return res
 
     def stationByName(self, station=None):
@@ -167,6 +172,12 @@ class WeatherStationData:
         if station :
             s = self.stationByName(station)
             if not s : return None
+            elif s['module_name'] == module:
+                return s
+        else:
+            for id, station in self.stations.items():
+                if station['module_name'] == module:
+                    return station
         for m in self.modules:
             mod = self.modules[m]
             if mod['module_name'] == module :
