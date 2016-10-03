@@ -68,7 +68,7 @@ $ echo $?
 
 ### 3 Package guide ###
 
-  
+
 
 Most of the time, the sequence of operations will be :
 
@@ -125,7 +125,7 @@ The results are Python data structures, mostly dictionaries as they mirror easil
 
 #### 4-1 Global variables ####
 
-  
+
 ```python
 _CLIENT_ID, _CLIENT_SECRET = Application ID and secret provided by Netatmo
 application registration in your user account
@@ -167,7 +167,7 @@ Properties, all properties are read-only unless specified :
   * **refreshToken** : The token used to renew the access token (normally should not be used)
   * **expiration** : The expiration time (epoch) of the current token
   * **scope** : The scope of the required access token (what will it be used for) default to read_station to provide backward compatibility.
- 
+
 Possible values for scope are :
  - read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
  - read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
@@ -175,7 +175,7 @@ Possible values for scope are :
 
 Several value can be used at the same time, ie: 'read_station read_camera'
 
-  
+
 
 #### 4-3 User class ####
 
@@ -391,7 +391,61 @@ Methods :
 
   * **motionDetected** (home=None, camera=None) : Return true is a movement has been detected in the last event
 
-#### 4-5 Utilities functions ####
+  #### 4-6 ThermostatData class ####
+
+
+
+  Constructor
+
+  ```python
+      thermostatData = lnetatmo.ThermostatData( authorization )
+  ```
+
+
+  Requires : an authorization object (ClientAuth instance)
+
+
+  Return : a ThermostatData object. This object contains most administration properties of Netatmo thermostats accessible to the user and the last data pushed by the thermostats to the Netatmo servers.
+
+  Raise a lnetatmo.NoDevice exception if no thermostat is available for the given account.
+
+  Properties, all properties are read-only unless specified:
+
+
+    * **rawData** : Full dictionary of the returned JSON Netatmo API service
+    * **devList** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * **default_device** : Name of the first device returned by the web service (warning, this is mainly for the ease of use of peoples having cameras in only 1 house).
+    * **default_module** : Data of the first module in the default device returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 camera).
+    * **devices** : Dictionary of devices (indexed by ID) accessible to this user account
+    * **modules** : Dictionary of modules (indexed by device name and moduleID) accessible to this user
+    * **therm_program_list** : Dictionary of therm programs (indexed by ID) accessible to the user account
+    * **zones** : Dictionary of zones (indexed by ID)
+    * **timetable** : Dictionary of timetable (indexed by m_offset)
+
+
+  Methods :
+
+    * **deviceById** (hid) : Find a device by its Netatmo ID
+      * Input : Device ID
+      * Output : device dictionary or None
+
+    * **deviceByName** (device=None) : Find a device by it's device name
+      * Input : device name to lookup (str)
+      * Output : device dictionary or None
+
+    * **moduleById** (hid) : Find a module by its Netatmo ID
+      * Input : module ID
+      * Output : module dictionary or None
+
+    * **moduleByName** (module=None, device=None) : Find a module by it's module name
+      * Input : module name and device name to lookup (str)
+      * Output : module dictionary or None
+
+    * **setthermpoint** (mode, temp, endTimeOffsetmode, temp, endTimeOffset) : set thermpoint
+      * Input : device_id and module_id and setpoint_mode
+
+
+#### 4-7 Utilities functions ####
 
 
   * **toTimeString** (timestamp) : Convert a Netatmo time stamp to a readable date/time format.
@@ -399,7 +453,7 @@ Methods :
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
 
 
-#### 4-6 All-in-One function ####
+#### 4-8 All-in-One function ####
 
 
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
