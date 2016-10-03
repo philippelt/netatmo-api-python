@@ -513,8 +513,8 @@ class ThermostatData:
                 }
         resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
 
-        self.rawData2 = resp['body']
-        self.devList = self.rawData2['devices']
+        self.rawData = resp['body']
+        self.devList = self.rawData['devices']
         if not self.devList : raise NoDevice("No thermostat available")
         self.devId = self.devList[0]['_id']
         self.modList = self.devList[0]['modules']
@@ -523,26 +523,26 @@ class ThermostatData:
         self.setpoint_temp = self.modList[0]['measured']['setpoint_temp']
         self.setpoint_mode = self.modList[0]['setpoint']['setpoint_mode']
         self.relay_cmd = int(self.modList[0]['therm_relay_cmd'])
-        self.devices = { d['_id'] : d for d in self.rawData2['devices'] }
+        self.devices = { d['_id'] : d for d in self.rawData['devices'] }
         self.modules = dict()
         self.therm_program_list = dict()
         self.zones = dict()
         self.timetable = dict()
-        for i in range(len(self.rawData2['devices'])):
-            nameDevice=self.rawData2['devices'][i]['station_name']
+        for i in range(len(self.rawData['devices'])):
+            nameDevice=self.rawData['devices'][i]['station_name']
             if nameDevice not in self.modules:
                 self.modules[nameDevice]=dict()
-            for m in self.rawData2['devices'][i]['modules']:
+            for m in self.rawData['devices'][i]['modules']:
                 self.modules[nameDevice][ m['_id'] ] = m
-            for p in self.rawData2['devices'][i]['modules'][0]['therm_program_list']:
+            for p in self.rawData['devices'][i]['modules'][0]['therm_program_list']:
                 self.therm_program_list[p['program_id']] = p
-            for z in self.rawData2['devices'][i]['modules'][0]['therm_program_list'][0]['zones']:
+            for z in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['zones']:
                 self.zones[z['id']] = z
-            for o in self.rawData2['devices'][i]['modules'][0]['therm_program_list'][0]['timetable']:
+            for o in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['timetable']:
                 self.timetable[o['m_offset']] = o
-        self.default_device2 = list(self.devices.values())[0]['station_name']
+        self.default_device = list(self.devices.values())[0]['station_name']
 
-        self.default_module = list(self.modules[self.default_device2].values())[0]['module_name']
+        self.default_module = list(self.modules[self.default_device].values())[0]['module_name']
 
     def lastData(self, device=None, exclude=0):
         s = self.deviceByName(device)
@@ -571,7 +571,7 @@ class ThermostatData:
         return None if did not in self.devices else self.devices[did]
 
     def deviceByName(self, device):
-        if not device: device = self.default_device2
+        if not device: device = self.default_device
         for key,value in self.devices.items():
             if value['station_name'] == device:
                 return self.devices[key]
