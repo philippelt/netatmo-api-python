@@ -1,7 +1,7 @@
 """
 coding=utf-8
 """
-import imghdr
+import imghdr, time
 
 from . import NoDevice, postRequest, _BASE_URL
 
@@ -188,7 +188,7 @@ class WelcomeData:
                 known_persons[ p_id ] = p
         return known_persons
 
-    def someoneKnownSeen(self, home=None, camera=None):
+    def someoneKnownSeen(self, home=None, camera=None, exclude=0):
         """
         Return True if someone known has been seen
         """
@@ -197,13 +197,24 @@ class WelcomeData:
         except TypeError:
             print("personSeenByCamera: Camera name or home is unknown")
             return False
+
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif self.events[cam_id][time_ev]['type'] == 'person':
+                    if self.events[cam_id][time_ev]['person_id'] in self._knownPersons():
+                        return True
         #Check in the last event is someone known has been seen
-        if self.lastEvent[cam_id]['type'] == 'person':
+        elif self.lastEvent[cam_id]['type'] == 'person':
             if self.lastEvent[cam_id]['person_id'] in self._knownPersons():
                 return True
         return False
 
-    def someoneUnknownSeen(self, home=None, camera=None):
+    def someoneUnknownSeen(self, home=None, camera=None, exclude=0):
         """
         Return True if someone unknown has been seen
         """
@@ -212,13 +223,24 @@ class WelcomeData:
         except TypeError:
             print("personSeenByCamera: Camera name or home is unknown")
             return False
+
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif self.events[cam_id][time_ev]['type'] == 'person':
+                    if self.events[cam_id][time_ev]['person_id'] not in self._knownPersons():
+                        return True
         #Check in the last event is someone known has been seen
-        if self.lastEvent[cam_id]['type'] == 'person':
+        elif self.lastEvent[cam_id]['type'] == 'person':
             if self.lastEvent[cam_id]['person_id'] not in self._knownPersons():
                 return True
         return False
 
-    def motionDetected(self, home=None, camera=None):
+    def motionDetected(self, home=None, camera=None, exclude=0):
         """
         Return True if movement has been detected
         """
@@ -227,6 +249,16 @@ class WelcomeData:
         except TypeError:
             print("personSeenByCamera: Camera name or home is unknown")
             return False
-        if self.lastEvent[cam_id]['type'] == 'movement':
+
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif self.events[cam_id][time_ev]['type'] == 'movement':
+                    return True
+        elif self.lastEvent[cam_id]['type'] == 'movement':
             return True
         return False

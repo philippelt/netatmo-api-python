@@ -10,6 +10,8 @@ setup(
     author='Philippe Larduinat',
     author_email='philippelt@users.sourceforge.net',
     py_modules=['lnetatmo'],
+    packages=['smart_home'],
+    package_dir={'smart_home': 'smart_home'},
     scripts=[],
     data_files=[],
     url='https://github.com/philippelt/netatmo-api-python',
