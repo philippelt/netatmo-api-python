@@ -28,6 +28,7 @@ class WelcomeData:
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
+        self.modules = dict()
         self.lastEvent = dict()
         for i in range(len(self.rawData['homes'])):
             nameHome=self.rawData['homes'][i]['name']
@@ -41,16 +42,20 @@ class WelcomeData:
                 self.events[ e['camera_id'] ][ e['time'] ] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[nameHome][ c['id'] ] = c
+                for m in c['modules']:
+                    self.modules[ m['id'] ] = m
+                    self.modules[ m['id'] ][ 'cam_id' ] = c['id']
         for camera in self.events:
             self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
+        self.default_module = list(self.modules.values())[0]['name']
         self.default_camera = list(self.cameras[self.default_home].values())[0]
 
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
 
     def homeByName(self, home=None):
-        if not home: home = self.default_home
+        if not home: home = self.homeByName(self.default_home)
         for key,value in self.homes.items():
             if value['name'] == home:
                 return self.homes[key]
@@ -77,6 +82,22 @@ class WelcomeData:
                         return self.cameras[home][cam_id]
         else:
             return list(self.cameras[home].values())[0]
+        return None
+
+    def moduleById(self, mid):
+        return None if mid not in self.modules else self.modules[mid]
+
+    def moduleByName(self, module=None, camera=None, home=None):
+        if not module:
+            self.moduleByName(self.default_module)
+        cam = None
+        if camera or home:
+            cam = self.cameraByName(camera, home)
+        for key,value in self.modules.items():
+            if value['name'] == module:
+                if cam and value['cam_id'] != cam['id']:
+                    return None
+                return self.modules[key]
         return None
 
     def cameraUrls(self, camera=None, home=None, cid=None):
@@ -262,3 +283,46 @@ class WelcomeData:
         elif self.lastEvent[cam_id]['type'] == 'movement':
             return True
         return False
+
+    def moduleMotionDetected(self, module=None, home=None, camera=None, exclude=0):
+        """
+        Return True if movement has been detected
+        """
+        try:
+            mod_id = self.moduleByName(module, camera=camera, home=home)['id']
+            cam_id = mod_id['cam_id']
+        except TypeError:
+            print("personSeenByCamera: Camera name or home is unknown")
+            return False
+
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif (self.events[cam_id][time_ev]['type'] == 'tag_big_move' or\
+                      self.events[cam_id][time_ev]['type'] == 'tag_small_move') and\
+                      self.events[cam_id][time_ev]['module_id'] == mod_id:
+                    return True
+        elif (self.lastEvent[cam_id]['type'] == 'tag_big_move' or\
+              self.lastEvent[cam_id]['type'] == 'tag_small_move') and\
+              self.lastEvent[cam_id]['type']['module_id'] == mod_id:
+            return True
+        return False
+
+    def moduleOpened(self, module=None, home=None, camera=None):
+        """
+        Return Trune if module status is open
+        """
+        try:
+            mod = moduleByName(module, home, camera)
+        except TypeError:
+            print("moduleOpened: Camera name, or home, or module is unknown")
+            return False
+
+        if mod['status'] == "open":
+            return True
+        return False
+
