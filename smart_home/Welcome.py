@@ -16,10 +16,11 @@ class WelcomeData:
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
-    def __init__(self, authData):
+    def __init__(self, authData, size=15):
         self.getAuthToken = authData.accessToken
         postParams = {
-            "access_token" : self.getAuthToken
+            "access_token" : self.getAuthToken,
+            "size" : size
             }
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
@@ -55,7 +56,7 @@ class WelcomeData:
         return None if hid not in self.homes else self.homes[hid]
 
     def homeByName(self, home=None):
-        if not home: home = self.homeByName(self.default_home)
+        if not home: return self.homeByName(self.default_home)
         for key,value in self.homes.items():
             if value['name'] == home:
                 return self.homes[key]
@@ -89,10 +90,12 @@ class WelcomeData:
 
     def moduleByName(self, module=None, camera=None, home=None):
         if not module:
-            self.moduleByName(self.default_module)
+            return self.moduleByName(self.default_module)
         cam = None
         if camera or home:
             cam = self.cameraByName(camera, home)
+            if not cam:
+                return None
         for key,value in self.modules.items():
             if value['name'] == module:
                 if cam and value['cam_id'] != cam['id']:
@@ -216,7 +219,7 @@ class WelcomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            print("someoneKnownSeen: Camera name or home is unknown")
             return False
 
         if exclude:
@@ -242,7 +245,7 @@ class WelcomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            print("someoneUnknownSeen: Camera name or home is unknown")
             return False
 
         if exclude:
@@ -268,7 +271,7 @@ class WelcomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            print("motionDetected: Camera name or home is unknown")
             return False
 
         if exclude:
@@ -289,10 +292,11 @@ class WelcomeData:
         Return True if movement has been detected
         """
         try:
-            mod_id = self.moduleByName(module, camera=camera, home=home)['id']
-            cam_id = mod_id['cam_id']
+            mod = self.moduleByName(module, camera=camera, home=home)
+            mod_id = mod['id']
+            cam_id = mod['cam_id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            print("moduleMotionDetected: Module name or Camera name or home is unknown")
             return False
 
         if exclude:
