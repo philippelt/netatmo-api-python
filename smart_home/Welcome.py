@@ -316,7 +316,7 @@ class WelcomeData:
             return True
         return False
 
-    def moduleOpened(self, module=None, home=None, camera=None):
+    def moduleOpened(self, module=None, home=None, camera=None, exclude=0):
         """
         Return True if module status is open
         """

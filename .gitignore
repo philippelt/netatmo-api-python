@@ -6,3 +6,4 @@ dist/
 lnetatmo.egg-info/
 
 *.pyc
+.DS_Store
