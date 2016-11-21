@@ -185,6 +185,8 @@ class WeatherStationData:
         lastD = dict()
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
+        if not 'dashboard_data' in module:
+            continue      
         ds = s['dashboard_data']
         if ds['time_utc'] > limit :
             lastD[s['module_name']] = ds.copy()
