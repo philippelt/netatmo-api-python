@@ -318,15 +318,28 @@ class WelcomeData:
 
     def moduleOpened(self, module=None, home=None, camera=None):
         """
-        Return Trune if module status is open
+        Return True if module status is open
         """
         try:
-            mod = moduleByName(module, home, camera)
+            mod = self.moduleByName(module, camera=camera, home=home)
+            mod_id = mod['id']
+            cam_id = mod['cam_id']
         except TypeError:
             print("moduleOpened: Camera name, or home, or module is unknown")
             return False
 
-        if mod['status'] == "open":
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif self.events[cam_id][time_ev]['type'] == 'tag_open' and\
+                     self.events[cam_id][time_ev]['module_id'] == mod_id:
+                    return True
+        elif self.lastEvent[cam_id]['type'] == 'tag_open' and\
+             self.lastEvent[cam_id]['type']['module_id'] == mod_id:
             return True
         return False
 
