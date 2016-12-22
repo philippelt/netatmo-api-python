@@ -3,7 +3,8 @@
 # Author : Philippe Larduinat, philippelt@users.sourceforge.net
 # Public domain source code
 """
-This API provides access to the Netatmo weather station or/and the Welcome camera
+This API provides access to the Netatmo weather station or/and the Netatmo
+cameras or/and the Netatmo smart thermostat
 This package can be used with Python2 or Python3 applications and do not
 require anything else than standard libraries
 
@@ -13,7 +14,7 @@ coding=utf-8
 import time
 
 from smart_home.WeatherStation import WeatherStationData, DeviceList
-from smart_home.Welcome import WelcomeData
+from smart_home.Camera import CameraData
 from smart_home.Thermostat import ThermostatData
 from smart_home import _BASE_URL, postRequest, NoDevice
 
@@ -49,6 +50,8 @@ class ClientAuth:
             access_camera: to access the camera, the videos and the live stream.
             read_thermostat: to retrieve thermostat data ( Getmeasure, Getthermostatsdata)
             write_thermostat: to set up the thermostat (Syncschedule, Setthermpoint)
+            read_presence: to retrieve Presence data (Gethomedata, Getcamerapicture)
+            access_presence: to access the live stream, any video stored on the SD card and to retrieve Presence’s lightflood status
             Several value can be used at the same time, ie: 'read_station read_camera'
     """
 
@@ -58,12 +61,12 @@ class ClientAuth:
                        password=_PASSWORD,
                        scope="read_station"):
         postParams = {
-                "grant_type" : "password",
-                "client_id" : clientId,
-                "client_secret" : clientSecret,
-                "username" : username,
-                "password" : password,
-                "scope" : scope
+                "grant_type": "password",
+                "client_id": clientId,
+                "client_secret": clientSecret,
+                "username": username,
+                "password": password,
+                "scope": scope
                 }
         resp = postRequest(_AUTH_REQ, postParams)
         self._clientId = clientId
@@ -76,12 +79,12 @@ class ClientAuth:
     @property
     def accessToken(self):
 
-        if self.expiration < time.time(): # Token should be renewed
+        if self.expiration < time.time():  # Token should be renewed
             postParams = {
-                    "grant_type" : "refresh_token",
-                    "refresh_token" : self.refreshToken,
-                    "client_id" : self._clientId,
-                    "client_secret" : self._clientSecret
+                    "grant_type": "refresh_token",
+                    "refresh_token": self.refreshToken,
+                    "client_id": self._clientId,
+                    "client_secret": self._clientSecret
                     }
             resp = postRequest(_AUTH_REQ, postParams)
             self._accessToken = resp['access_token']
@@ -116,7 +119,7 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth(scope="read_station read_camera access_camera read_thermostat write_thermostat")  # Test authentication method
+    authorization = ClientAuth(scope="read_station read_camera access_camera read_thermostat write_thermostat read_presence access_presence")  # Test authentication method
 
     try:
         devList = DeviceList(authorization)         # Test DEVICELIST
@@ -128,7 +131,7 @@ if __name__ == "__main__":
 
 
     try:
-        Camera = WelcomeData(authorization)
+        Camera = CameraData(authorization)
     except NoDevice :
         if stdout.isatty():
             print("lnetatmo.py : warning, no camera available for testing")

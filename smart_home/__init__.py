@@ -2,7 +2,7 @@ from sys import version_info
 import json
 
 # Common definitions
-_BASE_URL       = "https://api.netatmo.com/"
+_BASE_URL         = "https://api.netatmo.com/"
 
 # HTTP libraries depends upon Python 2 or 3
 if version_info.major == 3 :
@@ -11,10 +11,12 @@ else:
     from urllib import urlencode
     import urllib2
 
+
 class NoDevice( Exception ):
     pass
-    
+
 # Utilities routines
+
 
 def postRequest(url, params, json_resp=True, body_size=65535):
     # Netatmo response body size limited to 64k (should be under 16k)
@@ -33,11 +35,14 @@ def postRequest(url, params, json_resp=True, body_size=65535):
     else:
         return resp
 
+
 def toTimeString(value):
     return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(int(value)))
 
+
 def toEpoch(value):
     return int(time.mktime(time.strptime(value,"%Y-%m-%d_%H:%M:%S")))
+
 
 def todayStamps():
     today = time.strftime("%Y-%m-%d")
@@ -45,6 +50,7 @@ def todayStamps():
     return today, today+3600*24
 
 # Global shortcut
+
 
 def getStationMinMaxTH(station=None, module=None):
     authorization = ClientAuth()

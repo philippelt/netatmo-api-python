@@ -9,6 +9,8 @@ Python Netatmo API programmers guide
 
 >2016-06-25 Update documentation for Netatmo Welcome
 
+>2016-12-09 Update documentation for all Netatmo cameras
+
 
 No additional library other than standard Python library is required.
 
@@ -98,7 +100,7 @@ print ("Current temperature (inside/outside): %s / %s °C" %
 )
 ```
 
-In this example, no init parameters are supplied to ClientAuth, the library is supposed to have been customized with the required values (see §2). The user must have nammed the sensors indoor and outdoor through the Web interface (or any other name as long as the program is requesting the same name).
+In this example, no init parameters are supplied to ClientAuth, the library is supposed to have been customized with the required values (see §2). The user must have named the sensors indoor and outdoor through the Web interface (or any other name as long as the program is requesting the same name).
 
 The Netatmo design is based on stations (usually the in-house module) and modules (radio sensors reporting to a station, usually an outdoor sensor).
 
@@ -113,7 +115,7 @@ Having two roles, the station has a 'station_name' property as well as a 'module
 
 
 Sensors (stations and modules) are managed in the API using ID's (network hardware adresses). The Netatmo web account management gives you the capability to associate names to station sensor and module (and to the station itself). This is by far more comfortable and the interface provides service to locate a station or a module by name or by Id depending of your taste. Module lookup by name includes the optional station name in case
-multiple stations would have similar module names (if you monitor multiple stations/locations, it would not be a surprise that each of them would have an 'outdoor' module). This is a benefit in the sense it give you the ability to write generic code (for exemple, collect all 'outdoor' temperatures for all your stations).
+multiple stations would have similar module names (if you monitor multiple stations/locations, it would not be a surprise that each of them would have an 'outdoor' module). This is a benefit in the sense it give you the ability to write generic code (for example, collect all 'outdoor' temperatures for all your stations).
 
 The results are Python data structures, mostly dictionaries as they mirror easily the JSON returned data. All supplied classes provides simple properties to use as well as access to full data returned by the netatmo web services (rawData property for most classes).
 
@@ -170,8 +172,12 @@ Properties, all properties are read-only unless specified :
 
 Possible values for scope are :
  - read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
- - read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
+ - read_camera: to retrieve Welcome camera data (Gethomedata, Getcamerapicture)
  - access_camera: to access the camera, the videos and the live stream.
+ - read_thermostat: to retrieve thermostat data (Getmeasure, Getthermostatsdata)
+ - write_thermostat: to set up the thermostat (Syncschedule, Setthermpoint)
+ - read_presence: to retrieve Presence data (Gethomedata, Getcamerapicture)
+ - access_presence: to access the camera, the videos and the live stream.
 
 Several value can be used at the same time, ie: 'read_station read_camera'
 
@@ -254,7 +260,7 @@ Methods :
     * Input : module ID and optional Station ID
     * Output : module dictionary or None
 
-  * **modulesNamesList** (station=None) : Get the list of modules names, including the station module name. Each of them should have a corrsponding entry in lastData. It is an equivalent (at lower cost) for lastData.keys()
+  * **modulesNamesList** (station=None) : Get the list of modules names, including the station module name. Each of them should have a corresponding entry in lastData. It is an equivalent (at lower cost) for lastData.keys()
 
   * **lastData** (station=None, exclude=0) : Get the last data uploaded by the station, exclude sensors with measurement older than given value (default return all)
     * Input : station name OR id. If not provided default_station is used. Exclude is the delay in seconds from now to filter sensor readings.
@@ -312,25 +318,25 @@ for m in weatherData.checkNotUpdated("<optional station name>"):
     * Output :
       * A 4 values tuple (Temp mini, Temp maxi, Humid mini, Humid maxi)
 
-     >Note : I have been oblliged to determine the min and max manually, the built-in service in the API doesn't always provide the actual min and max. The double parameter (scale) and aggregation request (min, max) is not satisfying
+     >Note : I have been obliged to determine the min and max manually, the built-in service in the API doesn't always provide the actual min and max. The double parameter (scale) and aggregation request (min, max) is not satisfying
 at all if you slip over two days as required in a shifting 24 hours window.
 
 
-#### 4-5 WelcomeData class ####
+#### 4-5 CameraData class ####
 
 
 
 Constructor
 
 ```python
-    welcomeData = lnetatmo.WelcomeData( authorization )
+    cameraData = lnetatmo.CameraData( authorization )
 ```
 
 
 Requires : an authorization object (ClientAuth instance)
 
 
-Return : a WelcomeData object. This object contains most administration properties of Welcome cameras accessible to the user and the last data pushed by the cameras to the Netatmo servers.
+Return : a CameraData object. This object contains most administration properties of Netatmo cameras accessible to the user and the last data pushed by the cameras to the Netatmo servers.
 
 Raise a lnetatmo.NoDevice exception if no camera is available for the given account.
 
@@ -341,9 +347,10 @@ Properties, all properties are read-only unless specified:
   * **default_home** : Name of the first home returned by the web service (warning, this is mainly for the ease of use of peoples having cameras in only 1 house).
   * **default_camera** : Data of the first camera in the default home returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 camera).
   * **homes** : Dictionary of homes (indexed by ID) accessible to this user account
-  * **cameras** : Dictionnary of cameras (indexed by home name and cameraID) accessible to this user
+  * **cameras** : Dictionary of cameras (indexed by home name and cameraID) accessible to this user
   * **persons** : Dictionary of persons (indexed by ID) accessible to the user account
   * **events** : Dictionary of events (indexed by cameraID and timestamp) seen by cameras
+  * **outdoor_events** : Dictionary of Outdoor events (indexed by cameraID and timestamp) seen by cameras
 
 
 Methods :
@@ -364,6 +371,10 @@ Methods :
     * Input : camera name and home name to lookup (str)
     * Output : camera dictionary or None
 
+  * **cameraType** (camera=None, home=None, cid=None) : Return the type of a given camera.
+    * Input : camera name and home name or cameraID to lookup (str)
+    * Output : Return the type of a given camera
+
   * **cameraUrls** (camera=None, home=None, cid=None) : return Urls to access camera live feed
     * Input : camera name and home name or cameraID to lookup (str)
     * Output : tuple with the vpn_url (for remote access) and local url to access the camera live feed
@@ -376,12 +387,12 @@ Methods :
     * Input : image_id and key of an events or person face
     * Output: Tuple with image data (to be stored in a file) and image type (jpg, png...)
 
-  * **getProfileImage** (name) : Retreive the face of a given person
+  * **getProfileImage** (name) : Retrieve the face of a given person
     * Input : person name (str)
     * Output: **getCameraPicture** data
 
-  * **updateEvent** (event=None, home=None): Update the list of events
-    * Input: Id of the latest event and home name to update event list
+  * **updateEvent** (event=None, home=None, cameratype=None): Update the list of events
+    * Input: Id of the latest event, home name and cameratype to update event list
 
   * **personSeenByCamera** (name, home=None, camera=None): Return true is a specific person has been seen by the camera in the last event
 
@@ -390,6 +401,14 @@ Methods :
   * **someoneUnknownSeen** (home=None, camera=None) : Return true is an unknown person has been seen in the last event
 
   * **motionDetected** (home=None, camera=None) : Return true is a movement has been detected in the last event
+
+  * **outdoormotionDetected** (home=None, camera=None) : Return true is a outdoor movement has been detected in the last event
+
+  * **humanDetected** (home=None, camera=None) : Return True if a human has been detected in the last outdoor events
+
+  * **animalDetected** (home=None, camera=None) : Return True if an animal has been detected in the last outdoor events
+
+  * **carDetected** (home=None, camera=None) : Return True if a car has been detected in the last outdoor events
 
   #### 4-6 ThermostatData class ####
 
@@ -412,36 +431,36 @@ Methods :
   Properties, all properties are read-only unless specified:
 
 
-    * **rawData** : Full dictionary of the returned JSON Netatmo API service
-    * **devList** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
-    * **default_device** : Name of the first device returned by the web service (warning, this is mainly for the ease of use of peoples having cameras in only 1 house).
-    * **default_module** : Data of the first module in the default device returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 camera).
-    * **devices** : Dictionary of devices (indexed by ID) accessible to this user account
-    * **modules** : Dictionary of modules (indexed by device name and moduleID) accessible to this user
-    * **therm_program_list** : Dictionary of therm programs (indexed by ID) accessible to the user account
-    * **zones** : Dictionary of zones (indexed by ID)
-    * **timetable** : Dictionary of timetable (indexed by m_offset)
+  * **rawData** : Full dictionary of the returned JSON Netatmo API service
+  * **devList** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+  * **default_device** : Name of the first device returned by the web service (warning, this is mainly for the ease of use of peoples having multiple thermostats in only 1 house).
+  * **default_module** : Data of the first module in the default device returned by the web service (warning, this is mainly for the ease of use of peoples having only 1 thermostat).
+  * **devices** : Dictionary of devices (indexed by ID) accessible to this user account
+  * **modules** : Dictionary of modules (indexed by device name and moduleID) accessible to this user
+  * **therm_program_list** : Dictionary of therm programs (indexed by ID) accessible to the user account
+  * **zones** : Dictionary of zones (indexed by ID)
+  * **timetable** : Dictionary of timetable (indexed by m_offset)
 
 
   Methods :
 
-    * **deviceById** (hid) : Find a device by its Netatmo ID
+  * **deviceById** (hid) : Find a device by its Netatmo ID
       * Input : Device ID
       * Output : device dictionary or None
 
-    * **deviceByName** (device=None) : Find a device by it's device name
+  * **deviceByName** (device=None) : Find a device by it's device name
       * Input : device name to lookup (str)
       * Output : device dictionary or None
 
-    * **moduleById** (hid) : Find a module by its Netatmo ID
+  * **moduleById** (hid) : Find a module by its Netatmo ID
       * Input : module ID
       * Output : module dictionary or None
 
-    * **moduleByName** (module=None, device=None) : Find a module by it's module name
+  * **moduleByName** (module=None, device=None) : Find a module by it's module name
       * Input : module name and device name to lookup (str)
       * Output : module dictionary or None
 
-    * **setthermpoint** (mode, temp, endTimeOffsetmode, temp, endTimeOffset) : set thermpoint
+  * **setthermpoint** (mode, temp, endTimeOffsetmode, temp, endTimeOffset) : set thermpoint
       * Input : device_id and module_id and setpoint_mode
 
 

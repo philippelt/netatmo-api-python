@@ -14,7 +14,7 @@ To install lnetatmo simply run:
     python setup.py install
 
 Depending on your permissions you might be required to use sudo.
-Once installed you can simple add latmo to your python scripts by including:
+Once installed you can simple add lnetatmo to your python scripts by including:
 
     import lnetatmo
 
