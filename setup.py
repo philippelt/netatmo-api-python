@@ -1,19 +1,23 @@
-
 # python setup.py --dry-run --verbose install
 
 from distutils.core import setup
 
-
 setup(
     name='lnetatmo',
-    version='0.5.0', # Should be updated with new versions
+    version='1.2.1',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3'
+        ],
     author='Philippe Larduinat',
-    author_email='philippelt@users.sourceforge.net',
+    author_email='ph.larduinat@wanadoo.fr',
     py_modules=['lnetatmo'],
     scripts=[],
     data_files=[],
     url='https://github.com/philippelt/netatmo-api-python',
-    license='Open Source',
-    description='Simple API to access Netatmo weather station data from any python script.',
-    long_description=open('README.md').read()
+    download_url='https://github.com/philippelt/netatmo-api-python/tarball/1.2.1',
+    license='GPL V3',
+    description='Simple API to access Netatmo weather station data from any python script.'
 )
