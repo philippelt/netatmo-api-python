@@ -41,10 +41,10 @@ In the netatmo philosophy, both the application itself and the user have to be r
 
 Copy the lnetatmo.py file in your work directory (or use pip install lnetatmo).
 
-Authentication data can be supplied with 4 different methods : 
+Authentication data can be supplied with 4 different methods (each method override any settings of previous methods) : 
 
  1. Some or all values can be hard coded in the library source (and default to empty strings). If you use this method, you are back to the initial suggested method. It would be nice to switch to other methods to isolate credentials and ease library upgrades.
- 2. Some or all values can be overriden in a ~/.netatmo.credentials file containing the keys in JSON format  
+ 2. Some or all values can be overriden in a ~/.netatmo.credentials (in your platform home directory) file containing the keys in JSON format  
  
         $ cat .netatmo.credentials   # Here all values are defined but it is not mandatory
         {
@@ -55,7 +55,7 @@ Authentication data can be supplied with 4 different methods :
         }
         $
 
- 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker  
+ 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker. It also allow you to do some testing with other accounts without touching your current ~/.netatmo.credentials file 
  
         $ export USERNAME=newUsername
         $ export PASSWORD=password
@@ -64,9 +64,9 @@ Authentication data can be supplied with 4 different methods :
 
  4. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
  
-        # Example: CLIENT_ID and CLIENT_SECRET supposed to be defined by one of the previous methods
-        authData = lnetatmo.ClientAuth( username="newUsername",
-                                        password="password" )
+        # Example: USERNAME and PASSWORD supposed to be defined by one of the previous methods
+        authData = lnetatmo.ClientAuth( clientId="netatmo-client-id",
+                                        clientSecret="secret" )
 
 If you provide all the values, using any method or mix except 4, you can test that everything is working properly by simply running the package as a standalone program.
 
@@ -78,6 +78,8 @@ lnetatmo.py : OK
 $ echo $?
 0
 ```
+
+Whatever is your choice for the library authentication setup, your application code if you were using previous library version, will not be affected.
 
 
 ### 3 Package guide ###
