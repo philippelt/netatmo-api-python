@@ -1,7 +1,9 @@
 # Published Jan 2013
 # Revised Jan 2014 (to add new modules data)
-# Author : Philippe Larduinat, philippelt@users.sourceforge.net
-# Public domain source code
+# Revised 2016 (to add camera support)
+# Author : Philippe Larduinat, ph.larduinat@wanadoo.fr
+# Multiple contributors : see https://github.com/philippelt/netatmo-api-python
+# License : GPL V3
 """
 This API provides access to the Netatmo weather station or/and the Welcome camera
 This package can be used with Python2 or Python3 applications and do not
@@ -11,6 +13,8 @@ PythonAPI Netatmo REST data access
 coding=utf-8
 """
 from sys import version_info
+from os import getenv
+from os.path import expanduser, exists
 import json, time
 import imghdr
 import warnings
@@ -22,29 +26,59 @@ else:
     from urllib import urlencode
     import urllib2
 
-######################## USER SPECIFIC INFORMATION ######################
+######################## AUTHENTICATION INFORMATION ######################
 
 # To be able to have a program accessing your netatmo data, you have to register your program as
 # a Netatmo app in your Netatmo account. All you have to do is to give it a name (whatever) and you will be
 # returned a client_id and secret that your app has to supply to access netatmo servers.
 
-_CLIENT_ID     = ""   # Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
-_CLIENT_SECRET = ""   # Your client app secret   '     '
-_USERNAME      = ""   # Your netatmo account username
-_PASSWORD      = ""   # Your netatmo account password
+# To ease Docker packaging of your application, you can setup your authentication parameters through env variables
+
+# Authentication use :
+#  1 - Values hard coded in the library
+#  2 - The .netatmo.credentials file in JSON format in your home directory
+#  3 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD
+
+# Each level override values defined in the previous level. You could define CLIENT_ID and CLIENT_SECRET hard coded in the library
+# and username/password in .netatmo.credentials or environment variables
+
+cred = {                       # You can hard code authentication information in the following lines
+        "CLIENT_ID" :  "",     #   Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
+        "CLIENT_SECRET" : "",  #   Your client app secret   '     '
+        "USERNAME" : "",       #   Your netatmo account username
+        "PASSWORD" : ""        #   Your netatmo account password
+        }
+
+# Other authentication setup management (optionals)
+
+CREDENTIALS = expanduser("~/.netatmo.credentials")
+
+def getParameter(key, default):
+    return getenv(key, default[key])
+
+# 2 : Override hard coded values with credentials file if any
+if exists(CREDENTIALS) :
+    with open(CREDENTIALS, "r") as f: cred = json.loads(f.read())
+
+# 3 : Override final value with content of env variables if defined
+_CLIENT_ID     = getParameter("CLIENT_ID", cred)
+_CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
+_USERNAME      = getParameter("USERNAME", cred)
+_PASSWORD      = getParameter("PASSWORD", cred)
 
 #########################################################################
 
 
 # Common definitions
 
-_BASE_URL       = "https://api.netatmo.com/"
-_AUTH_REQ       = _BASE_URL + "oauth2/token"
-_GETMEASURE_REQ = _BASE_URL + "api/getmeasure"
-_GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
-_GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
+_BASE_URL = "https://api.netatmo.com/"
+_AUTH_REQ             = _BASE_URL + "oauth2/token"
+_GETMEASURE_REQ       = _BASE_URL + "api/getmeasure"
+_GETSTATIONDATA_REQ   = _BASE_URL + "api/getstationsdata"
+_GETHOMEDATA_REQ      = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
-_GETEVENTSUNTIL_REQ = _BASE_URL + "api/geteventsuntil"
+_GETEVENTSUNTIL_REQ   = _BASE_URL + "api/geteventsuntil"
+
 
 
 class NoDevice( Exception ):
@@ -72,6 +106,7 @@ class ClientAuth:
                        username=_USERNAME,
                        password=_PASSWORD,
                        scope="read_station"):
+        
         postParams = {
                 "grant_type" : "password",
                 "client_id" : clientId,
@@ -166,7 +201,7 @@ class WeatherStationData:
         for m in self.modules:
             mod = self.modules[m]
             if mod['module_name'] == module :
-                if not s or mod['main_device'] == s['_id'] : return mod
+                return mod
         return None
 
     def moduleById(self, mid, sid=None):
@@ -547,6 +582,7 @@ def getStationMinMaxTH(station=None, module=None):
         else : result = [lastD[mname]['Temperature'], lastD[mname]['Humidity']]
         result.extend(devList.MinMaxTH(station, mname))
     return result
+
 
 # auto-test when executed directly
 

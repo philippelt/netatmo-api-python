@@ -6,3 +6,5 @@ dist/
 lnetatmo.egg-info/
 
 *.pyc
+
+__pycache__/

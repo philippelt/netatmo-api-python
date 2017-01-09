@@ -17,7 +17,3 @@ Depending on your permissions you might be required to use sudo.
 Once installed you can simple add latmo to your python scripts by including:
 
     import lnetatmo
-
-### Note ###
-
-this release is an interim release waiting for Netatmo dashboard finalization. As any work in progress, it can stop to work at any time if serious changes occurs.
