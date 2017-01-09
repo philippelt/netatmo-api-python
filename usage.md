@@ -39,35 +39,34 @@ In the netatmo philosophy, both the application itself and the user have to be r
 
 
 
-Copy the lnetatmo.py file in your work directory (or your platform choice of user libraries or virtualenv or ...).
+Copy the lnetatmo.py file in your work directory (or use pip install lnetatmo).
 
 Authentication data can be supplied with 4 different methods : 
 
  1. Some or all values can be hard coded in the library source (and default to empty strings). If you use this method, you are back to the initial suggested method. It would be nice to switch to other methods to isolate credentials and ease library upgrades.
- 2. Some or all values can be overriden in a ~/.netatmo.credentials file containing the keys in JSON format
-```bash
-$ cat .netatmo.credentials   # Here all values are defined but it is not mandatory
-{
-    "CLIENT_ID" : "`xxx",
-    "CLIENT_SECRET" : "xxx",
-    "USERNAME" : "xxx",
-    "PASSWORD" : "xxx"
-}
-$
-```
- 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker.
-```bash
-$ export USERNAME=newUsername
-$ export PASSWORD=password
-$ python3 MyCodeUsingLnetatmo.py
-...
-```
- 4. Some or all values can be overriden by explicit call to initializer of ClientAuth class
-```python
-# Example: CLIENT_ID and CLIENT_SECRET supposed to be defined by one of the previous methods
-authData = lnetatmo.ClientAuth( username="newUsername",
-                                password="password" )
-```
+ 2. Some or all values can be overriden in a ~/.netatmo.credentials file containing the keys in JSON format  
+ 
+        $ cat .netatmo.credentials   # Here all values are defined but it is not mandatory
+        {
+            "CLIENT_ID" : "`xxx",
+            "CLIENT_SECRET" : "xxx",
+            "USERNAME" : "xxx",
+            "PASSWORD" : "xxx"
+        }
+        $
+
+ 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker  
+ 
+        $ export USERNAME=newUsername
+        $ export PASSWORD=password
+        $ python3 MyCodeUsingLnetatmo.py
+        ...
+
+ 4. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
+ 
+        # Example: CLIENT_ID and CLIENT_SECRET supposed to be defined by one of the previous methods
+        authData = lnetatmo.ClientAuth( username="newUsername",
+                                        password="password" )
 
 If you provide all the values, using any method or mix except 4, you can test that everything is working properly by simply running the package as a standalone program.
 
