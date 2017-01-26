@@ -4,6 +4,7 @@ coding=utf-8
 import imghdr
 import time
 
+from urllib.error import URLError
 from . import NoDevice, postRequest, _BASE_URL
 
 _GETHOMEDATA_REQ = _BASE_URL + "api/gethomedata"
@@ -158,13 +159,20 @@ class CameraData:
         if camera_data:
             vpn_url = camera_data['vpn_url']
             if camera_data['is_local']:
-                resp = postRequest('{0}/command/ping'.format(
-                    camera_data['vpn_url']), dict())
-                temp_local_url = resp['local_url']
-                resp = postRequest('{0}/command/ping'.format(
-                    temp_local_url), dict())
-                if temp_local_url == resp['local_url']:
-                    local_url = temp_local_url
+                try:
+                    resp = postRequest('{0}/command/ping'.format(
+                        camera_data['vpn_url']), dict())
+                    temp_local_url = resp['local_url']
+                except URLError:
+                    return None, None
+
+                try:
+                    resp = postRequest('{0}/command/ping'.format(
+                        temp_local_url), dict())
+                    if temp_local_url == resp['local_url']:
+                        local_url = temp_local_url
+                except URLError:
+                    pass
         return vpn_url, local_url
 
     def personsAtHome(self, home=None):
