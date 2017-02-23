@@ -343,6 +343,7 @@ class WelcomeData:
         for camera in self.events:
             self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
+        if not self.cameras[self.default_home] : raise NoDevice("No camera available")
         self.default_camera = list(self.cameras[self.default_home].values())[0]
 
     def homeById(self, hid):
@@ -609,7 +610,7 @@ if __name__ == "__main__":
         Camera = WelcomeData(authorization)
     except NoDevice :
         if stdout.isatty():
-            print("lnetatmo.py : warning, no camera available for testing")
+            print("lnetatmo.py : warning, no Welcome camera available for testing")
 
     # If we reach this line, all is OK
 

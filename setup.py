@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='lnetatmo',
-    version='1.2.1',
+    version='1.2.2',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -17,7 +17,7 @@ setup(
     scripts=[],
     data_files=[],
     url='https://github.com/philippelt/netatmo-api-python',
-    download_url='https://github.com/philippelt/netatmo-api-python/tarball/1.2.1',
+    download_url='https://github.com/philippelt/netatmo-api-python/tarball/1.2.2',
     license='GPL V3',
     description='Simple API to access Netatmo weather station data from any python script.'
 )
