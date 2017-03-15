@@ -332,23 +332,25 @@ for m in weatherData.checkNotUpdated("<optional station name>"):
 at all if you slip over two days as required in a shifting 24 hours window.
 
 
-#### 4-5 WelcomeData class ####
+#### 4-5 HomeData class ####
 
 
 
 Constructor
 
 ```python
-    welcomeData = lnetatmo.WelcomeData( authorization )
+    homeData = lnetatmo.HomeData( authorization )
 ```
 
 
 Requires : an authorization object (ClientAuth instance)
 
 
-Return : a WelcomeData object. This object contains most administration properties of Welcome cameras accessible to the user and the last data pushed by the cameras to the Netatmo servers.
+Return : a homeData object. This object contains most administration properties of home security products and notably Welcome & Presence cameras.
 
 Raise a lnetatmo.NoDevice exception if no camera is available for the given account.
+
+Note : the is_local property of camera is most of the time unusable if your IP changes, use cameraUrls to try to get a local IP as a replacement.
 
 Properties, all properties are read-only unless specified:
 

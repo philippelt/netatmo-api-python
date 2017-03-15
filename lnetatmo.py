@@ -105,7 +105,7 @@ class ClientAuth:
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
                        password=_PASSWORD,
-                       scope="read_station"):
+                       scope="read_station read_camera access_camera read_presence access_presence"):
         
         postParams = {
                 "grant_type" : "password",
@@ -308,9 +308,9 @@ class DeviceList(WeatherStationData):
             DeprecationWarning )
     pass
 
-class WelcomeData:
+class HomeData:
     """
-    List the Netatmo Welcome cameras informations (Homes, cameras, events, persons)
+    List the Netatmo home informations (Homes, cameras, events, persons)
 
     Args:
         authData (ClientAuth): Authentication information with a working access Token
@@ -323,7 +323,7 @@ class WelcomeData:
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
-        if not self.homes : raise NoDevice("No camera available")
+        if not self.homes : raise NoDevice("No home available")
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
@@ -343,7 +343,7 @@ class WelcomeData:
         for camera in self.events:
             self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
         self.default_home = list(self.homes.values())[0]['name']
-        if not self.cameras[self.default_home] : raise NoDevice("No camera available")
+        if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
         self.default_camera = list(self.cameras[self.default_home].values())[0]
 
     def homeById(self, hid):
@@ -392,12 +392,11 @@ class WelcomeData:
             camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
             vpn_url = camera_data['vpn_url']
-            if camera_data['is_local']:
-                resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
-                temp_local_url=resp['local_url']
-                resp = postRequest('{0}/command/ping'.format(temp_local_url),dict())
-                if temp_local_url == resp['local_url']:
-                    local_url = temp_local_url
+            resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
+            temp_local_url=resp['local_url']
+            resp = postRequest('{0}/command/ping'.format(temp_local_url),dict())
+            if temp_local_url == resp['local_url']:
+                local_url = temp_local_url
         return vpn_url, local_url
 
     def personsAtHome(self, home=None):
@@ -531,6 +530,15 @@ class WelcomeData:
             return True
         return False
 
+class WelcomeData(HomeData):
+    """
+    This class is now deprecated. Use HomeData instead
+    Home can handle many devices, not only Welcome cameras
+    """
+    warnings.warn("The 'WelcomeData' class was renamed 'HomeData' to handle new Netatmo Home capabilities",
+            DeprecationWarning )
+    pass
+
 # Utilities routines
 
 def postRequest(url, params, json_resp=True, body_size=65535):
@@ -595,22 +603,22 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth(scope="read_station read_camera access_camera")  # Test authentication method
+    authorization = ClientAuth()  # Test authentication method
     
     try:
-        devList = DeviceList(authorization)         # Test DEVICELIST
+        weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
     except NoDevice:
         if stdout.isatty():
             print("lnetatmo.py : warning, no weather station available for testing")
     else:
-        devList.MinMaxTH()                          # Test GETMEASUR
+        weatherStation.MinMaxTH()                          # Test GETMEASUR
 
 
     try:
-        Camera = WelcomeData(authorization)
+        Homes = HomeData(authorization)
     except NoDevice :
         if stdout.isatty():
-            print("lnetatmo.py : warning, no Welcome camera available for testing")
+            print("lnetatmo.py : warning, no home available for testing")
 
     # If we reach this line, all is OK
 

@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='lnetatmo',
-    version='1.2.2',
+    version='1.3.2',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
