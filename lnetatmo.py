@@ -422,7 +422,7 @@ class HomeData:
             "image_id" : image_id,
             "key" : key
             }
-        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False, body_size=None)
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False)
         image_type = imghdr.what('NONE.FILE',resp)
         return resp, image_type
 
@@ -541,22 +541,25 @@ class WelcomeData(HomeData):
 
 # Utilities routines
 
-def postRequest(url, params, json_resp=True, body_size=65535):
+def postRequest(url, params, json_resp=True):
     # Netatmo response body size limited to 64k (should be under 16k)
     if version_info.major == 3:
         req = urllib.request.Request(url)
         req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
         params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params).read(body_size).decode("utf-8")
+        resp = urllib.request.urlopen(req, params)
     else:
         params = urlencode(params)
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req).read(body_size)
+        resp = urllib2.urlopen(req)
+    data = ""
+    for buff in iter(lambda: resp.read(65535), b''):
+        data += buff.decode("utf-8")
     if json_resp:
-        return json.loads(resp)
+        return json.loads(data)
     else:
-        return resp
+        return data
 
 def toTimeString(value):
     return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(int(value)))
