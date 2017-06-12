@@ -17,7 +17,7 @@ setup(
     scripts=[],
     data_files=[],
     url='https://github.com/philippelt/netatmo-api-python',
-    download_url='https://github.com/philippelt/netatmo-api-python/tarball/1.3.3',
+    download_url='https://github.com/philippelt/netatmo-api-python/tarball/v1.3.3.tar.gz',
     license='GPL V3',
     description='Simple API to access Netatmo weather station data from any python script.'
 )
