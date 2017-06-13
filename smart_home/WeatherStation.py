@@ -81,7 +81,17 @@ class WeatherStationData:
         mod = self.moduleByName(module)
         conditions = []
         for cond in mod['data_type']:
-            conditions.append(cond.lower())
+            if cond == 'Wind':
+                # the Wind meter actually exposes the following conditions
+                conditions.extend(['windangle', 'windstrength', 'gustangle', 'guststrength'])
+            else:
+                conditions.append(cond.lower())
+        if mod['type'] == 'NAMain':
+            # the main module has wifi_status
+            conditions.append('wifi_status')
+        else:
+            # assume all other modules have rf_status and battery_vp
+            conditions.extend(['rf_status', 'battery_vp'])
         return conditions
 
     def lastData(self, station=None, exclude=0):
