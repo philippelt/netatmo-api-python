@@ -58,7 +58,8 @@ def getParameter(key, default):
 
 # 2 : Override hard coded values with credentials file if any
 if exists(CREDENTIALS) :
-    with open(CREDENTIALS, "r") as f: cred = json.loads(f.read())
+    with open(CREDENTIALS, "r") as f:
+        cred.update({k.upper():v for k,v in json.loads(f.read()).items()})
 
 # 3 : Override final value with content of env variables if defined
 _CLIENT_ID     = getParameter("CLIENT_ID", cred)
@@ -228,6 +229,8 @@ class WeatherStationData:
         for module in s["modules"]:
             ds = module['dashboard_data']
             if ds['time_utc'] > limit :
+                # If no module_name has been setup, use _id by default
+                if "module_name" not in module : module['module_name'] = module["_id"]
                 lastD[module['module_name']] = ds.copy()
                 lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
