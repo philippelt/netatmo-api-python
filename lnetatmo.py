@@ -425,7 +425,7 @@ class HomeData:
             "image_id" : image_id,
             "key" : key
             }
-        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams, json_resp=False)
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams)
         image_type = imghdr.what('NONE.FILE',resp)
         return resp, image_type
 
@@ -544,8 +544,7 @@ class WelcomeData(HomeData):
 
 # Utilities routines
 
-def postRequest(url, params, json_resp=True):
-    # Netatmo response body size limited to 64k (should be under 16k)
+def postRequest(url, params):
     if version_info.major == 3:
         req = urllib.request.Request(url)
         req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
@@ -556,13 +555,11 @@ def postRequest(url, params, json_resp=True):
         headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
         req = urllib2.Request(url=url, data=params, headers=headers)
         resp = urllib2.urlopen(req)
-    data = ""
-    for buff in iter(lambda: resp.read(65535), b''):
-        data += buff.decode("utf-8")
-    if json_resp:
-        return json.loads(data)
-    else:
-        return data
+    data = b""
+    for buff in iter(lambda: resp.read(65535), b''): data += buff
+    # Return values in bytes if not json data to handle properly camera images
+    returnedContentType = resp.getheader("Content-Type") if version_info.major == 3 else resp.info()["Content-Type"]
+    return json.loads(data.decode("utf-8")) if "application/json" in returnedContentType else data
 
 def toTimeString(value):
     return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(int(value)))
