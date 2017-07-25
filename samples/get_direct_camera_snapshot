@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+# Locate the camera name "MyCam" IP on the local LAN
+# to collect a snapshot of what the camera sees
+# If available use a local connection to save internet bandwith
+
+
+from sys import exit
+import lnetatmo
+
+# The name I gave the camera in the Netatmo Security App
+MY_CAMERA = "MyCam"
+
+# Authenticate (see authentication in documentation)
+# Note you will need the appropriate scope (read_welcome access_welcome or read_presence access_presence)
+# depending of the camera you are trying to reach
+# The default library scope ask for all aceess to all cameras
+authorization = lnetatmo.ClientAuth()
+
+# Gather Home information (available cameras and other infos)
+homeData = lnetatmo.HomeData(authorization)
+
+# Request a snapshot from the camera
+snapshot = homeData.getLiveSnapshot( camera=MY_CAMERA )
+
+# If all was Ok, I should have an image, if None there was an error
+if not snapshot :
+    # Decide what to do with an error situation (alert, log, ...)
+    exit(1)
+
+# You can then archive the snapshot, send it by mail, message App, ...
+# Example : Save the snapshot in a file
+with open("MyCamSnap.jpg", "wb") as f: f.write(snapshot)
+
+exit(0)

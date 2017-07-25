@@ -81,6 +81,37 @@ _GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ   = _BASE_URL + "api/geteventsuntil"
 
 
+#TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
+
+# _POST_UPDATE_HOME_REQ  = _BASE_URL + "/api/updatehome"
+
+# For presence setting (POST BODY):
+# _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"   # (HomeId, DetectionKind, DetectionSetup.index)
+_PRES_DETECTION_KIND   = ("humans", "animals", "vehicles", "movements")
+_PRES_DETECTION_SETUP  = ("ignore", "record", "record & notify")
+
+# _PRES_BODY_ALERT_TIME  = "home_id=%s&presence_settings[presence_notify_%s]=%s"   # (HomeID, "from"|"to", "hh:mm")
+
+# Regular (documented) commands (both cameras)
+
+_PRES_CDE_GET_SNAP     = "/live/snapshot_720.jpg"
+
+#TODO# Undocumented (taken from https://github.com/KiboOst/php-NetatmoCameraAPI/blob/master/class/NetatmoCameraAPI.php)
+# Work with local_url only (undocumented scope control probably)
+
+# For Presence camera
+
+_PRES_CDE_GET_LIGHT    = "/command/floodlight_get_config"
+# Not working yet, probably due to scope restriction
+#_PRES_CDE_SET_LIGHT    = "/command/floodlight_set_config?config=mode:%s"    # "auto"|"on"|"off"
+
+
+# For all cameras
+
+_CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"off"
+# Not working yet
+#_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
+
 
 class NoDevice( Exception ):
     pass
@@ -106,7 +137,7 @@ class ClientAuth:
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
                        password=_PASSWORD,
-                       scope="read_station read_camera access_camera read_presence access_presence"):
+                       scope="read_station read_camera access_camera write_camera read_presence access_presence write_presence"):
         
         postParams = {
                 "grant_type" : "password",
@@ -325,27 +356,31 @@ class HomeData:
             }
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
+        # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
         if not self.homes : raise NoDevice("No home available")
+        self.default_home = list(self.homes.values())[0]['name']
+        # Split homes data by category
         self.persons = dict()
         self.events = dict()
         self.cameras = dict()
         self.lastEvent = dict()
         for i in range(len(self.rawData['homes'])):
-            nameHome=self.rawData['homes'][i]['name']
+            curHome = self.rawData['homes'][i]
+            nameHome = curHome['name']
             if nameHome not in self.cameras:
-                self.cameras[nameHome]=dict()
-            for p in self.rawData['homes'][i]['persons']:
+                self.cameras[nameHome] = dict()
+            for p in curHome['persons']:
                 self.persons[ p['id'] ] = p
-            for e in self.rawData['homes'][i]['events']:
+            for e in curHome['events']:
                 if e['camera_id'] not in self.events:
                     self.events[ e['camera_id'] ] = dict()
                 self.events[ e['camera_id'] ][ e['time'] ] = e
-            for c in self.rawData['homes'][i]['cameras']:
+            for c in curHome['cameras']:
                 self.cameras[nameHome][ c['id'] ] = c
+                c["home_id"] = curHome['id']
         for camera in self.events:
-            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
-        self.default_home = list(self.homes.values())[0]['name']
+            self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
         if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
         self.default_camera = list(self.cameras[self.default_home].values())[0]
 
@@ -386,6 +421,8 @@ class HomeData:
         """
         Return the vpn_url and the local_url (if available) of a given camera
         in order to access to its live feed
+        Can't use the is_local property which is mostly false in case of operator
+        dynamic IP change after presence start sequence
         """
         local_url = None
         vpn_url = None
@@ -395,12 +432,17 @@ class HomeData:
             camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
             vpn_url = camera_data['vpn_url']
-            resp = postRequest('{0}/command/ping'.format(camera_data['vpn_url']),dict())
+            resp = postRequest(vpn_url + '/command/ping')
             temp_local_url=resp['local_url']
-            resp = postRequest('{0}/command/ping'.format(temp_local_url),dict())
-            if temp_local_url == resp['local_url']:
+            resp = postRequest(temp_local_url + '/command/ping',timeout=1)
+            if resp and temp_local_url == resp['local_url']:
                 local_url = temp_local_url
         return vpn_url, local_url
+
+    def url(self, camera=None, home=None, cid=None):
+        vpn_url, local_url = self.cameraUrls(camera, home, cid)
+        # Return local if available else vpn
+        return local_url or vpn_url
 
     def personsAtHome(self, home=None):
         """
@@ -533,6 +575,47 @@ class HomeData:
             return True
         return False
 
+    def presenceUrl(self, camera=None, home=None, cid=None, setting=None):
+        camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
+        if camera["type"] != "NOC": return None # Not a presence camera
+        vpnUrl, localUrl = self.cameraUrls(cid=camera["id"])
+        return localUrl
+    
+    def presenceLight(self, camera=None, home=None, cid=None, setting=None):
+        url = self.presenceUrl(home=home, camera=camera) or self.cameraById(cid=cid)
+        if not url or setting not in ("on", "off", "auto"): return None
+        if setting : return "Currently unsupported"
+        return cameraCommand(url, _PRES_CDE_GET_LIGHT)["mode"]
+        # Not yet supported
+        #if not setting: return cameraCommand(url, _PRES_CDE_GET_LIGHT)["mode"]
+        #else: return cameraCommand(url, _PRES_CDE_SET_LIGHT, setting)
+
+    def presenceStatus(self, mode, camera=None, home=None, cid=None):
+        url = self.presenceUrl(home=home, camera=camera) or self.cameraById(cid=cid)
+        if not url or mode not in ("on", "off") : return None
+        r = cameraCommand(url, _CAM_CHANGE_STATUS, mode)
+        return mode if r["status"] == "ok" else None
+
+    def presenceSetAction(self, camera=None, home=None, cid=None,
+                          eventType=_PRES_DETECTION_KIND[0], action=2):
+        return "Currently unsupported"
+        if eventType not in _PRES_DETECTION_KIND or \
+           action not in _PRES_DETECTION_SETUP : return None
+        camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
+        postParams = { "access_token" : self.getAuthToken,
+                       "home_id" : camera["home_id"],
+                       "presence_settings[presence_record_%s]" % eventType : _PRES_DETECTION_SETUP.index(action)
+                     }
+        resp = postRequest(_POST_UPDATE_HOME_REQ, postParams)
+        self.rawData = resp['body']
+
+    def getLiveSnapshot(self, camera=None, home=None, cid=None):
+        camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
+        vpnUrl, localUrl = self.cameraUrls(cid=camera["id"])
+        url = localUrl or vpnUrl
+        return cameraCommand(url, _PRES_CDE_GET_SNAP)
+
+
 class WelcomeData(HomeData):
     """
     This class is now deprecated. Use HomeData instead
@@ -544,17 +627,29 @@ class WelcomeData(HomeData):
 
 # Utilities routines
 
-def postRequest(url, params):
+def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
+    url = cameraUrl + ( commande % parameters if parameters else commande)
+    return postRequest(url, timeout=timeout)
+    
+def postRequest(url, params=None, timeout=10):
     if version_info.major == 3:
         req = urllib.request.Request(url)
-        req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
-        params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params)
+        if params:
+            req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
+            params = urllib.parse.urlencode(params).encode('utf-8')
+        try:
+            resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
+        except urllib.error.URLError:
+            return None
     else:
-        params = urlencode(params)
-        headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
-        req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req)
+        if params:
+            params = urlencode(params)
+            headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
+        req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
+        try:
+            resp = urllib2.urlopen(req, timeout=timeout)
+        except urllib2.URLError:
+            return None
     data = b""
     for buff in iter(lambda: resp.read(65535), b''): data += buff
     # Return values in bytes if not json data to handle properly camera images
@@ -618,7 +713,8 @@ if __name__ == "__main__":
 
 
     try:
-        Homes = HomeData(authorization)
+        homes = HomeData(authorization)
+        with open("t.jpg", "wb") as f: f.write(homes.getLiveSnapshot(camera="LachPresence1"))
     except NoDevice :
         if stdout.isatty():
             print("lnetatmo.py : warning, no home available for testing")

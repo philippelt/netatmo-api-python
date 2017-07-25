@@ -383,8 +383,12 @@ Methods :
     * Output : camera dictionary or None
 
   * **cameraUrls** (camera=None, home=None, cid=None) : return Urls to access camera live feed
-    * Input : camera name and home name or cameraID to lookup (str)
-    * Output : tuple with the vpn_url (for remote access) and local url to access the camera live feed
+    * Input : camera name and optional home name or cameraID to lookup (str)
+    * Output : tuple with the vpn_url (for remote access) and local url to access the camera (commands)
+
+  * **url** (camera=None, home=None, cid=None) : return the best url to access camera live feed
+    * Input : camera name and optional home name or cameraID to lookup (str)
+    * Output : the local url if available to reduce internet bandwith usage else the vpn url
 
   * **personsAtHome** (home=None) : return the list of known persons who are at home
     * Input : home name to lookup (str)
@@ -408,6 +412,19 @@ Methods :
   * **someoneUnknownSeen** (home=None, camera=None) : Return true is an unknown person has been seen in the last event
 
   * **motionDetected** (home=None, camera=None) : Return true is a movement has been detected in the last event
+
+  * **presenceLight** (camera=None, home=None, cid=None, setting=None) : return or set the Presence camera lighting mode
+    * Input : camera name and optional home name or cameraID to lookup (str), setting must be None|auto|on|off. *currently not supported*
+    * Output : setting requested if supplied else current camera setting
+
+  * **presenceStatus** (mode, camera=None, home=None, cid=None) : set the camera on or off (current status in camera properties)
+    * Input : mode (on|off) (str), camera name and optional home name or cameraID to lookup (str)
+    * Output : requested mode if changed else None
+
+  * **getLiveSnapshot** (camera=None, home=None, cid=None) : Get a jpeg of current live view of the camera
+    * Input : camera name and optional home name or cameraID to lookup (str)
+    * Output : jpeg binary content
+
 
 #### 4-5 Utilities functions ####
 
