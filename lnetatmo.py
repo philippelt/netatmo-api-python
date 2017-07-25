@@ -714,7 +714,6 @@ if __name__ == "__main__":
 
     try:
         homes = HomeData(authorization)
-        with open("t.jpg", "wb") as f: f.write(homes.getLiveSnapshot(camera="LachPresence1"))
     except NoDevice :
         if stdout.isatty():
             print("lnetatmo.py : warning, no home available for testing")
