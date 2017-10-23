@@ -26,7 +26,7 @@ class CameraData:
             "access_token": self.getAuthToken,
             "size": size
             }
-        resp = postRequest(_GETHOMEDATA_REQ, postParams, body_size=None)
+        resp = postRequest(_GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
         self.homes = {d['id']: d for d in self.rawData['homes']}
         if not self.homes:
@@ -199,8 +199,7 @@ class CameraData:
             "image_id": image_id,
             "key": key
             }
-        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams,
-                           json_resp=False, body_size=None)
+        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams)
         image_type = imghdr.what('NONE.FILE', resp)
         return resp, image_type
 
@@ -249,7 +248,7 @@ class CameraData:
                 "home_id": home_data['id'],
                 "event_id": event['id']
             }
-        resp = postRequest(_GETEVENTSUNTIL_REQ, postParams, body_size=None)
+        resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
         eventList = resp['body']['events_list']
         for e in eventList:
             if e['type'] == 'outdoor':
@@ -263,7 +262,7 @@ class CameraData:
                 self.outdoor_lastEvent[camera] = self.outdoor_events[camera][
                         sorted(self.outdoor_events[camera])[-1]]
 
-    def personSeenByCamera(self, name, home=None, camera=None):
+    def personSeenByCamera(self, name, home=None, camera=None, exclude=0):
         """
         Return True if a specific person has been seen by a camera
         """
@@ -273,7 +272,19 @@ class CameraData:
             print("personSeenByCamera: Camera name or home is unknown")
             return False
         # Check in the last event is someone known has been seen
-        if self.lastEvent[cam_id]['type'] == 'person':
+        if exclude:
+            limit = (time.time() - exclude)
+            array_time_event = sorted(self.events[cam_id])
+            array_time_event.reverse()
+            for time_ev in array_time_event:
+                if time_ev < limit:
+                    return False
+                elif self.events[cam_id][time_ev]['type'] == 'person':
+                    person_id = self.events[cam_id][time_ev]['person_id']
+                    if 'pseudo' in self.persons[person_id]:
+                        if self.persons[person_id]['pseudo'] == name:
+                            return True
+        elif self.lastEvent[cam_id]['type'] == 'person':
             person_id = self.lastEvent[cam_id]['person_id']
             if 'pseudo' in self.persons[person_id]:
                 if self.persons[person_id]['pseudo'] == name:
@@ -286,6 +297,12 @@ class CameraData:
             if 'pseudo' in p:
                 known_persons[p_id] = p
         return known_persons
+
+    def knownPersonsNames(self):
+        names = []
+        for p_id,p in self._knownPersons().items():
+            names.append(p['pseudo'])
+        return names
 
     def someoneKnownSeen(self, home=None, camera=None, exclude=0):
         """

@@ -18,22 +18,30 @@ class NoDevice( Exception ):
 # Utilities routines
 
 
-def postRequest(url, params, json_resp=True, body_size=65535):
-    # Netatmo response body size limited to 64k (should be under 16k)
+def postRequest(url, params=None, timeout=10):
     if version_info.major == 3:
         req = urllib.request.Request(url)
-        req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
-        params = urllib.parse.urlencode(params).encode('utf-8')
-        resp = urllib.request.urlopen(req, params).read(body_size).decode("utf-8")
+        if params:
+            req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
+            params = urllib.parse.urlencode(params).encode('utf-8')
+        try:
+            resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
+        except urllib.error.URLError:
+            return None
     else:
-        params = urlencode(params)
-        headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
-        req = urllib2.Request(url=url, data=params, headers=headers)
-        resp = urllib2.urlopen(req).read(body_size)
-    if json_resp:
-        return json.loads(resp)
-    else:
-        return resp
+        if params:
+            params = urlencode(params)
+            headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
+        req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
+        try:
+            resp = urllib2.urlopen(req, timeout=timeout)
+        except urllib2.URLError:
+            return None
+    data = b""
+    for buff in iter(lambda: resp.read(65535), b''): data += buff
+    # Return values in bytes if not json data to handle properly camera images
+    returnedContentType = resp.getheader("Content-Type") if version_info.major == 3 else resp.info()["Content-Type"]
+    return json.loads(data.decode("utf-8")) if "application/json" in returnedContentType else data
 
 
 def toTimeString(value):
