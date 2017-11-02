@@ -247,7 +247,7 @@ class WeatherStationData:
                 return self.modules[mid]
 
     def lastData(self, station=None, exclude=0):
-        s = self.stationByName(station)
+        s = self.stationByName(station) or self.stationById(station)
         if not s : return None
         lastD = dict()
         # Define oldest acceptable sensor measure event
