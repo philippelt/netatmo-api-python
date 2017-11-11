@@ -74,7 +74,7 @@ class ClientAuth:
         self._accessToken = resp['access_token']
         self.refreshToken = resp['refresh_token']
         self._scope = resp['scope']
-        self.expiration = int(resp['expire_in'] + time.time())
+        self.expiration = int(resp['expire_in'] + time.time() - 1800)
 
     @property
     def accessToken(self):
@@ -89,7 +89,7 @@ class ClientAuth:
             resp = postRequest(_AUTH_REQ, postParams)
             self._accessToken = resp['access_token']
             self.refreshToken = resp['refresh_token']
-            self.expiration = int(resp['expire_in'] + time.time())
+            self.expiration = int(resp['expire_in'] + time.time() - 1800)
         return self._accessToken
 
 
