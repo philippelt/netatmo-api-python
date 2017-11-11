@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name='lnetatmo',
-    version='0.9.2',  # Should be updated with new versions
+    version='0.9.2.1',  # Should be updated with new versions
     author='Philippe Larduinat',
     author_email='philippelt@users.sourceforge.net',
     py_modules=['lnetatmo'],
