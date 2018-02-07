@@ -73,12 +73,13 @@ _PASSWORD      = getParameter("PASSWORD", cred)
 # Common definitions
 
 _BASE_URL = "https://api.netatmo.com/"
-_AUTH_REQ             = _BASE_URL + "oauth2/token"
-_GETMEASURE_REQ       = _BASE_URL + "api/getmeasure"
-_GETSTATIONDATA_REQ   = _BASE_URL + "api/getstationsdata"
-_GETHOMEDATA_REQ      = _BASE_URL + "api/gethomedata"
-_GETCAMERAPICTURE_REQ = _BASE_URL + "api/getcamerapicture"
-_GETEVENTSUNTIL_REQ   = _BASE_URL + "api/geteventsuntil"
+_AUTH_REQ              = _BASE_URL + "oauth2/token"
+_GETMEASURE_REQ        = _BASE_URL + "api/getmeasure"
+_GETSTATIONDATA_REQ    = _BASE_URL + "api/getstationsdata"
+_GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
+_GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
+_GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
+_GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
 
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
@@ -117,6 +118,10 @@ class NoDevice( Exception ):
     pass
 
 
+class AuthFailure( Exception ):
+    pass
+
+
 class ClientAuth:
     """
     Request authentication and keep access token available through token method. Renew it automatically if necessary
@@ -137,7 +142,8 @@ class ClientAuth:
                        clientSecret=_CLIENT_SECRET,
                        username=_USERNAME,
                        password=_PASSWORD,
-                       scope="read_station read_camera access_camera write_camera read_presence access_presence write_presence"):
+                       scope="read_station read_camera access_camera write_camera " \
+                                 "read_presence access_presence write_presence read_thermostat write_thermostat"):
         
         postParams = {
                 "grant_type" : "password",
@@ -148,6 +154,8 @@ class ClientAuth:
                 "scope" : scope
                 }
         resp = postRequest(_AUTH_REQ, postParams)
+        if not resp: raise AuthFailure("Authentication request rejected")
+
         self._clientId = clientId
         self._clientSecret = clientSecret
         self._accessToken = resp['access_token']
@@ -187,6 +195,54 @@ class User:
         self.rawData = resp['body']
         self.devList = self.rawData['devices']
         self.ownerMail = self.rawData['user']['mail']
+
+
+class ThermostatData:
+    """
+    List the Thermostat and temperature modules
+
+    Args:
+        authData (clientAuth): Authentication information with a working access Token
+    """
+    def __init__(self, authData):
+        self.getAuthToken = authData.accessToken
+        postParams = {
+                "access_token" : self.getAuthToken
+                }
+        resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
+        self.rawData = resp['body']['devices']
+        if not self.rawData : raise NoDevice("No thermostat available")
+        self.thermostat = { d['_id'] : d for d in self.rawData }
+        for t,v in self.thermostat.items():
+            v['name'] = v['station_name']
+            for m in v['modules']:
+                m['name'] = m['module_name']
+        self.defaultThermostat = self.rawData[0]['station_name']
+        self.defaultThermostatId = self.rawData[0]['_id']
+        self.defaultModule = self.rawData[0]['modules'][0]
+
+    def getThermostat(self, name=None, tid=None):
+        if tid:
+            if tid in self.thermostat.keys():
+                return self.thermostat[tid]
+            else:
+                return None
+        elif name:
+            for t in self.thermostat.values():
+                if t['name'] == name: return t
+            return None
+        return self.thermostat[self.defaultThermostatId]
+
+    def moduleNamesList(self, name=None, tid=None):
+        thermostat = self.getThermostat(name=name, tid=tid)
+        return [m['name'] for m in thermostat['modules']] if thermostat else None
+
+    def getModuleByName(self, name, thermostatId=None):
+        thermostat = self.getThermostat(tid=thermostatId)
+        for m in thermostat['modules']:
+            if m['name'] == name: return m
+        return None
+
 
 class WeatherStationData:
     """

@@ -8,3 +8,5 @@ lnetatmo.egg-info/
 *.pyc
 
 __pycache__/
+
+MANIFEST*
