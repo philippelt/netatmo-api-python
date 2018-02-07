@@ -774,6 +774,12 @@ if __name__ == "__main__":
         if stdout.isatty():
             print("lnetatmo.py : warning, no home available for testing")
 
+    try:
+        thermostat = ThermostatData(authorization)
+    except NoDevice:
+        if stdout.isatty():
+            print("lnetatmo.py : warning, no thermostat avaible for testing")
+
     # If we reach this line, all is OK
 
     # If launched interactively, display OK message
