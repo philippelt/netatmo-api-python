@@ -27,6 +27,8 @@ class WeatherStationData:
         self.modules = dict()
         for i in range(len(self.rawData)):
             for m in self.rawData[i]['modules']:
+                if 'module_name' not in m:
+                    continue
                 self.modules[ m['_id'] ] = m
                 self.modules[ m['_id'] ][ 'main_device' ] = self.rawData[i]['_id']
         self.default_station = list(self.stations.values())[0]['station_name']
@@ -106,6 +108,8 @@ class WeatherStationData:
             lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
         for module in s["modules"]:
+            if 'dashboard_data' not in module:
+                continue
             ds = module['dashboard_data']
             if ds['time_utc'] > limit :
                 lastD[module['module_name']] = ds.copy()
