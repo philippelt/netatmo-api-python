@@ -315,6 +315,8 @@ class WeatherStationData:
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
         for module in s["modules"]:
             ds = module['dashboard_data']
+            if 'time_utc' not in ds:
+                return None
             if ds['time_utc'] > limit :
                 # If no module_name has been setup, use _id by default
                 if "module_name" not in module : module['module_name'] = module["_id"]
