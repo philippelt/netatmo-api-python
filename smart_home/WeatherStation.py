@@ -11,7 +11,6 @@ _GETSTATIONDATA_REQ = _BASE_URL + "api/getstationsdata"
 class WeatherStationData:
     """
     List the Weather Station devices (stations and modules)
-
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """

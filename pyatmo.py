@@ -7,7 +7,6 @@ This API provides access to the Netatmo weather station or/and the Netatmo
 cameras or/and the Netatmo smart thermostat
 This package can be used with Python2 or Python3 applications and do not
 require anything else than standard libraries
-
 PythonAPI Netatmo REST data access
 coding=utf-8
 """
@@ -39,7 +38,6 @@ _AUTH_REQ       = _BASE_URL + "oauth2/token"
 class ClientAuth:
     """
     Request authentication and keep access token available through token method. Renew it automatically if necessary
-
     Args:
         clientId (str): Application clientId delivered by Netatmo on dev.netatmo.com
         clientSecret (str): Application Secret key delivered by Netatmo on dev.netatmo.com
@@ -97,7 +95,6 @@ class ClientAuth:
 class User:
     """
     This class returns basic information about the user
-
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
