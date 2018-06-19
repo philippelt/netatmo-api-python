@@ -391,10 +391,11 @@ class CameraData:
         except TypeError:
             print("outdoormotionDetected: Camera name or home is unknown")
             return False
-        if self.lastEvent[cam_id]['type'] == 'movement':
-            if self.lastEvent[cam_id]['video_status'] == 'recording' and\
-             self.lastEvent[cam_id]['time'] + offset > int(time.time()):
-                return True
+        if cam_id in self.lastEvent:
+            if self.lastEvent[cam_id]['type'] == 'movement':
+                if self.lastEvent[cam_id]['video_status'] == 'recording' and\
+                 self.lastEvent[cam_id]['time'] + offset > int(time.time()):
+                    return True
         return False
 
     def humanDetected(self, home=None, camera=None, offset=0):
