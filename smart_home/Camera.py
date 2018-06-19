@@ -47,18 +47,19 @@ class CameraData:
                 self.types[nameHome] = dict()
             for p in self.rawData['homes'][i]['persons']:
                 self.persons[p['id']] = p
-            for e in self.rawData['homes'][i]['events']:
-                if e['type'] == 'outdoor':
-                    if e['camera_id'] not in self.outdoor_events:
-                        self.outdoor_events[e['camera_id']] = dict()
-                    self.outdoor_events[e['camera_id']][e['time']] = e
-                elif e['type'] != 'outdoor':
-                    if e['camera_id'] not in self.events:
-                        self.events[e['camera_id']] = dict()
-                    self.events[e['camera_id']][e['time']] = e
+            if 'events' in self.rawData['homes'][i]:
+                for e in self.rawData['homes'][i]['events']:
+                    if e['type'] == 'outdoor':
+                        if e['camera_id'] not in self.outdoor_events:
+                            self.outdoor_events[e['camera_id']] = dict()
+                        self.outdoor_events[e['camera_id']][e['time']] = e
+                    elif e['type'] != 'outdoor':
+                        if e['camera_id'] not in self.events:
+                            self.events[e['camera_id']] = dict()
+                        self.events[e['camera_id']][e['time']] = e
             for c in self.rawData['homes'][i]['cameras']:
                 self.cameras[nameHome][c['id']] = c
-                if c['type'] == 'NACamera' and 'modules' in c :
+                if c['type'] == 'NACamera' and 'modules' in c:
                     for m in c['modules']:
                         self.modules[m['id']] = m
                         self.modules[m['id']]['cam_id'] = c['id']
@@ -300,7 +301,7 @@ class CameraData:
 
     def knownPersonsNames(self):
         names = []
-        for p_id,p in self._knownPersons().items():
+        for p_id, p in self._knownPersons().items():
             names.append(p['pseudo'])
         return names
 
@@ -474,7 +475,7 @@ class CameraData:
                     return True
         elif (self.lastEvent[cam_id]['type'] == 'tag_big_move' or
               self.lastEvent[cam_id]['type'] == 'tag_small_move') and\
-              self.lastEvent[cam_id]['module_id'] == mod_id:
+                self.lastEvent[cam_id]['module_id'] == mod_id:
                     return True
         return False
 
@@ -498,9 +499,9 @@ class CameraData:
                 if time_ev < limit:
                     return False
                 elif self.events[cam_id][time_ev]['type'] == 'tag_open' and\
-                     self.events[cam_id][time_ev]['module_id'] == mod_id:
+                        self.events[cam_id][time_ev]['module_id'] == mod_id:
                     return True
         elif self.lastEvent[cam_id]['type'] == 'tag_open' and\
-             self.lastEvent[cam_id]['module_id'] == mod_id:
+                self.lastEvent[cam_id]['module_id'] == mod_id:
             return True
         return False
