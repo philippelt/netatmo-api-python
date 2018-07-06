@@ -144,7 +144,7 @@ if __name__ == "__main__":
             print("lnetatmo.py : warning, no thermostat available for testing")
 
 
-    Public = PublicData(authorization)
+    PublicData(authorization)
 
     # If we reach this line, all is OK
 
