@@ -48,6 +48,7 @@ class CameraData:
             for p in self.rawData['homes'][i]['persons']:
                 self.persons[p['id']] = p
             if 'events' in self.rawData['homes'][i]:
+                self.default_home = self.rawData['homes'][i]['name']
                 for e in self.rawData['homes'][i]['events']:
                     if e['type'] == 'outdoor':
                         if e['camera_id'] not in self.outdoor_events:
@@ -71,7 +72,7 @@ class CameraData:
         for camera in self.outdoor_events:
             self.outdoor_lastEvent[camera] = self.outdoor_events[camera][
                 sorted(self.outdoor_events[camera])[-1]]
-        self.default_home = list(self.homes.values())[0]['name']
+        # self.default_home = list(self.homes.values())[0]['name']
         if self.modules != {}:
             self.default_module = list(self.modules.values())[0]['name']
         else:
