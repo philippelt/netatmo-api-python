@@ -72,7 +72,6 @@ class CameraData:
         for camera in self.outdoor_events:
             self.outdoor_lastEvent[camera] = self.outdoor_events[camera][
                 sorted(self.outdoor_events[camera])[-1]]
-        # self.default_home = list(self.homes.values())[0]['name']
         if self.modules != {}:
             self.default_module = list(self.modules.values())[0]['name']
         else:
