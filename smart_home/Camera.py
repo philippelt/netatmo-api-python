@@ -476,7 +476,7 @@ class CameraData:
                     return True
         elif (self.lastEvent[cam_id]['type'] == 'tag_big_move' or
               self.lastEvent[cam_id]['type'] == 'tag_small_move') and\
-                self.lastEvent[cam_id]['module_id'] == mod_id:
+              self.lastEvent[cam_id]['module_id'] == mod_id:
                     return True
         return False
 
@@ -500,9 +500,9 @@ class CameraData:
                 if time_ev < limit:
                     return False
                 elif self.events[cam_id][time_ev]['type'] == 'tag_open' and\
-                        self.events[cam_id][time_ev]['module_id'] == mod_id:
+                     self.events[cam_id][time_ev]['module_id'] == mod_id:
                     return True
         elif self.lastEvent[cam_id]['type'] == 'tag_open' and\
-                self.lastEvent[cam_id]['module_id'] == mod_id:
+             self.lastEvent[cam_id]['module_id'] == mod_id:
             return True
         return False
