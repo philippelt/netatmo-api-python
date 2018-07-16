@@ -26,6 +26,8 @@ class WeatherStationData:
         self.stations = { d['_id'] : d for d in self.rawData }
         self.modules = dict()
         for i in range(len(self.rawData)):
+            if 'modules' not in self.rawData[i]:
+                self.rawData[i]['modules'] = [ self.rawData[i] ]
             for m in self.rawData[i]['modules']:
                 if 'module_name' not in m:
                     continue
