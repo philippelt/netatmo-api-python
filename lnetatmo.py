@@ -262,8 +262,10 @@ class WeatherStationData:
         self.stations = { d['_id'] : d for d in self.rawData }
         self.modules = dict()
         for i in range(len(self.rawData)):
-            for m in self.rawData[i]['modules']:
-                self.modules[ m['_id'] ] = m
+            # Loop on external modules if they are present
+            if 'modules' in self.rawData[i]:
+                for m in self.rawData[i]['modules']:
+                    self.modules[ m['_id'] ] = m
         self.default_station = list(self.stations.values())[0]['station_name']
 
     def modulesNamesList(self, station=None):
@@ -309,20 +311,21 @@ class WeatherStationData:
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
         ds = s['dashboard_data']
-        if ds['time_utc'] > limit :
+        if ds.get('time_utc',limit+10) > limit :
             lastD[s['module_name']] = ds.copy()
-            lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
+            lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc") if 'time_utc' in lastD[s['module_name']] else time.time()
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
-        for module in s["modules"]:
-            ds = module['dashboard_data']
-            if ds['time_utc'] > limit :
-                # If no module_name has been setup, use _id by default
-                if "module_name" not in module : module['module_name'] = module["_id"]
-                lastD[module['module_name']] = ds.copy()
-                lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
-                # For potential use, add battery and radio coverage information to module data if present
-                for i in ('battery_vp', 'rf_status') :
-                    if i in module : lastD[module['module_name']][i] = module[i]
+        if 'modules' in s:
+            for module in s["modules"]:
+                ds = module['dashboard_data']
+                if ds.get('time_utc',limit+10) > limit :
+                    # If no module_name has been setup, use _id by default
+                    if "module_name" not in module : module['module_name'] = module["_id"]
+                    lastD[module['module_name']] = ds.copy()
+                    lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc") if 'time_utc' in lastD[s['module_name']] else time.time()
+                    # For potential use, add battery and radio coverage information to module data if present
+                    for i in ('battery_vp', 'rf_status') :
+                        if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
     def checkNotUpdated(self, station=None, delay=3600):
