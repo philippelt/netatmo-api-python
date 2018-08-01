@@ -322,7 +322,7 @@ class WeatherStationData:
                     # If no module_name has been setup, use _id by default
                     if "module_name" not in module : module['module_name'] = module["_id"]
                     lastD[module['module_name']] = ds.copy()
-                    lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc") if 'time_utc' in lastD[s['module_name']] else time.time()
+                    lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc") if 'time_utc' in lastD[module['module_name']] else time.time()
                     # For potential use, add battery and radio coverage information to module data if present
                     for i in ('battery_vp', 'rf_status') :
                         if i in module : lastD[module['module_name']][i] = module[i]
