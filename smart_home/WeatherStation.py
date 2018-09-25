@@ -93,8 +93,8 @@ class WeatherStationData:
             # the main module has wifi_status
             conditions.append('wifi_status')
         else:
-            # assume all other modules have rf_status and battery_vp
-            conditions.extend(['rf_status', 'battery_vp'])
+            # assume all other modules have rf_status, battery_vp, and battery_percent
+            conditions.extend(['rf_status', 'battery_vp', 'battery_percent'])
         return conditions
 
     def lastData(self, station=None, exclude=0):
@@ -116,7 +116,7 @@ class WeatherStationData:
                 lastD[module['module_name']] = ds.copy()
                 lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
-                for i in ('battery_vp', 'rf_status') :
+                for i in ('rf_status', 'battery_vp', 'battery_percent') :
                     if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
