@@ -18,7 +18,7 @@ class WeatherStationData:
         self.urlReq = urlReq or _GETMEASURE_REQ
         self.getAuthToken = authData.accessToken
         postParams = {
-                "access_token" : self.getAuthToken
+                "access_token": self.getAuthToken
                 }
         resp = postRequest(self.urlReq, postParams)
         self.rawData = resp['body']['devices']
@@ -36,13 +36,13 @@ class WeatherStationData:
         self.default_station = list(self.stations.values())[0]['station_name']
 
     def modulesNamesList(self, station=None):
-        res = [m['module_name'] for m in self.modules.values()]
+        res = set([m['module_name'] for m in self.modules.values()])
         if station:
-            res.append(self.stationByName(station)['module_name'])
+            res.add(self.stationByName(station)['module_name'])
         else:
             for id,station in self.stations.items():
-                res.append(station['module_name'])
-        return res
+                res.add(station['module_name'])
+        return list(res)
 
     def stationByName(self, station=None):
         if not station : station = self.default_station
