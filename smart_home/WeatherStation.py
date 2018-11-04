@@ -14,12 +14,13 @@ class WeatherStationData:
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
-    def __init__(self, authData):
+    def __init__(self, authData, urlReq=None):
+        self.urlReq = urlReq or _GETMEASURE_REQ
         self.getAuthToken = authData.accessToken
         postParams = {
                 "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
+        resp = postRequest(self.urlReq, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No weather station available")
         self.stations = { d['_id'] : d for d in self.rawData }
