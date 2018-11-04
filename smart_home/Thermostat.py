@@ -29,8 +29,11 @@ class ThermostatData:
         self.modList = self.devList[0]['modules']
         self.modId = self.modList[0]['_id']
         self.temp = self.modList[0]['measured']['temperature']
-        self.setpoint_temp = self.modList[0]['measured']['setpoint_temp']
         self.setpoint_mode = self.modList[0]['setpoint']['setpoint_mode']
+        if self.setpoint_mode == 'manual':
+            self.setpoint_temp = self.modList[0]['setpoint']['setpoint_temp']
+        else:
+            self.setpoint_temp = self.modList[0]['measured']['setpoint_temp']
         self.relay_cmd = int(self.modList[0]['therm_relay_cmd'])
         self.devices = { d['_id'] : d for d in self.rawData['devices'] }
         self.modules = dict()
