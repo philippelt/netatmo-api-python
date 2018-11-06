@@ -27,6 +27,8 @@ class CameraData:
             "size": size
             }
         resp = postRequest(_GETHOMEDATA_REQ, postParams)
+        if 'body' not in resp:
+            raise URLError('No data returned by Netatmo server')
         self.rawData = resp['body']
         self.homes = {d['id']: d for d in self.rawData['homes']}
         if not self.homes:

@@ -113,12 +113,14 @@ class WeatherStationData:
             if 'dashboard_data' not in module:
                 continue
             ds = module['dashboard_data']
-            if ds['time_utc'] > limit :
+            if 'time_utc' in ds and ds['time_utc'] > limit :
                 lastD[module['module_name']] = ds.copy()
                 lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc")
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('rf_status', 'battery_vp', 'battery_percent') :
                     if i in module : lastD[module['module_name']][i] = module[i]
+            else:
+                return None
         return lastD
 
     def checkNotUpdated(self, station=None, delay=3600):

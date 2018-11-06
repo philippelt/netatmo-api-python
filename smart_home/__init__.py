@@ -1,3 +1,5 @@
+import time
+import traceback
 from sys import version_info
 import json
 
@@ -27,6 +29,7 @@ def postRequest(url, params=None, timeout=10):
         try:
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.URLError:
+            print(traceback.format_exc())
             return None
     else:
         if params:
@@ -61,6 +64,8 @@ def todayStamps():
 
 
 def getStationMinMaxTH(station=None, module=None):
+    from pyatmo import ClientAuth
+    from smart_home.WeatherStation import DeviceList
     authorization = ClientAuth()
     devList = DeviceList(authorization)
     if not station : station = devList.default_station
