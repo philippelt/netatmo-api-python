@@ -7,7 +7,7 @@ import setuptools
 
 setup(
     name='pyatmo',
-    version='1.2.1',  # Should be updated with new versions
+    version='1.3',  # Should be updated with new versions
     author='Hugo Dupras',
     author_email='jabesq@gmail.com',
     py_modules=['pyatmo'],
@@ -17,6 +17,7 @@ setup(
     data_files=[],
     url='https://github.com/jabesq/netatmo-api-python',
     license='MIT',
-    description='Simple API to access Netatmo weather station data from any python script. Design for Home-Assitant (but not only)',
+    description='Simple API to access Netatmo weather station data from any python script. '
+                'Design for Home-Assitant (but not only)',
     long_description=open('README.md').read()
 )
