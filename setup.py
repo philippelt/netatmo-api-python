@@ -7,7 +7,7 @@ import setuptools
 
 setup(
     name='pyatmo',
-    version='1.3',  # Should be updated with new versions
+    version='1.4',  # Should be updated with new versions
     author='Hugo Dupras',
     author_email='jabesq@gmail.com',
     py_modules=['pyatmo'],
