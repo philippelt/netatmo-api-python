@@ -15,7 +15,7 @@ class WeatherStationData:
         authData (ClientAuth): Authentication information with a working access Token
     """
     def __init__(self, authData, urlReq=None):
-        self.urlReq = urlReq or _GETMEASURE_REQ
+        self.urlReq = urlReq or _GETSTATIONDATA_REQ
         self.getAuthToken = authData.accessToken
         postParams = {
                 "access_token": self.getAuthToken
