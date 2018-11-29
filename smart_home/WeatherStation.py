@@ -63,7 +63,7 @@ class WeatherStationData:
                 return s
         else:
             for id, station in self.stations.items():
-                if station['module_name'] == module:
+                if 'module_name' in station and station['module_name'] == module:
                     return station
         for m in self.modules:
             mod = self.modules[m]
@@ -105,7 +105,7 @@ class WeatherStationData:
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
         ds = s['dashboard_data']
-        if ds['time_utc'] > limit :
+        if 'module_name' in s and ds['time_utc'] > limit :
             lastD[s['module_name']] = ds.copy()
             lastD[s['module_name']]['When'] = lastD[s['module_name']].pop("time_utc")
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
