@@ -14,7 +14,7 @@ import time
 
 from smart_home.WeatherStation import WeatherStationData, DeviceList
 from smart_home.Camera import CameraData
-from smart_home.Thermostat import ThermostatData
+from smart_home.Thermostat import ThermostatData, HomeData, HomeStatus
 from smart_home.PublicData import PublicData
 from smart_home.HomeCoach import HomeCoachData
 from smart_home import _BASE_URL, postRequest, NoDevice
