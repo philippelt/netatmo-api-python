@@ -109,19 +109,14 @@ class HomeStatus(HomeData):
             # print('home_id', self.home_id)
         elif home:
             self.home_id = self.home_data.gethomeId(home=home)
-            # print('self.home_id = self.home_data.gethomeId(home=home)', self.home_id)
         else:
             self.home_id = self.home_data.gethomeId(home=self.home_data.default_home)
-            # print('self.home_data.gethomeId(home=self.home_data.default_home)', self.home_id)
-        # self.default_home = self.home_data.default_home
         postParams = {
             "access_token": self.getAuthToken,
             "home_id": self.home_id
             }
 
         resp = postRequest(_GETHOMESTATUS_REQ, postParams)
-        # print(postParams)
-        # print(resp)
         self.rawData = resp['body']['home']
         self.rooms = dict()
         self.thermostats = dict()
@@ -157,8 +152,6 @@ class HomeStatus(HomeData):
         print(self.thermostats)
         if self.valves != {}:
             self.default_valve = list(self.valves.values())[0]
-        # print(self.relays)
-        # print(self.default_room)
 
     def roomById(self, rid):
         if not rid:
@@ -224,7 +217,6 @@ class HomeStatus(HomeData):
     def getHgtemp(self, home=None):
         if not home:
             home = self.home_data.default_home
-            # print(self.home_data.default_home)
         data = self.home_data.getSelectedschedule(home=home)
         return data['hg_temp']
 
@@ -250,7 +242,6 @@ class HomeStatus(HomeData):
         else:
             relay_status = self.thermostatById(rid=None)
         if relay_status:
-            # print(self.thermostatById(rid=None))
             boiler_status = relay_status['boiler_status']
         return boiler_status
 
@@ -271,8 +262,6 @@ class HomeStatus(HomeData):
             "home_id": home_id,
             "mode": mode
             }
-        # print(postParams)
-        # return postRequest(_SETTHERMMODE_REQ, postParams)
         resp = postRequest(_SETTHERMMODE_REQ, postParams)
         print(resp)
 
@@ -285,9 +274,7 @@ class HomeStatus(HomeData):
             }
         if temp is not None:
             postParams['temp'] = temp
-        # print(postParams)
         return postRequest(_SETROOMTHERMPOINT_REQ, postParams)
-        # print(resp)
 
 
 class ThermostatData:
@@ -353,7 +340,7 @@ class ThermostatData:
             ds = module['setpoint']['setpoint_mode']
             dz = module['therm_program_list'][0]['zones']
             if dm['time'] > limit :
-                lastD[module['module_name']] = dm.copy()                # lastD['setpoint_mode'] = ds
+                lastD[module['module_name']] = dm.copy()
                 lastD[module['module_name']]['setpoint_mode'] = ds
                 # For potential use, add battery and radio coverage information to module data if present
                 for i in ('battery_vp', 'rf_status', 'therm_relay_cmd', 'battery_percent') :
