@@ -41,6 +41,8 @@ class CameraData:
         self.lastEvent = dict()
         self.outdoor_lastEvent = dict()
         self.types = dict()
+        self.default_home = None
+        self.default_camera = None
         for i in range(len(self.rawData['homes'])):
             nameHome = self.rawData['homes'][i]['name']
             if nameHome not in self.cameras:
@@ -78,7 +80,9 @@ class CameraData:
             self.default_module = list(self.modules.values())[0]['name']
         else:
             self.default_module = None
-        self.default_camera = list(self.cameras[self.default_home].values())[0]
+        if self.default_home is not None and len(self.cameras) > 0:
+            self.default_camera = list(self.cameras[
+                self.default_home].values())[0]
 
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
