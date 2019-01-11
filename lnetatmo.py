@@ -318,6 +318,8 @@ class WeatherStationData:
             lastD[s['module_name']]['wifi_status'] = s['wifi_status']
         if 'modules' in s:
             for module in s["modules"]:
+                # Skip lost modules that no longer have dashboard data available
+                if 'dashboard_data' not in module : continue
                 ds = module['dashboard_data']
                 if ds.get('time_utc',limit+10) > limit :
                     # If no module_name has been setup, use _id by default
