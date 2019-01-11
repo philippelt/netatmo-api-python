@@ -306,7 +306,8 @@ class WeatherStationData:
 
     def lastData(self, station=None, exclude=0):
         s = self.stationByName(station) or self.stationById(station)
-        if not s : return None
+        # Breaking change from Netatmo : dashboard_data no longer available if station lost
+        if not s or 'dashboard_data' not in s : return None
         lastD = dict()
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
@@ -429,15 +430,18 @@ class HomeData:
             nameHome = curHome['name']
             if nameHome not in self.cameras:
                 self.cameras[nameHome] = dict()
-            for p in curHome['persons']:
-                self.persons[ p['id'] ] = p
-            for e in curHome['events']:
-                if e['camera_id'] not in self.events:
-                    self.events[ e['camera_id'] ] = dict()
-                self.events[ e['camera_id'] ][ e['time'] ] = e
-            for c in curHome['cameras']:
-                self.cameras[nameHome][ c['id'] ] = c
-                c["home_id"] = curHome['id']
+            if 'persons' in curHome:
+                for p in curHome['persons']:
+                    self.persons[ p['id'] ] = p
+            if 'events' in curHome:
+                    for e in curHome['events']:
+                        if e['camera_id'] not in self.events:
+                            self.events[ e['camera_id'] ] = dict()
+                        self.events[ e['camera_id'] ][ e['time'] ] = e
+            if 'cameras' in curHome:
+                for c in curHome['cameras']:
+                    self.cameras[nameHome][ c['id'] ] = c
+                    c["home_id"] = curHome['id']
         for camera in self.events:
             self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
         if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
