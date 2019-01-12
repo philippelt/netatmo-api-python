@@ -18,9 +18,13 @@ from os.path import expanduser, exists
 import json, time
 import imghdr
 import warnings
+import logging
+
+# Just in case method could change
+PYTHON3 = (version_info.major > 2)
 
 # HTTP libraries depends upon Python 2 or 3
-if version_info.major == 3 :
+if PYTHON3 :
     import urllib.parse, urllib.request
 else:
     from urllib import urlencode
@@ -38,15 +42,18 @@ else:
 #  1 - Values hard coded in the library
 #  2 - The .netatmo.credentials file in JSON format in your home directory
 #  3 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD
+#      Note: The USERNAME environment variable may interfer with the envvar used by Windows for login name
+#            if you have this issue, do not forget to "unset USERNAME" before running your program
 
 # Each level override values defined in the previous level. You could define CLIENT_ID and CLIENT_SECRET hard coded in the library
 # and username/password in .netatmo.credentials or environment variables
 
-cred = {                       # You can hard code authentication information in the following lines
-        "CLIENT_ID" :  "",     #   Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
-        "CLIENT_SECRET" : "",  #   Your client app secret   '     '
-        "USERNAME" : "",       #   Your netatmo account username
-        "PASSWORD" : ""        #   Your netatmo account password
+# 1 : Embedded credentials
+cred = {                           # You can hard code authentication information in the following lines
+        "CLIENT_ID" :  "",         #   Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
+        "CLIENT_SECRET" : "",      #   Your client app secret   '     '
+        "USERNAME" : "",           #   Your netatmo account username
+        "PASSWORD" : ""            #   Your netatmo account password
         }
 
 # Other authentication setup management (optionals)
@@ -112,6 +119,10 @@ _PRES_CDE_GET_LIGHT    = "/command/floodlight_get_config"
 _CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"off"
 # Not working yet
 #_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
+
+
+# Logger context
+logger = logging.getLogger("lnetatmo")
 
 
 class NoDevice( Exception ):
@@ -580,7 +591,7 @@ class HomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            logger.warning("personSeenByCamera: Camera name or home is unknown")
             return False
         #Check in the last event is someone known has been seen
         if self.lastEvent[cam_id]['type'] == 'person':
@@ -604,7 +615,7 @@ class HomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            logger.warning("personSeenByCamera: Camera name or home is unknown")
             return False
         #Check in the last event is someone known has been seen
         if self.lastEvent[cam_id]['type'] == 'person':
@@ -619,7 +630,7 @@ class HomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            logger.warning("personSeenByCamera: Camera name or home is unknown")
             return False
         #Check in the last event is someone known has been seen
         if self.lastEvent[cam_id]['type'] == 'person':
@@ -634,7 +645,7 @@ class HomeData:
         try:
             cam_id = self.cameraByName(camera=camera, home=home)['id']
         except TypeError:
-            print("personSeenByCamera: Camera name or home is unknown")
+            logger.warning("personSeenByCamera: Camera name or home is unknown")
             return False
         if self.lastEvent[cam_id]['type'] == 'movement':
             return True
@@ -697,14 +708,15 @@ def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
     return postRequest(url, timeout=timeout)
     
 def postRequest(url, params=None, timeout=10):
-    if version_info.major == 3:
+    if PYTHON3:
         req = urllib.request.Request(url)
         if params:
             req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
             params = urllib.parse.urlencode(params).encode('utf-8')
         try:
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
-        except urllib.error.URLError:
+        except urllib.error.HTTPError as err:
+            logger.error("code=%s, reason=%s" % (err.code, err.reason))
             return None
     else:
         if params:
@@ -713,12 +725,13 @@ def postRequest(url, params=None, timeout=10):
         req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
         try:
             resp = urllib2.urlopen(req, timeout=timeout)
-        except urllib2.URLError:
+        except urllib2.HTTPError as err:
+            logger.error("code=%s, reason=%s" % (err.code, err.reason))
             return None
     data = b""
     for buff in iter(lambda: resp.read(65535), b''): data += buff
     # Return values in bytes if not json data to handle properly camera images
-    returnedContentType = resp.getheader("Content-Type") if version_info.major == 3 else resp.info()["Content-Type"]
+    returnedContentType = resp.getheader("Content-Type") if PYTHON3 else resp.info()["Content-Type"]
     return json.loads(data.decode("utf-8")) if "application/json" in returnedContentType else data
 
 def toTimeString(value):
@@ -761,6 +774,8 @@ def getStationMinMaxTH(station=None, module=None):
 if __name__ == "__main__":
 
     from sys import exit, stdout, stderr
+    
+    logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
 
     if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
@@ -771,8 +786,7 @@ if __name__ == "__main__":
     try:
         weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
     except NoDevice:
-        if stdout.isatty():
-            print("lnetatmo.py : warning, no weather station available for testing")
+        logger.warning("No weather station available for testing")
     else:
         weatherStation.MinMaxTH()                          # Test GETMEASUR
 
@@ -780,19 +794,14 @@ if __name__ == "__main__":
     try:
         homes = HomeData(authorization)
     except NoDevice :
-        if stdout.isatty():
-            print("lnetatmo.py : warning, no home available for testing")
+        logger.warning("No home available for testing")
 
     try:
         thermostat = ThermostatData(authorization)
     except NoDevice:
-        if stdout.isatty():
-            print("lnetatmo.py : warning, no thermostat avaible for testing")
+        logger.warning("No thermostat avaible for testing")
 
     # If we reach this line, all is OK
-
-    # If launched interactively, display OK message
-    if stdout.isatty():
-        print("lnetatmo.py : OK")
+    logger.info("OK")
 
     exit(0)
