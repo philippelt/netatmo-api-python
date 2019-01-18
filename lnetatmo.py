@@ -120,6 +120,25 @@ _CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"of
 # Not working yet
 #_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
 
+# UNITS used by Netatmo services
+UNITS = {
+    "unit" : {
+        0: "metric",
+        1: "imperial"
+    },
+    "windunit" : {
+        0: "kph",
+        1: "mph",
+        2: "ms",
+        3: "beaufort",
+        4: "knot"
+    },
+    "pressureunit" : {
+        0: "mbar",
+        1: "inHg",
+        2: "mmHg"
+    }
+}
 
 # Logger context
 logger = logging.getLogger("lnetatmo")
@@ -198,6 +217,8 @@ class User:
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
+    warnings.warn("The 'User' class is no longer maintained by Netatmo",
+            DeprecationWarning )
     def __init__(self, authData):
         postParams = {
                 "access_token" : authData.accessToken
@@ -206,6 +227,14 @@ class User:
         self.rawData = resp['body']
         self.devList = self.rawData['devices']
         self.ownerMail = self.rawData['user']['mail']
+
+
+class UserInfo:
+    """
+    This class is populated with data from various Netatmo requests to provide
+    complimentary data (eg Units for Weatherdata)
+    """
+    pass
 
 
 class ThermostatData:
@@ -269,6 +298,7 @@ class WeatherStationData:
                 }
         resp = postRequest(_GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
+        # Weather data
         if not self.rawData : raise NoDevice("No weather station available")
         self.stations = { d['_id'] : d for d in self.rawData }
         self.modules = dict()
@@ -278,6 +308,16 @@ class WeatherStationData:
                 for m in self.rawData[i]['modules']:
                     self.modules[ m['_id'] ] = m
         self.default_station = list(self.stations.values())[0]['station_name']
+        # User data
+        userData = resp['body']['user']
+        self.user = UserInfo()
+        setattr(self.user, "mail", userData['mail'])
+        for k,v in userData['administrative'].items():
+            if k in UNITS:
+                setattr(self.user, k, UNITS[k][v])
+            else:
+                setattr(self.user, k, v)
+
 
     def modulesNamesList(self, station=None):
         res = [m['module_name'] for m in self.modules.values()]

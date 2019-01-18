@@ -13,10 +13,17 @@ import time
 import lnetatmo
 
 authorization = lnetatmo.ClientAuth()
-devList = lnetatmo.WeatherStationData(authorization)
+weather = lnetatmo.WeatherStationData(authorization)
+
+user = weather.user
+
+print("Station owner : ", user.mail)
+print("Data units    : ", user.unit)
+
+print()
 
 # For each available module in the returned data that should not be older than one hour (3600 s) from now
-for module, moduleData in devList.lastData(exclude=3600).items() :
+for module, moduleData in weather.lastData(exclude=3600).items() :
    
     # Name of the module (or station embedded module), the name you defined in the web netatmo account station management
     print(module)
@@ -31,6 +38,10 @@ for module, moduleData in devList.lastData(exclude=3600).items() :
 # OUTPUT SAMPLE :
 #
 # $ printAllLastData
+#
+#Station owner :  ph.larduinat@wanadoo.fr
+#Data units    :  metric
+#
 #
 #Office
 #    AbsolutePressure : 988.7
