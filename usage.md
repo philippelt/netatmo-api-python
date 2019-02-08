@@ -61,6 +61,11 @@ Authentication data can be supplied with 4 different methods (each method overri
         $ export PASSWORD=password
         $ python3 MyCodeUsingLnetatmo.py
         ...
+        
+**Note to windows users:**  
+<aside class="warning">
+If you are running on Windows platform, take care to the **USERNAME** environment variable that is automatically set with the windows login user name. This is likely to conflict with the user name you are using for your Netatmo account and will result in an unexpected authentication failure. In such case, take care to "unset" the default **USERNAME** env variable before running your code (or set it with your actual Netatmo account ID).
+</aside>
 
  4. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
  
