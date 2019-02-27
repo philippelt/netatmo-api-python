@@ -550,9 +550,12 @@ class HomeData:
             vpn_url = camera_data['vpn_url']
             resp = postRequest(vpn_url + '/command/ping')
             temp_local_url=resp['local_url']
-            resp = postRequest(temp_local_url + '/command/ping',timeout=1)
-            if resp and temp_local_url == resp['local_url']:
-                local_url = temp_local_url
+            try:
+                resp = postRequest(temp_local_url + '/command/ping',timeout=1)
+                if resp and temp_local_url == resp['local_url']:
+                    local_url = temp_local_url
+            except:  # On this particular request, vithout errors from previous requests, error is timeout
+                local_url = None
         return vpn_url, local_url
 
     def url(self, camera=None, home=None, cid=None):
