@@ -378,7 +378,7 @@ class WeatherStationData:
                     lastD[module['module_name']] = ds.copy()
                     lastD[module['module_name']]['When'] = lastD[module['module_name']].pop("time_utc") if 'time_utc' in lastD[module['module_name']] else time.time()
                     # For potential use, add battery and radio coverage information to module data if present
-                    for i in ('battery_vp', 'rf_status') :
+                    for i in ('battery_vp', 'battery_percent', 'rf_status') :
                         if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
