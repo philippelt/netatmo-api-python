@@ -4,7 +4,7 @@
 # 2014-01 : philippelt@users.sourceforge.net 
 
 # Just connect to a Netatmo account, and print all last informations available for
-# station and modules of the user account
+# station(s) and modules of the user account
 # (except if module data is more than one hour old that usually means module lost
 #  wether out of radio range or battery exhausted thus information is no longer
 #  significant)
@@ -20,19 +20,24 @@ user = weather.user
 print("Station owner : ", user.mail)
 print("Data units    : ", user.unit)
 
-print()
+# For each station in the account
+for station in weather.stations:
 
-# For each available module in the returned data that should not be older than one hour (3600 s) from now
-for module, moduleData in weather.lastData(exclude=3600).items() :
-   
-    # Name of the module (or station embedded module), the name you defined in the web netatmo account station management
-    print(module)
-    
-    # List key/values pair of sensor information (eg Humidity, Temperature, etc...)
-    for sensor, value in moduleData.items() :
-        # To ease reading, print measurement event in readable text (hh:mm:ss)
-        if sensor == "When" : value = time.strftime("%H:%M:%S",time.localtime(value))
-        print("%30s : %s" % (sensor, value))
+    print("\nSTATION : %s\n" % weather.stations[station]["station_name"])
+
+    # For each available module in the returned data of the specified station
+    # that should not be older than one hour (3600 s) from now
+    for module, moduleData in weather.lastData(station=station, exclude=3600).items() :
+       
+        # Name of the module (or station embedded module)
+        # You setup this name in the web netatmo account station management
+        print(module)
+        
+        # List key/values pair of sensor information (eg Humidity, Temperature, etc...)
+        for sensor, value in moduleData.items() :
+            # To ease reading, print measurement event in readable text (hh:mm:ss)
+            if sensor == "When" : value = time.strftime("%H:%M:%S",time.localtime(value))
+            print("%30s : %s" % (sensor, value))
 
 
 # OUTPUT SAMPLE :
@@ -42,6 +47,8 @@ for module, moduleData in weather.lastData(exclude=3600).items() :
 #Station owner :  ph.larduinat@wanadoo.fr
 #Data units    :  metric
 #
+#
+#STATION : TEST-STATION-1
 #
 #Office
 #    AbsolutePressure : 988.7
