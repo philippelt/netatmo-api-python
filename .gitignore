@@ -10,3 +10,12 @@ lnetatmo.egg-info/
 __pycache__/
 
 MANIFEST*
+
+*.csv
+*.h5
+*.feather
+*.json
+*.parquet
+*.pkl
+*.xlsx
+
