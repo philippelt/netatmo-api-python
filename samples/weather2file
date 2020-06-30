@@ -36,6 +36,30 @@ def valid_datetime_type(arg_datetime_str):
         msg = f"Given Date {arg_datetime_str} not valid! Expected format, YYYY-MM-DD_hh:mm!"
         raise argparse.ArgumentTypeError(msg)
 
+def valid_hour_limit(hour_limit):
+    hour_limit = int(hour_limit)
+    if hour_limit <= 0:
+        msg = "Hour limit must be larger than 0"
+        raise argparse.ArgumentTypeError(msg)
+    elif hour_limit > 500:
+        msg = "Hour limit cannot be more than 500"
+        raise argparse.ArgumentTypeError(msg)
+    
+    return hour_limit 
+
+
+def valid_ten_seconds_limit(ten_sec_limit):
+    ten_sec_limit = int(ten_sec_limit)
+    if ten_sec_limit <= 0:
+        msg = "Ten seconds limit must be larger than 0"
+        raise argparse.ArgumentTypeError(msg)
+    elif ten_sec_limit > 50:
+        msg = "Ten seconds limit cannot be more than 50"
+        raise argparse.ArgumentTypeError(msg)
+
+    return ten_sec_limit
+
+
 verbose_dict = {
         'debug':logging.DEBUG,
         'info':logging.INFO,
@@ -270,9 +294,12 @@ class RateLimitHandler:
                  nr_previous_requests=0):
         
         
-        
         self._USER_REQUEST_LIMIT_PER_TEN_SECONDS = user_request_limit_per_ten_seconds
-        self._USER_REQUST_LIMIT_PER_HOUR = user_request_limit_per_hour # Due to the authorization steps
+        logging.debug(f'Ten second rate limit was set to {user_request_limit_per_ten_seconds}')
+
+        self._USER_REQUST_LIMIT_PER_HOUR = user_request_limit_per_hour 
+        logging.debug(f'Hour rate limit was set to {user_request_limit_per_hour}')
+
         self._TEN_SECOND_TIMEDELTA = timedelta(seconds=10)
         self._HOUR_TIMEDELTA = timedelta(hours=1)
         self._SECOND_TIMEDELTA = timedelta(seconds=1)
@@ -535,6 +562,26 @@ def main():
         required=False,
         help="Assumes this many previous requests has been done, so that the rate limit is not exceeded (default: 0)")
 
+
+    parser.add_argument(
+        "-hrl",
+        "--hour-rate-limit",
+        type=valid_hour_limit,
+        default=400,
+        required=False,
+        help="Specify the rate limit per hour (default: 400, max: 500)")
+
+
+
+    parser.add_argument(
+        "-t",
+        "--ten-second-rate-limit",
+        type=valid_ten_seconds_limit,
+        default=30,
+        required=False,
+        help="Specify the rate limit per ten seconds (default: 30, max: 50)")
+
+
     args = parser.parse_args()
 
 
@@ -549,9 +596,10 @@ def main():
 
     
     # Rate handler to make sure that we don't exceed Netatmos user rate limits
-    rate_limit_handler = RateLimitHandler(nr_previous_requests=args.previous_requests)
-
-
+    rate_limit_handler = RateLimitHandler(
+            user_request_limit_per_ten_seconds=args.ten_second_rate_limit,
+            user_request_limit_per_hour=args.hour_rate_limit,
+            nr_previous_requests=args.previous_requests)
 
 
     for station_mac, station_data_overview in rate_limit_handler.get_stations():
