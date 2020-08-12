@@ -1,6 +1,4 @@
 # Published Jan 2013
-# Revised Jan 2014 (to add new modules data)
-# Revised 2016 (to add camera support)
 # Author : Philippe Larduinat, ph.larduinat@wanadoo.fr
 # Multiple contributors : see https://github.com/philippelt/netatmo-api-python
 # License : GPL V3
@@ -15,6 +13,8 @@ coding=utf-8
 from sys import version_info
 from os import getenv
 from os.path import expanduser, exists
+import platform
+import warnings
 import json, time
 import imghdr
 import warnings
@@ -29,6 +29,7 @@ if PYTHON3 :
 else:
     from urllib import urlencode
     import urllib2
+
 
 ######################## AUTHENTICATION INFORMATION ######################
 
@@ -69,6 +70,13 @@ if exists(CREDENTIALS) :
         cred.update({k.upper():v for k,v in json.loads(f.read()).items()})
 
 # 3 : Override final value with content of env variables if defined
+#     Warning, for Windows user, USERNAME contains by default the windows logged user name
+#     This usually lead to an authentication error
+if platform.system() == "Windows" and getenv("USERNAME", None):
+    warnings.warn("You are running on Windows and the USERNAME env var is set. " \
+                  "Be sure this env var contains Your Netatmo username " \
+                  "or clear it with <SET USERNAME=> before running your program\n", RuntimeWarning, stacklevel=3)
+
 _CLIENT_ID     = getParameter("CLIENT_ID", cred)
 _CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
 _USERNAME      = getParameter("USERNAME", cred)
