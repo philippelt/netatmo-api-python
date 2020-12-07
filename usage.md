@@ -247,8 +247,8 @@ Raise a lnetatmo.NoDevice exception if no weather station is available for the g
 If no home is specified, the first returned home will be set as default home. Same apply to station.
 If you have only one home and one station, you can safely ignore these new parameters. Note that return order is undefined. If you have multiple homes and a weather station in only one, the default home may be the one without station and the call will fail.
 
-    **Breaking change:**
-      >  If you used the station name in the past in any method call, you should be aware that Netatmo decided to rename your station with their own value thus your existing code will have to be updated.
+>**Breaking change:**  
+If you used the station name in the past in any method call, you should be aware that Netatmo decided to rename your station with their own value thus your existing code will have to be updated.
 
 Properties, all properties are read-only unless specified:
 
