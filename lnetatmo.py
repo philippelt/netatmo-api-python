@@ -392,15 +392,15 @@ class WeatherStationData:
                         if i in module : lastD[module['module_name']][i] = module[i]
         return lastD
 
-    def checkNotUpdated(self, station=None, delay=3600):
-        res = self.lastData(station)
+    def checkNotUpdated(self, delay=3600):
+        res = self.lastData()
         ret = []
         for mn,v in res.items():
             if time.time()-v['When'] > delay : ret.append(mn)
         return ret if ret else None
 
-    def checkUpdated(self, station=None, delay=3600):
-        res = self.lastData(station)
+    def checkUpdated(self, delay=3600):
+        res = self.lastData()
         ret = []
         for mn,v in res.items():
             if time.time()-v['When'] < delay : ret.append(mn)
