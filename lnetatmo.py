@@ -320,10 +320,10 @@ class WeatherStationData:
         self.stations = { d['station_name'] : d for d in self.rawData }
         self.homes = { d['home_name'] : d["station_name"] for d in self.rawData }
         # Keeping the old behavior for default station name
-        if station and station not in self.stations: raise NoDevice("No station with name %s" % station)
-        self.default_station = station or list(self.stations.keys())[0]
         if home and home not in self.homes : raise NoHome("No home with name %s" % home)
         self.default_home = home or list(self.homes.keys())[0]
+        if station and station not in self.stations: raise NoDevice("No station with name %s" % station)
+        self.default_station = station or [v["station_name"] for k,v in self.stations.items() if v["home_name"] == self.default_home][0]
         self.modules = dict()
         self.default_station_data = self.stationByName(self.default_station)
         if 'modules' in self.default_station_data:
