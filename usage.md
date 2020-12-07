@@ -7,9 +7,11 @@ Python Netatmo API programmers guide
 
 >2014-01-13, Revision to include new modules additionnal informations
 
->2016-06-25 Update documentation for Netatmo Welcome
+>2016-06-25, Update documentation for Netatmo Welcome
 
->2017-01-09 Minor updates to packaging info
+>2017-01-09, Minor updates to packaging info
+
+>2020-12-07, Breaking changes due to removal of direct access to devices, "home" being now required (Netatmo redesign)
 
 No additional library other than standard Python library is required.
 
@@ -232,16 +234,21 @@ In most cases, you will not need to use this class that is oriented toward an ap
 Constructor
 
 ```python
-    weatherData = lnetatmo.WeatherStationData( authorization )
+    weatherData = lnetatmo.WeatherStationData( authorization, home=None, station=None )
 ```
 
 
-Requires : an authorization object (ClientAuth instance)
-
+ * Input :  : an authorization object (ClientAuth instance), an optional home name, an optional station name
 
 Return : a WeatherStationData object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.
 
 Raise a lnetatmo.NoDevice exception if no weather station is available for the given account.
+
+If no home is specified, the first returned home will be set as default home. Same apply to station.
+If you have only one home and one station, you can safely ignore these new parameters. Note that return order is undefined. If you have multiple homes and a weather station in only one, the default home may be the one without station and the call will fail.
+
+    **Breaking change**
+      >  If you used the station name in the past in any method call, you should be aware that Netatmo decided to rename your station with their own value thus your existing code will have to be updated.
 
 Properties, all properties are read-only unless specified:
 
@@ -443,8 +450,9 @@ Methods :
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
 
 
-**getStationMinMaxTH**(station=None, module=None) :
+**getStationMinMaxTH**(station=None, module=Nonei, home=None) :
   * Input : optional station name and/or module name (if no station name is provided, default_station will be used, if no module name is provided, station sensor will be reported).
+    if no home is specified, first returned home will be used
   * Output : A tuple of 6 values (Temperature, Humidity, minT, MaxT, minH, maxH)
 
 ```python

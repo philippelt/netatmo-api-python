@@ -10,11 +10,14 @@ require anything else than standard libraries
 PythonAPI Netatmo REST data access
 coding=utf-8
 """
+
+import warnings
+if __name__ == "__main__": warnings.filterwarnings("ignore") # For installation test only
+
 from sys import version_info
 from os import getenv
 from os.path import expanduser, exists
 import platform
-import warnings
 import json, time
 import imghdr
 import warnings
@@ -156,6 +159,10 @@ class NoDevice( Exception ):
     pass
 
 
+class NoHome( Exception ):
+    pass
+
+
 class AuthFailure( Exception ):
     pass
 
@@ -251,8 +258,16 @@ class ThermostatData:
 
     Args:
         authData (clientAuth): Authentication information with a working access Token
+        home : Home name or id of the home who's thermostat belongs to
     """
-    def __init__(self, authData):
+    def __init__(self, authData, home=None):
+
+        # I don't own a thermostat thus I am not able to test the Thermostat support
+        warnings.warn("The Thermostat code is not tested due to the lack of test environment.\n" \
+                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
+                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)",
+                       RuntimeWarning )
+
         self.getAuthToken = authData.accessToken
         postParams = {
                 "access_token" : self.getAuthToken
@@ -260,25 +275,18 @@ class ThermostatData:
         resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
-        self.thermostat = { d['_id'] : d for d in self.rawData }
-        for t,v in self.thermostat.items():
-            v['name'] = v['station_name']
-            for m in v['modules']:
-                m['name'] = m['module_name']
-        self.defaultThermostat = self.rawData[0]['station_name']
-        self.defaultThermostatId = self.rawData[0]['_id']
-        self.defaultModule = self.rawData[0]['modules'][0]
+        self.thermostatData = filter_home_data(rawData, home)
+        if not self.thermostatData : raise NoHome("No home %s found" % home)
+        self.thermostatData['name'] = self.thermostatData['home_name']
+        for m in self.thermostatData['modules']:
+            m['name'] = m['module_name']
+        self.defaultThermostat = self.thermostatData['home_name']
+        self.defaultThermostatId = self.thermostatData['_id']
+        self.defaultModule = self.thermostatData['modules'][0]
 
-    def getThermostat(self, name=None, tid=None):
-        if tid:
-            if tid in self.thermostat.keys():
-                return self.thermostat[tid]
-            else:
-                return None
-        elif name:
-            for t in self.thermostat.values():
-                if t['name'] == name: return t
-            return None
+    def getThermostat(self, name=None):
+        if ['name'] != name: return None
+        else: return 
         return self.thermostat[self.defaultThermostatId]
 
     def moduleNamesList(self, name=None, tid=None):
@@ -299,7 +307,7 @@ class WeatherStationData:
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
-    def __init__(self, authData):
+    def __init__(self, authData, home=None, station=None):
         self.getAuthToken = authData.accessToken
         postParams = {
                 "access_token" : self.getAuthToken
@@ -307,15 +315,20 @@ class WeatherStationData:
         resp = postRequest(_GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         # Weather data
-        if not self.rawData : raise NoDevice("No weather station available")
-        self.stations = { d['_id'] : d for d in self.rawData }
+        if not self.rawData : raise NoDevice("No weather station in any homes")
+        # Stations are no longer in the Netatmo API, keeping them for compatibility
+        self.stations = { d['station_name'] : d for d in self.rawData }
+        self.homes = { d['home_name'] : d["station_name"] for d in self.rawData }
+        # Keeping the old behavior for default station name
+        if station and station not in self.stations: raise NoDevice("No station with name %s" % station)
+        self.default_station = station or list(self.stations.keys())[0]
+        if home and home not in self.homes : raise NoHome("No home with name %s" % home)
+        self.default_home = home or list(self.homes.keys())[0]
         self.modules = dict()
-        for i in range(len(self.rawData)):
-            # Loop on external modules if they are present
-            if 'modules' in self.rawData[i]:
-                for m in self.rawData[i]['modules']:
-                    self.modules[ m['_id'] ] = m
-        self.default_station = list(self.stations.values())[0]['station_name']
+        self.default_station_data = self.stationByName(self.default_station)
+        if 'modules' in self.default_station_data:
+            for m in self.default_station_data['modules']:
+                self.modules[ m['_id'] ] = m
         # User data
         userData = resp['body']['user']
         self.user = UserInfo()
@@ -327,7 +340,7 @@ class WeatherStationData:
                 setattr(self.user, k, v)
 
 
-    def modulesNamesList(self, station=None):
+    def modulesNamesList(self, station=None, home=None):
         res = [m['module_name'] for m in self.modules.values()]
         res.append(self.stationByName(station)['module_name'])
         return res
@@ -340,31 +353,20 @@ class WeatherStationData:
         return None
 
     def stationById(self, sid):
-        return None if sid not in self.stations else self.stations[sid]
+        return self.stations.get(sid)
 
-    def moduleByName(self, module, station=None):
-        s = None
-        if station :
-            s = self.stationByName(station)
-            if not s : return None
+    def moduleByName(self, module):
         for m in self.modules:
             mod = self.modules[m]
             if mod['module_name'] == module :
                 return mod
         return None
 
-    def moduleById(self, mid, sid=None):
-        s = self.stationById(sid) if sid else None
-        if mid in self.modules :
-            if s:
-                for module in s['modules']:
-                    if module['_id'] == mid:
-                        return module
-            else:
-                return self.modules[mid]
+    def moduleById(self, mid):
+        return self.modules.get(mid)
 
-    def lastData(self, station=None, exclude=0):
-        s = self.stationByName(station) or self.stationById(station)
+    def lastData(self, exclude=0):
+        s = self.default_station_data
         # Breaking change from Netatmo : dashboard_data no longer available if station lost
         if not s or 'dashboard_data' not in s : return None
         lastD = dict()
@@ -417,22 +419,16 @@ class WeatherStationData:
         postParams['real_time'] = "true" if real_time else "false"
         return postRequest(_GETMEASURE_REQ, postParams)
 
-    def MinMaxTH(self, station=None, module=None, frame="last24"):
-        if not station : station = self.default_station
-        s = self.stationByName(station)
-        if not s :
-            s = self.stationById(station)
-            if not s : return None
+    def MinMaxTH(self, module=None, frame="last24"):
+        s = self.default_station_data
         if frame == "last24":
             end = time.time()
             start = end - 24*3600 # 24 hours ago
         elif frame == "day":
             start, end = todayStamps()
         if module and module != s['module_name']:
-            m = self.moduleByName(module, s['station_name'])
-            if not m :
-                m = self.moduleById(s['_id'], module)
-                if not m : return None
+            m = self.moduleById(module) or self.moduleByName(module)
+            if not m : raise NoDevice("Can't find module %s" % module)
             # retrieve module's data
             resp = self.getMeasure(
                     device_id  = s['_id'],
@@ -470,7 +466,7 @@ class HomeData:
     Args:
         authData (ClientAuth): Authentication information with a working access Token
     """
-    def __init__(self, authData):
+    def __init__(self, authData, home=None):
         self.getAuthToken = authData.accessToken
         postParams = {
             "access_token" : self.getAuthToken
@@ -480,7 +476,7 @@ class HomeData:
         # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
         if not self.homes : raise NoDevice("No home available")
-        self.default_home = list(self.homes.values())[0]['name']
+        self.default_home = home or list(self.homes.values())[0]['name']
         # Split homes data by category
         self.persons = dict()
         self.events = dict()
@@ -754,6 +750,17 @@ class WelcomeData(HomeData):
 
 # Utilities routines
 
+
+def filter_home_data(rawData, home):
+    if home:
+        # Find a home who's home id or name is the one requested
+        for h in rawData:
+            if h["home_name"] == home or h["home_id"] == home:
+                return h
+        return None
+    # By default, the first home is returned
+    return rawData[0]
+
 def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
     url = cameraUrl + ( commande % parameters if parameters else commande)
     return postRequest(url, timeout=timeout)
@@ -798,16 +805,19 @@ def todayStamps():
 
 # Global shortcut
 
-def getStationMinMaxTH(station=None, module=None):
+def getStationMinMaxTH(station=None, module=None, home=None):
     authorization = ClientAuth()
-    devList = DeviceList(authorization)
-    if not station : station = devList.default_station
-    if module :
-        mname = module
-    else :
-        mname = devList.stationByName(station)['module_name']
-    lastD = devList.lastData(station)
-    if mname == "*":
+    devList = WeatherStationData(authorization, station=station, home=home)
+    if module == "*":
+        pass
+    elif module:
+        module = devList.moduleById(module) or devList.moduleByName(module)
+        if not module: raise NoDevice("No such module %s" % module)
+        else: module = module["module_name"]
+    else:
+        module = list(devList.modules.values())[0]["module_name"]
+    lastD = devList.lastData()
+    if module == "*":
         result = dict()
         for m in lastD.keys():
             if time.time()-lastD[m]['When'] > 3600 : continue
@@ -815,8 +825,9 @@ def getStationMinMaxTH(station=None, module=None):
             result[m] = (r[0], lastD[m]['Temperature'], r[1])
     else:
         if time.time()-lastD[mname]['When'] > 3600 : result = ["-", "-"]
-        else : result = [lastD[mname]['Temperature'], lastD[mname]['Humidity']]
-        result.extend(devList.MinMaxTH(station, mname))
+        else : 
+            result = [lastD[module]['Temperature'], lastD[module]['Humidity']]
+            result.extend(devList.MinMaxTH(module))
     return result
 
 
@@ -840,7 +851,6 @@ if __name__ == "__main__":
         logger.warning("No weather station available for testing")
     else:
         weatherStation.MinMaxTH()                          # Test GETMEASUR
-
 
     try:
         homes = HomeData(authorization)
