@@ -102,7 +102,7 @@ _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
 
-# _POST_UPDATE_HOME_REQ  = _BASE_URL + "/api/updatehome"
+_POST_UPDATE_HOME_REQ  = _BASE_URL + "/api/updatehome"
 
 # For presence setting (POST BODY):
 # _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"   # (HomeId, DetectionKind, DetectionSetup.index)
@@ -275,7 +275,7 @@ class ThermostatData:
         resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
-        self.thermostatData = filter_home_data(rawData, home)
+        self.thermostatData = filter_home_data(self.rawData, home)
         if not self.thermostatData : raise NoHome("No home %s found" % home)
         self.thermostatData['name'] = self.thermostatData['home_name']
         for m in self.thermostatData['modules']:
@@ -824,7 +824,7 @@ def getStationMinMaxTH(station=None, module=None, home=None):
             r = devList.MinMaxTH(module=m)
             result[m] = (r[0], lastD[m]['Temperature'], r[1])
     else:
-        if time.time()-lastD[mname]['When'] > 3600 : result = ["-", "-"]
+        if time.time()-lastD[module]['When'] > 3600 : result = ["-", "-"]
         else : 
             result = [lastD[module]['Temperature'], lastD[module]['Humidity']]
             result.extend(devList.MinMaxTH(module))
