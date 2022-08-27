@@ -22,9 +22,13 @@ import json, time
 import imghdr
 import warnings
 import logging
+import socket
 
 # Just in case method could change
 PYTHON3 = (version_info.major > 2)
+
+if PYTHON3 :
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # HTTP libraries depends upon Python 2 or 3
 if PYTHON3 :
@@ -33,6 +37,8 @@ else:
     from urllib import urlencode
     import urllib2
 
+# deactivate request handling of local http server for OAuth2 flow initialization
+keepHttpServerRunning = True
 
 ######################## AUTHENTICATION INFORMATION ######################
 
@@ -56,8 +62,8 @@ else:
 cred = {                           # You can hard code authentication information in the following lines
         "CLIENT_ID" :  "",         #   Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
         "CLIENT_SECRET" : "",      #   Your client app secret   '     '
-        "USERNAME" : "",           #   Your netatmo account username
-        "PASSWORD" : ""            #   Your netatmo account password
+        "REFRESH_TOKEN": "",       #   Your oauth2 refresh token
+        "SCOPE": ""                #   The blank separated scopes that should be granted to your access token, see https://dev.netatmo.com/apidocumentation/oauth#scopes
         }
 
 # Other authentication setup management (optionals)
@@ -82,8 +88,8 @@ if platform.system() == "Windows" and getenv("USERNAME", None):
 
 _CLIENT_ID     = getParameter("CLIENT_ID", cred)
 _CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
-_USERNAME      = getParameter("USERNAME", cred)
-_PASSWORD      = getParameter("PASSWORD", cred)
+_REFRESH_TOKEN = getParameter("REFRESH_TOKEN", cred)
+_SCOPE         = getParameter("SCOPE", cred)
 
 #########################################################################
 
@@ -185,18 +191,21 @@ class ClientAuth:
 
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
-                       username=_USERNAME,
-                       password=_PASSWORD,
-                       scope="read_station read_camera access_camera write_camera " \
-                                 "read_presence access_presence write_presence read_thermostat write_thermostat"):
+                       refreshToken=_REFRESH_TOKEN,
+#                       scope="read_station read_camera access_camera write_camera " \
+#                                 "read_presence access_presence write_presence read_thermostat write_thermostat"):
+                       scope=_SCOPE):
         
+        if _REFRESH_TOKEN == "": 
+            # using print here, because the logger is not necesssary configured:
+            print("A REFRESH_TOKEN is missing in you config file ~/.netatmo.credentials. Please start the module manually to retrieve a token: python -m lnetatmo")
+            exit(0)
+ 
         postParams = {
-                "grant_type" : "password",
+                "grant_type" : "refresh_token",
                 "client_id" : clientId,
                 "client_secret" : clientSecret,
-                "username" : username,
-                "password" : password,
-                "scope" : scope
+                "refresh_token" : refreshToken
                 }
         resp = postRequest(_AUTH_REQ, postParams)
         if not resp: raise AuthFailure("Authentication request rejected")
@@ -831,18 +840,108 @@ def getStationMinMaxTH(station=None, module=None, home=None):
     return result
 
 
+def getFreePort():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    host = s.getsockname()[0]
+    s.close()
+    sock = socket.socket()
+    sock.bind(('', 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    return {"host":host, "port":port}
+     
+     #"http://{0}:{1}".format(host, port)
+
+def encodeParams(params):
+    if PYTHON3:
+        return urllib.parse.urlencode(params)
+    return urllib.urlencode(params)
+
+# TODO: Python 3 only
+class ProcessOAuth2Code(BaseHTTPRequestHandler):
+
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_GET(self):
+        #logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+        self._set_response()
+
+        urlParams = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        if not "code" in urlParams:
+            self.wfile.write(("no code in request").encode('utf-8'))
+            return
+
+        code = urlParams["code"]
+        if code is None:
+            self.wfile.write(("no code in query").encode('utf-8'))
+            return
+
+        code = code[0]
+        host = self.headers.get('Host')
+
+        postParams = {
+                  "grant_type": "authorization_code",
+                  "client_id": _CLIENT_ID,
+                  "client_secret": _CLIENT_SECRET,
+                  "code": code,
+                  "redirect_uri": "http://{0}".format(host),
+                  "scope": _SCOPE}
+    
+        resp = postRequest(_AUTH_REQ, postParams)
+        if not resp: raise AuthFailure("retrieving refresh_token failed for code: {0}", code)
+        
+        global keepHttpServerRunning
+        keepHttpServerRunning = False
+        
+        updateRefreshToken(resp["refresh_token"])
+        self.wfile.write("updated refresh token".encode('utf-8'))
+        
+
+def updateRefreshToken(token):
+    logger.info("write new refresh token to config file: {0}".format(token))
+    with open(CREDENTIALS, "r") as jsonFile:
+        data = json.load(jsonFile)
+
+    data["REFRESH_TOKEN"] = token
+
+    with open(CREDENTIALS, "w") as jsonFile:
+        json.dump(data, jsonFile)
+
+
 # auto-test when executed directly
 
 if __name__ == "__main__":
-
     from sys import exit, stdout, stderr
     
     logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
 
-    if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
+    if not _CLIENT_ID or not _CLIENT_SECRET :
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
+    if _REFRESH_TOKEN == "": 
+        logger.info("A REFRESH_TOKEN is missing in you config file ~/.netatmo.credentials, we need to retrieve it via OAuth2 authentication, please open the url a browser on the same network with access to this device")
+        if _SCOPE == "": 
+            logger.info("The SCOPE property is missing or empty in your config file, please add it")
+
+        freePort = getFreePort()
+        port = freePort["port"]
+        host = freePort["host"]
+        redirect_uri = "http://{0}:{1}".format( host, port)
+        params = { "client_id":_CLIENT_ID, "redirect_uri": redirect_uri,"scope":_SCOPE }
+        outhRequestUrl = "https://api.netatmo.com/oauth2/authorize?" + encodeParams(params)
+        print(outhRequestUrl)
+
+        server_address = (host, port)
+        print("wait for processing activatin code on http://{0}:{1}".format(host,port))
+        httpd = HTTPServer(server_address, ProcessOAuth2Code)
+        while keepHttpServerRunning:
+            httpd.handle_request()
+        
     authorization = ClientAuth()  # Test authentication method
     
     try:
