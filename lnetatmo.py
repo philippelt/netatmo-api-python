@@ -94,10 +94,11 @@ _BASE_URL = "https://api.netatmo.com/"
 _AUTH_REQ              = _BASE_URL + "oauth2/token"
 _GETMEASURE_REQ        = _BASE_URL + "api/getmeasure"
 _GETSTATIONDATA_REQ    = _BASE_URL + "api/getstationsdata"
-_GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
+_GETHOMESDATA_REQ      = _BASE_URL + "api/homesdata"
+_GETHOMESTATUS_REQ     = _BASE_URL + "api/homestatus"
 
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
@@ -160,6 +161,10 @@ class NoDevice( Exception ):
 
 
 class NoHome( Exception ):
+    pass
+
+
+class NoHomes( Exception ):
     pass
 
 
@@ -252,7 +257,7 @@ class UserInfo:
     pass
 
 
-class ThermostatData:
+class EnergyHomesData:
     """
     List the Thermostat and temperature modules
 
@@ -261,30 +266,27 @@ class ThermostatData:
         home : Home name or id of the home who's thermostat belongs to
     """
     def __init__(self, authData, home=None):
-
-        # I don't own a thermostat thus I am not able to test the Thermostat support
-        warnings.warn("The Thermostat code is not tested due to the lack of test environment.\n" \
-                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
-                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)",
-                       RuntimeWarning )
-
         self.getAuthToken = authData.accessToken
         postParams = {
                 "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
-        self.rawData = resp['body']['devices']
-        if not self.rawData : raise NoDevice("No thermostat available")
-        self.thermostatData = filter_home_data(self.rawData, home)
-        if not self.thermostatData : raise NoHome("No home %s found" % home)
-        self.thermostatData['name'] = self.thermostatData['home_name']
-        for m in self.thermostatData['modules']:
-            m['name'] = m['module_name']
-        self.defaultThermostat = self.thermostatData['home_name']
-        self.defaultThermostatId = self.thermostatData['_id']
-        self.defaultModule = self.thermostatData['modules'][0]
+        resp = postRequest(_GETHOMESDATA_REQ, postParams)
 
-    def getThermostat(self, name=None):
+        self.rawData = resp['body']['homes']
+        if not self.rawData : raise NoHomes("No homes available")
+        self.homes = {}
+        self.defaultHomeId = self.rawData[0]['id']
+        for home in self.rawData:
+            self.homes[home['id']] = home
+
+    def getHome(self, name=None):
+        def getThermostats(self):
+            return self['']
+
+        if ['name'] != name: return self.homes[self.defaultHomeId]
+        else: self.homes[name]
+
+    def getThermostat(self, name=None, homeId=None):
         if ['name'] != name: return None
         else: return 
         return self.thermostat[self.defaultThermostatId]
@@ -299,6 +301,50 @@ class ThermostatData:
             if m['name'] == name: return m
         return None
 
+class EnergyHomeStatus:
+    def __init__(self, authData, home):
+        self.getAuthToken = authData.accessToken
+        if not home: raise NoHome("No home provided")
+        postParams = {
+                "access_token" : self.getAuthToken,
+                "home_id": home['id']
+                }
+        resp = postRequest(_GETHOMESTATUS_REQ, postParams)
+
+        self.rawData = resp['body']['home']
+        if not self.rawData : raise NoHome("No home available")
+
+        self.rooms = dict()
+        self.rawRooms = dict()
+        self.modules = dict()
+
+        for module in self.rawData['modules']:
+            self.modules[module['id']] = module
+
+        for room in self.rawData['rooms']:
+            self.rawRooms[room['id']] = room
+
+        for room in home['rooms']:
+            singleRoom = room
+
+            singleRoom['modules'] = dict()
+            for moduleId in room['module_ids']:
+                rawModule = []
+                for homeModule in home['modules']:
+                    if homeModule['id'] == moduleId: rawModule = homeModule
+
+                singleRoom['modules'][moduleId] = self.modules[moduleId] | rawModule
+
+            if room['id'] not in self.rawRooms: rawRoom = dict()
+            else: rawRoom = self.rawRooms[room['id']]
+
+            self.rooms[room['id']] = singleRoom | rawRoom
+
+    def getModules(self):
+        return self.modules
+
+    def getRooms(self):
+        return self.rooms
 
 class WeatherStationData:
     """
