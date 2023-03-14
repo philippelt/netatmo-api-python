@@ -14,6 +14,7 @@ If you have multiple homes or were supplying a station name in some method calls
  - to supply a home name when looking for data for most class initializers
  - to use the new station name set by Netatmo (which is not your previously set value)
 
+>Note: Authentication tokens obtained using ClientAuth will always expires after 3 hours. If you are using long lasting sessions, you must renew this tokens by calling again ClientAuth periodically.
 
 ### Install ###
 
