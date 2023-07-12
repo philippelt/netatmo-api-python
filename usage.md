@@ -13,13 +13,15 @@ Python Netatmo API programmers guide
 
 >2020-12-07, Breaking changes due to removal of direct access to devices, "home" being now required (Netatmo redesign)
 
+>2023-07-12, Breaking changes due to deprecation of grant_type "password" for ALL apps
+
 No additional library other than standard Python library is required.
 
 Both Python V2.7x and V3.x.x are supported without change.
 
 More information about the Netatmo REST API can be obtained from http://dev.netatmo.com/doc/
 
-This package support only user based authentication.
+This package support only preauthenticated scoped tokens created along apps.
 
 
 
@@ -32,6 +34,7 @@ Before being able to use the module you will need :
 
   * A Netatmo user account having access to, at least, one station
   * An application registered from the user account (see http://dev.netatmo.com/dev/createapp) to obtain application credentials.
+  * Create a couple access_token/refresh_token at the same time with your required scope (depending of your intents on library use)
 
 In the netatmo philosophy, both the application itself and the user have to be registered thus have authentication credentials to be able to access any station. Registration is free for both.
 
@@ -52,24 +55,19 @@ Authentication data can be supplied with 4 different methods (each method overri
         {
             "CLIENT_ID" : "`xxx",
             "CLIENT_SECRET" : "xxx",
-            "USERNAME" : "xxx",
-            "PASSWORD" : "xxx"
+            "REFRESH_TOKEN" : "xxx"
         }
         $
 
  3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker. It also allow you to do some testing with other accounts without touching your current ~/.netatmo.credentials file 
  
-        $ export USERNAME=newUsername
-        $ export PASSWORD=password
+        $ export REFRESH_TOKEN="yyy"
         $ python3 MyCodeUsingLnetatmo.py
         ...
         
-    **Note to windows users:**  
-      >  If you are running on Windows platform, take care to the **USERNAME** environment variable that is automatically set with the windows login user name. This is likely to conflict with the user name you are using for your Netatmo account and will result in an unexpected authentication failure. In such case, take care to "unset" the default **USERNAME** env variable before running your code (or set it with your actual Netatmo account ID).
-
  4. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
  
-        # Example: USERNAME and PASSWORD supposed to be defined by one of the previous methods
+        # Example: REFRESH_TOKEN supposed to be defined by one of the previous methods
         authData = lnetatmo.ClientAuth( clientId="netatmo-client-id",
                                         clientSecret="secret" )
 
@@ -151,7 +149,7 @@ The results are Python data structures, mostly dictionaries as they mirror easil
 _CLIENT_ID, _CLIENT_SECRET = Application ID and secret provided by Netatmo
 application registration in your user account
 
-_USERNAME, _PASSWORD : Username and password of your netatmo account
+_REFRESH_TOKEN : Refresh token created along the app client credentials
 
 _BASE_URL and _*_REQ : Various URL to access Netatmo web services. They are
 documented in http://dev.netatmo.com/doc/ They should not be changed unless
@@ -169,9 +167,7 @@ Constructor
 ```python
     authorization = lnetatmo.ClientAuth( clientId = _CLIENT_ID,
                                          clientSecret = _CLIENT_SECRET,
-                                         username = _USERNAME,
-                                         password = _PASSWORD,
-                                         scope = "read_station"
+                                         refreshToken = _REFRESH_TOKEN,
                                         )
 ```
 
@@ -185,17 +181,9 @@ Return : an authorization object that will supply the access token required by o
 Properties, all properties are read-only unless specified :
 
   * **accessToken** : Retrieve a valid access token (renewed if necessary)
-  * **refreshToken** : The token used to renew the access token (normally should not be used)
+  * **refreshToken** : The token used to renew the access token (normally should not be used explicitely)
   * **expiration** : The expiration time (epoch) of the current token
-  * **scope** : The scope of the required access token (what will it be used for) default to read_station to provide backward compatibility.
  
-Possible values for scope are :
- - read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
- - read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
- - access_camera: to access the camera, the videos and the live stream.
-
-Several value can be used at the same time, ie: 'read_station read_camera'
-
   
 
 #### 4-3 User class ####

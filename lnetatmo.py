@@ -45,19 +45,16 @@ else:
 # Authentication use :
 #  1 - Values hard coded in the library
 #  2 - The .netatmo.credentials file in JSON format in your home directory
-#  3 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD
-#      Note: The USERNAME environment variable may interfer with the envvar used by Windows for login name
-#            if you have this issue, do not forget to "unset USERNAME" before running your program
+#  3 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
 
 # Each level override values defined in the previous level. You could define CLIENT_ID and CLIENT_SECRET hard coded in the library
-# and username/password in .netatmo.credentials or environment variables
+# and REFRESH_TOKEN in .netatmo.credentials or environment variables
 
 # 1 : Embedded credentials
 cred = {                           # You can hard code authentication information in the following lines
-        "CLIENT_ID" :  "",         #   Your client ID from Netatmo app registration at http://dev.netatmo.com/dev/listapps
+        "CLIENT_ID" :  "",         #   Your client ID from Netatmo app registration at http://dev.netatmo.com
         "CLIENT_SECRET" : "",      #   Your client app secret   '     '
-        "USERNAME" : "",           #   Your netatmo account username
-        "PASSWORD" : ""            #   Your netatmo account password
+        "REFRESH_TOKEN" : ""       #   Your scoped refresh token (generated with app credentials)
         }
 
 # Other authentication setup management (optionals)
@@ -73,17 +70,9 @@ if exists(CREDENTIALS) :
         cred.update({k.upper():v for k,v in json.loads(f.read()).items()})
 
 # 3 : Override final value with content of env variables if defined
-#     Warning, for Windows user, USERNAME contains by default the windows logged user name
-#     This usually lead to an authentication error
-if platform.system() == "Windows" and getenv("USERNAME", None):
-    warnings.warn("You are running on Windows and the USERNAME env var is set. " \
-                  "Be sure this env var contains Your Netatmo username " \
-                  "or clear it with <SET USERNAME=> before running your program\n", RuntimeWarning, stacklevel=3)
-
 _CLIENT_ID     = getParameter("CLIENT_ID", cred)
 _CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
-_USERNAME      = getParameter("USERNAME", cred)
-_PASSWORD      = getParameter("PASSWORD", cred)
+_REFRESH_TOKEN = getParameter("REFRESH_TOKEN", cred)
 
 #########################################################################
 
@@ -174,55 +163,37 @@ class ClientAuth:
     Args:
         clientId (str): Application clientId delivered by Netatmo on dev.netatmo.com
         clientSecret (str): Application Secret key delivered by Netatmo on dev.netatmo.com
-        username (str)
-        password (str)
-        scope (Optional[str]): Default value is 'read_station'
-            read_station: to retrieve weather station data (Getstationsdata, Getmeasure)
-            read_camera: to retrieve Welcome data (Gethomedata, Getcamerapicture)
-            access_camera: to access the camera, the videos and the live stream.
-            Several value can be used at the same time, ie: 'read_station read_camera'
+        refresh_token (str) : Scoped refresh token
     """
 
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
-                       username=_USERNAME,
-                       password=_PASSWORD,
-                       scope="read_station read_camera access_camera write_camera " \
-                                 "read_presence access_presence write_presence read_thermostat write_thermostat"):
+                       refreshToken=_REFRESH_TOKEN):
         
-        postParams = {
-                "grant_type" : "password",
-                "client_id" : clientId,
-                "client_secret" : clientSecret,
-                "username" : username,
-                "password" : password,
-                "scope" : scope
-                }
-        resp = postRequest(_AUTH_REQ, postParams)
-        if not resp: raise AuthFailure("Authentication request rejected")
-
         self._clientId = clientId
         self._clientSecret = clientSecret
-        self._accessToken = resp['access_token']
-        self.refreshToken = resp['refresh_token']
-        self._scope = resp['scope']
-        self.expiration = int(resp['expire_in'] + time.time())
+        self._accessToken = None
+        self.refreshToken = refreshToken
+        self.expiration = 0 # Force refresh token
 
     @property
     def accessToken(self):
-
-        if self.expiration < time.time(): # Token should be renewed
-            postParams = {
-                    "grant_type" : "refresh_token",
-                    "refresh_token" : self.refreshToken,
-                    "client_id" : self._clientId,
-                    "client_secret" : self._clientSecret
-                    }
-            resp = postRequest(_AUTH_REQ, postParams)
-            self._accessToken = resp['access_token']
-            self.refreshToken = resp['refresh_token']
-            self.expiration = int(resp['expire_in'] + time.time())
+        if self.expiration < time.time() : self.renew_token()
         return self._accessToken
+
+    def renew_token(self):
+        postParams = {
+                "grant_type" : "refresh_token",
+                "refresh_token" : self.refreshToken,
+                "client_id" : self._clientId,
+                "client_secret" : self._clientSecret
+                }
+        resp = postRequest(_AUTH_REQ, postParams)
+        if self.refreshToken != resp['refresh_token']:
+            print("New refresh token:", resp['refresh_token'])
+        self._accessToken = resp['access_token']
+        self.refreshToken = resp['refresh_token']
+        self.expiration = int(resp['expire_in'] + time.time())
 
 
 class User:
@@ -774,7 +745,7 @@ def postRequest(url, params=None, timeout=10):
         try:
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.HTTPError as err:
-            logger.error("code=%s, reason=%s" % (err.code, err.reason))
+            logger.error("code=%s, reason=%s, body=%s" % (err.code, err.reason, err.fp.read()))
             return None
     else:
         if params:
@@ -839,7 +810,7 @@ if __name__ == "__main__":
     
     logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
 
-    if not _CLIENT_ID or not _CLIENT_SECRET or not _USERNAME or not _PASSWORD :
+    if not _CLIENT_ID or not _CLIENT_SECRET or not _REFRESH_TOKEN :
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
