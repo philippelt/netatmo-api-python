@@ -163,7 +163,7 @@ class ClientAuth:
     Args:
         clientId (str): Application clientId delivered by Netatmo on dev.netatmo.com
         clientSecret (str): Application Secret key delivered by Netatmo on dev.netatmo.com
-        refresh_token (str) : Scoped refresh token
+        refreshToken (str) : Scoped refresh token
     """
 
     def __init__(self, clientId=_CLIENT_ID,
