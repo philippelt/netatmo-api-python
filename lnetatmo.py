@@ -293,8 +293,17 @@ class WeatherStationData:
         # Keeping the old behavior for default station name
         if home and home not in self.homes : raise NoHome("No home with name %s" % home)
         self.default_home = home or list(self.homes.keys())[0]
-        if station and station not in self.stations: raise NoDevice("No station with name %s" % station)
-        self.default_station = station or [v["station_name"] for k,v in self.stations.items() if v["home_name"] == self.default_home][0]
+        if station:
+            if station not in self.stations:
+                # May be a station_id convert it to corresponding station name
+                s = self.stationById(station)
+                if s :
+                    station = s["station_name"]
+                else:
+                    raise NoDevice("No station with name or id %s" % station)
+            self.default_station = station
+        else:
+            self.default_station =  [v["station_name"] for k,v in self.stations.items() if v["home_name"] == self.default_home][0]
         self.modules = dict()
         self.default_station_data = self.stationByName(self.default_station)
         if 'modules' in self.default_station_data:
@@ -313,6 +322,7 @@ class WeatherStationData:
 
     def modulesNamesList(self, station=None, home=None):
         res = [m['module_name'] for m in self.modules.values()]
+        station = self.stationByName(station) or self.stationById(station)
         res.append(self.stationByName(station)['module_name'])
         return res
 
@@ -324,7 +334,9 @@ class WeatherStationData:
         return None
 
     def stationById(self, sid):
-        return self.stations.get(sid)
+        for s in self.stations:
+            if sid == self.stations[s]["_id"]: return self.stations[s]
+        return None
 
     def moduleByName(self, module):
         for m in self.modules:
@@ -337,7 +349,7 @@ class WeatherStationData:
         return self.modules.get(mid)
 
     def lastData(self, station=None, exclude=0):
-        s = self.stationByName(station)
+        s = self.stationByName(station) or self.stationById(station)
         # Breaking change from Netatmo : dashboard_data no longer available if station lost
         if not s or 'dashboard_data' not in s : return None
         lastD = dict()

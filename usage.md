@@ -226,7 +226,7 @@ Constructor
 ```
 
 
- * Input : an authorization object (ClientAuth instance), an optional home name, an optional station name
+ * Input : an authorization object (ClientAuth instance), an optional home name, an optional station name or id
 
 Return : a WeatherStationData object. This object contains most administration properties of stations and modules accessible to the user and the last data pushed by the station to the Netatmo servers.
 
