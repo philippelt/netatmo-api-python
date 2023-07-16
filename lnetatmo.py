@@ -156,6 +156,9 @@ class AuthFailure( Exception ):
     pass
 
 
+class outOfScope( Exception ):
+    pass
+
 class ClientAuth:
     """
     Request authentication and keep access token available through token method. Renew it automatically if necessary
@@ -188,7 +191,7 @@ class ClientAuth:
                 "client_id" : self._clientId,
                 "client_secret" : self._clientSecret
                 }
-        resp = postRequest(_AUTH_REQ, postParams)
+        resp = postRequest("authentication", _AUTH_REQ, postParams)
         if self.refreshToken != resp['refresh_token']:
             print("New refresh token:", resp['refresh_token'])
         self._accessToken = resp['access_token']
@@ -209,7 +212,7 @@ class User:
         postParams = {
                 "access_token" : authData.accessToken
                 }
-        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
+        resp = postRequest("Weather station", _GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']
         self.devList = self.rawData['devices']
         self.ownerMail = self.rawData['user']['mail']
@@ -243,7 +246,7 @@ class ThermostatData:
         postParams = {
                 "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
+        resp = postRequest("Thermostat", _GETTHERMOSTATDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
         self.thermostatData = filter_home_data(self.rawData, home)
@@ -283,7 +286,7 @@ class WeatherStationData:
         postParams = {
                 "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_GETSTATIONDATA_REQ, postParams)
+        resp = postRequest("Weather station", _GETSTATIONDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         # Weather data
         if not self.rawData : raise NoDevice("No weather station in any homes")
@@ -400,7 +403,7 @@ class WeatherStationData:
         if limit : postParams['limit'] = limit
         postParams['optimize'] = "true" if optimize else "false"
         postParams['real_time'] = "true" if real_time else "false"
-        return postRequest(_GETMEASURE_REQ, postParams)
+        return postRequest("Weather station", _GETMEASURE_REQ, postParams)
 
     def MinMaxTH(self, module=None, frame="last24"):
         s = self.default_station_data
@@ -454,7 +457,7 @@ class HomeData:
         postParams = {
             "access_token" : self.getAuthToken
             }
-        resp = postRequest(_GETHOMEDATA_REQ, postParams)
+        resp = postRequest("Home data", _GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
         # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
@@ -535,10 +538,10 @@ class HomeData:
             camera_data=self.cameraByName(camera=camera, home=home)
         if camera_data:
             vpn_url = camera_data['vpn_url']
-            resp = postRequest(vpn_url + '/command/ping')
+            resp = postRequest("Camera", vpn_url + '/command/ping')
             temp_local_url=resp['local_url']
             try:
-                resp = postRequest(temp_local_url + '/command/ping',timeout=1)
+                resp = postRequest("Camera", temp_local_url + '/command/ping',timeout=1)
                 if resp and temp_local_url == resp['local_url']:
                     local_url = temp_local_url
             except:  # On this particular request, vithout errors from previous requests, error is timeout
@@ -573,7 +576,7 @@ class HomeData:
             "image_id" : image_id,
             "key" : key
             }
-        resp = postRequest(_GETCAMERAPICTURE_REQ, postParams)
+        resp = postRequest("Camera", _GETCAMERAPICTURE_REQ, postParams)
         image_type = imghdr.what('NONE.FILE',resp)
         return resp, image_type
 
@@ -607,7 +610,7 @@ class HomeData:
             "home_id" : home_data['id'],
             "event_id" : event['id']
         }
-        resp = postRequest(_GETEVENTSUNTIL_REQ, postParams)
+        resp = postRequest("Camera", _GETEVENTSUNTIL_REQ, postParams)
         eventList = resp['body']['events_list']
         for e in eventList:
             self.events[ e['camera_id'] ][ e['time'] ] = e
@@ -712,7 +715,7 @@ class HomeData:
                        "home_id" : camera["home_id"],
                        "presence_settings[presence_record_%s]" % eventType : _PRES_DETECTION_SETUP.index(action)
                      }
-        resp = postRequest(_POST_UPDATE_HOME_REQ, postParams)
+        resp = postRequest("Camera", _POST_UPDATE_HOME_REQ, postParams)
         self.rawData = resp['body']
 
     def getLiveSnapshot(self, camera=None, home=None, cid=None):
@@ -746,9 +749,9 @@ def filter_home_data(rawData, home):
 
 def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
     url = cameraUrl + ( commande % parameters if parameters else commande)
-    return postRequest(url, timeout=timeout)
+    return postRequest("Camera", url, timeout=timeout)
     
-def postRequest(url, params=None, timeout=10):
+def postRequest(topic, url, params=None, timeout=10):
     if PYTHON3:
         req = urllib.request.Request(url)
         if params:
@@ -757,7 +760,10 @@ def postRequest(url, params=None, timeout=10):
         try:
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.HTTPError as err:
-            logger.error("code=%s, reason=%s, body=%s" % (err.code, err.reason, err.fp.read()))
+            if err.code == 403:
+                logger.warning("Your current token scope do not allow access to %s" % topic)
+            else:
+                logger.error("code=%s, reason=%s, body=%s" % (err.code, err.reason, err.fp.read()))
             return None
     else:
         if params:
@@ -767,7 +773,10 @@ def postRequest(url, params=None, timeout=10):
         try:
             resp = urllib2.urlopen(req, timeout=timeout)
         except urllib2.HTTPError as err:
-            logger.error("code=%s, reason=%s" % (err.code, err.reason))
+            if err.code == 403:
+                logger.warning("Your current token scope do not allow access to %s" % topic)
+            else:
+                logger.error("code=%s, reason=%s" % (err.code, err.reason))
             return None
     data = b""
     for buff in iter(lambda: resp.read(65535), b''): data += buff
