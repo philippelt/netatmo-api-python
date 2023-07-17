@@ -292,6 +292,7 @@ class WeatherStationData:
         if not self.rawData : raise NoDevice("No weather station in any homes")
         # Stations are no longer in the Netatmo API, keeping them for compatibility
         self.stations = { d['station_name'] : d for d in self.rawData }
+        self.stationIds = { d['_id'] : d for d in self.rawData }
         self.homes = { d['home_name'] : d["station_name"] for d in self.rawData }
         # Keeping the old behavior for default station name
         if home and home not in self.homes : raise NoHome("No home with name %s" % home)
@@ -331,15 +332,13 @@ class WeatherStationData:
 
     def stationByName(self, station=None):
         if not station : station = self.default_station
-        for i,s in self.stations.items():
-            if s['station_name'] == station :
-                return self.stations[i]
-        return None
+        if station not in self.stations : return None
+        return self.stations[station]
 
     def stationById(self, sid):
-        for s in self.stations:
-            if sid == self.stations[s]["_id"]: return self.stations[s]
-        return None
+        if not sid : return self.stations[self.default_station]
+        if sid not in self.stationIds : return None
+        return self.stationIds[sid]
 
     def moduleByName(self, module):
         for m in self.modules:
