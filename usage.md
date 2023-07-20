@@ -422,9 +422,49 @@ Methods :
   * **getLiveSnapshot** (camera=None, home=None, cid=None) : Get a jpeg of current live view of the camera
     * Input : camera name and optional home name or cameraID to lookup (str)
     * Output : jpeg binary content
+  
+
+#### 4-6 HomeStatus class ####
 
 
-#### 4-5 Utilities functions ####
+Constructor
+
+```python
+    homeStatus = lnetatmo.HomeStatus( authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+
+Return : a homeStatus object. This object contains most administration properties of Home+ Control devices such as Smarther thermostat, Socket, Cable Output, Centralized fan, Micromodules, ...
+
+Methods :
+
+  * **getRoomsId** : return all room ID
+    * Output : list of IDs of every single room (only the one with Smarther thermostat)
+
+  * **getListRoomParam** : return every parameters of a room
+    * Input : room ID
+    * Output : list of parameters of a room
+
+  * **getRoomParam** : return a specific parameter for a specific room
+    * Input : room ID and parameter
+    * Output : value
+
+  * **getModulesId** : return all module IDs
+    * Output : list of IDs of every single module (socket, cable outlet, ...)
+
+  * **getListModuleParam** : return every parameters of a module
+    * Input : module ID
+    * Output : list of parameters of a module
+
+  * **getModuleParam** : return a specific parameter for a specific module
+    * Input : module ID and parameter
+    * Output : value
+
+
+#### 4-7 Utilities functions ####
 
 
   * **toTimeString** (timestamp) : Convert a Netatmo time stamp to a readable date/time format.
@@ -432,7 +472,7 @@ Methods :
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
 
 
-#### 4-6 All-in-One function ####
+#### 4-8 All-in-One function ####
 
 
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
