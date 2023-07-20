@@ -87,6 +87,7 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
+_HOME_STATUS           = _BASE_URL + "api/homestatus"         # Used for Home+ Control Devices 
 
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
@@ -172,7 +173,7 @@ class ClientAuth:
     def __init__(self, clientId=_CLIENT_ID,
                        clientSecret=_CLIENT_SECRET,
                        refreshToken=_REFRESH_TOKEN):
-        
+
         self._clientId = clientId
         self._clientSecret = clientSecret
         self._accessToken = None
@@ -226,6 +227,59 @@ class UserInfo:
     pass
 
 
+class HomeStatus:
+    """
+    List all Home+Control devices (Smarther thermostat, Socket, Cable Output, Centralized fan, Micromodules, ......)
+
+    Args:
+        authData (clientAuth): Authentication information with a working access Token
+        home : Home name or id of the home who's thermostat belongs to
+    """
+    def __init__(self, authData, home_id):
+
+        self.getAuthToken = authData.accessToken
+        postParams = {
+                "access_token" : self.getAuthToken,
+                "home_id": home_id
+                }
+        resp = postRequest("home_status", _HOME_STATUS, postParams)
+        self.resp = resp
+        self.rawData = resp['body']['home']
+        if not self.rawData : raise NoHome("No home %s found" % home_id)
+        self.rooms = self.rawData['rooms']
+        self.modules = self.rawData['modules']
+
+    def getRoomsId(self):
+        return [room['id'] for room in self.rooms]
+
+    def getListRoomParam(self, room_id):
+        for room in self.rooms:
+            if(room['id'] == room_id):
+                return [param for param in room]
+        return None
+
+    def getRoomParam(self, room_id, param):
+        for room in self.rooms:
+            if(room['id'] == room_id and param in room):
+                return room[param]
+        return None
+
+    def getModulesId(self):
+        return [module['id'] for module in self.modules]
+
+    def getListModuleParam(self, module_id):
+        for module in self.modules:
+            if(module['id'] == module_id):
+                return [param for param in module]
+        return None
+
+    def getModuleParam(self, module_id, param):
+        for module in self.modules:
+            if(module['id'] == module_id and param in module):
+                return module[param]
+        return None
+
+
 class ThermostatData:
     """
     List the Thermostat and temperature modules
@@ -260,7 +314,7 @@ class ThermostatData:
 
     def getThermostat(self, name=None):
         if ['name'] != name: return None
-        else: return 
+        else: return
         return self.thermostat[self.defaultThermostatId]
 
     def moduleNamesList(self, name=None, tid=None):
@@ -688,7 +742,7 @@ class HomeData:
         if camera["type"] != "NOC": return None # Not a presence camera
         vpnUrl, localUrl = self.cameraUrls(cid=camera["id"])
         return localUrl
-    
+
     def presenceLight(self, camera=None, home=None, cid=None, setting=None):
         url = self.presenceUrl(home=home, camera=camera) or self.cameraById(cid=cid)
         if not url or setting not in ("on", "off", "auto"): return None
@@ -749,7 +803,7 @@ def filter_home_data(rawData, home):
 def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
     url = cameraUrl + ( commande % parameters if parameters else commande)
     return postRequest("Camera", url, timeout=timeout)
-    
+
 def postRequest(topic, url, params=None, timeout=10):
     if PYTHON3:
         req = urllib.request.Request(url)
@@ -816,7 +870,7 @@ def getStationMinMaxTH(station=None, module=None, home=None):
             result[m] = (r[0], lastD[m]['Temperature'], r[1])
     else:
         if time.time()-lastD[module]['When'] > 3600 : result = ["-", "-"]
-        else : 
+        else :
             result = [lastD[module]['Temperature'], lastD[module]['Humidity']]
             result.extend(devList.MinMaxTH(module))
     return result
@@ -827,7 +881,7 @@ def getStationMinMaxTH(station=None, module=None, home=None):
 if __name__ == "__main__":
 
     from sys import exit, stdout, stderr
-    
+
     logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
 
     if not _CLIENT_ID or not _CLIENT_SECRET or not _REFRESH_TOKEN :
@@ -835,7 +889,7 @@ if __name__ == "__main__":
            exit(1)
 
     authorization = ClientAuth()  # Test authentication method
-    
+
     try:
         weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
     except NoDevice:
