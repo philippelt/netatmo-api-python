@@ -732,9 +732,13 @@ class WelcomeData(HomeData):
     warnings.warn("The 'WelcomeData' class was renamed 'HomeData' to handle new Netatmo Home capabilities",
             DeprecationWarning )
     pass
-
 # Utilities routines
 
+def rawAPI(authData, url, parameters={}):
+    fullUrl = _BASE_URL + "api/" + url
+    parameters["access_token"] = authData.accessToken
+    resp = postRequest("rawAPI", fullUrl, parameters)
+    return resp["body"] if "body" in resp else None
 
 def filter_home_data(rawData, home):
     if home:
@@ -755,6 +759,8 @@ def postRequest(topic, url, params=None, timeout=10):
         req = urllib.request.Request(url)
         if params:
             req.add_header("Content-Type","application/x-www-form-urlencoded;charset=utf-8")
+            if "access_token" in params:
+                req.add_header("Authorization","Bearer %s" % params.pop("access_token"))
             params = urllib.parse.urlencode(params).encode('utf-8')
         try:
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
@@ -767,7 +773,9 @@ def postRequest(topic, url, params=None, timeout=10):
     else:
         if params:
             params = urlencode(params)
-            headers = {"Content-Type" : "application/x-www-form-urlencoded;charset=utf-8"}
+            headers = {"Content-Type"  : "application/x-www-form-urlencoded;charset=utf-8"}
+            if "access_token" in params:
+                headers["Authorization"] = "Bearer %s" % params.pop("access_token")
         req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
         try:
             resp = urllib2.urlopen(req, timeout=timeout)

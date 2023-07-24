@@ -15,6 +15,8 @@ Python Netatmo API programmers guide
 
 >2023-07-12, Breaking changes due to deprecation of grant_type "password" for ALL apps
 
+>2023-07-24, Adding rawAPI call to direct access the netatmo API when no additional support is provided by the library
+
 No additional library other than standard Python library is required.
 
 Both Python V2.7x and V3.x.x are supported without change.
@@ -427,6 +429,7 @@ Methods :
 #### 4-5 Utilities functions ####
 
 
+  * **rawAPI** (authentication, APIkeyword, parameters) : Direct call an APIkeyword from Netatmo and return a dictionary with the raw response the APIkeywork is the path without the / before as specified in the documentation (eg. "gethomesdata" or "homestatus")
   * **toTimeString** (timestamp) : Convert a Netatmo time stamp to a readable date/time format.
   * **toEpoch**( dateString) : Convert a date string (form YYYY-MM-DD_HH:MM:SS) to timestamp
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
