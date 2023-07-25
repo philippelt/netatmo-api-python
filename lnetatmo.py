@@ -826,10 +826,10 @@ def postRequest(topic, url, params=None, timeout=10):
             return None
     else:
         if params:
+            token = params.pop("access_token") if "access_token" in params else None
             params = urlencode(params)
             headers = {"Content-Type"  : "application/x-www-form-urlencoded;charset=utf-8"}
-            if "access_token" in params:
-                headers["Authorization"] = "Bearer %s" % params.pop("access_token")
+            if token: headers["Authorization"] = "Bearer %s" % token
         req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
         try:
             resp = urllib2.urlopen(req, timeout=timeout)
