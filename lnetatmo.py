@@ -830,7 +830,7 @@ def postRequest(topic, url, params=None, timeout=10):
             params = urlencode(params)
             headers = {"Content-Type"  : "application/x-www-form-urlencoded;charset=utf-8"}
             if token: headers["Authorization"] = "Bearer %s" % token
-        req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url)
+        req = urllib2.Request(url=url, data=params, headers=headers) if params else urllib2.Request(url=url, headers=headers)
         try:
             resp = urllib2.urlopen(req, timeout=timeout)
         except urllib2.HTTPError as err:
