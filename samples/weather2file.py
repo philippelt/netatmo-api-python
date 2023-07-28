@@ -147,7 +147,7 @@ class DataFrameHandler:
         logging.debug(f"{full_file_path} saved")
 
     def append(self, df):
-        self.df = self.df.append(df).reset_index(drop=True)
+        self.df = pd.concat([self.df, df], ignore_index=True)
 
     def get_newest_timestamp(self,module_mac):
         if ('module_mac' in self.df.columns):
@@ -233,18 +233,17 @@ class ParquetHandler(DataFrameHandler):
 class SQLHandler(DataFrameHandler):
     def __init__(self, file_name, output_path):
         raise NotImplementedError("sql details not setup")
-        from sqlalchemy import create_engine
+        #from sqlalchemy import create_engine
 
-        super().__init__(df, file_name, output_path, file_format="sql", kwargs={"con": self.engine})
-        self.engine = create_engine("sqlite://", echo=False)
+        #super().__init__(file_name, output_path, file_format="sql", kwargs={"con": self.engine})
+        #self.engine = create_engine("sqlite://", echo=False)
 
     def _read_file(self, file_path):
         return pd.read_sql(file_path, **self.kwargs)
 
     def _write_file(self, file_path):
         raise NotImplementedError("sql details not setup")
-        engine = create_engine("sqlite://", echo=False)
-        df.to_sql(file_path, index=False, **self.kwargs)
+        self.df.to_sql(file_path, index=False, **self.kwargs)
 
 
 class FeatherHandler(DataFrameHandler):
@@ -393,9 +392,9 @@ class RateLimitHandler:
         """Returns a dict to be used when requesting data through the Netatmo API"""
         
         return {'device_id':station_id,
-         'module_id':module_id,
          'scale':'max',
          'mtype':','.join(data_type),
+         'module_id':module_id,
          'date_begin':start_date,
          'date_end':end_date}
 
@@ -445,13 +444,11 @@ class RateLimitHandler:
         # Start with the oldest timestamp
         module_start_date_timestamp = module_data_overview['last_setup']
 
-        # Create an empty DataFrame to fill with new values
-        df_module = pd.DataFrame([])
-
+        # Fill array with data
+        data = []
 
         if(newest_utctime):
             # Found newer data! Change start time according to the newest value
-
 
             if(newest_utctime > module_start_date_timestamp):
                 module_start_date_timestamp = newest_utctime + 1
@@ -483,16 +480,17 @@ class RateLimitHandler:
                 try:
                     # Was there any data?
                     if(retreived_module_data['body']):
-                        # Yes! Append it with df_module                    
-                        df_module = df_module.append(self._to_dataframe(retreived_module_data['body'],
+                        new_df = self._to_dataframe(retreived_module_data['body'],
                                             module_data_overview,
                                             station_name,
                                             station_mac,
                                             dtype,
-                                            time_z))
-                        logging.debug(f'{len(retreived_module_data["body"])} samples found for {module_data_overview["module_name"]}. {df_module.shape[0]} new samples collected so far.')
+                                            time_z)
+                        data.append(new_df)
+                        new_df['utc_time'].min()
+                        logging.debug(f'{len(retreived_module_data["body"])} samples found for {module_data_overview["module_name"]}. {new_df["timestamp"].iloc[0]} - {new_df["timestamp"].iloc[-1]}')
                         # Now change the start_time
-                        module_start_date_timestamp = df_module['utc_time'].max() + 1
+                        module_start_date_timestamp = new_df['utc_time'].max() + 1
 
                     else:
                         keep_collecting_module_data = False
@@ -503,8 +501,15 @@ class RateLimitHandler:
                     keep_collecting_module_data = False
                     logging.error(f'Something fishy is going on... Aborting collection for module {module_name}')
         
+
+        if data:
+            df_module = pd.concat(data,ignore_index=True)
+        else:
+            df_module = pd.DataFrame([])
+
+
         logging.info(f'Collected data from {module_name} contains {df_module.shape[0]} samples.')
-        return df_module.reset_index(drop=True)
+        return df_module
 
 def main():
 
@@ -602,17 +607,18 @@ def main():
             nr_previous_requests=args.previous_requests)
 
 
-    for station_mac, station_data_overview in rate_limit_handler.get_stations():
+    for station_name, station_data_overview in rate_limit_handler.get_stations():
     
-        station_name = station_data_overview['station_name']
+        station_mac = station_data_overview['_id']
     
         station_timezone = timezone(station_data_overview['place']['timezone'])
         logging.info(f'Timezone {station_timezone} extracted from data.')
         
         end_datetime_timestamp = np.floor(datetime.timestamp(station_timezone.localize(args.end_datetime)))
+        newest_utc = df_handler.get_newest_timestamp(station_data_overview['_id'])
         df_handler.append(
             rate_limit_handler.get_module_df(
-                df_handler.get_newest_timestamp(station_data_overview['_id']),
+                newest_utc,
                 station_name,
                 station_mac,
                 station_data_overview,
