@@ -252,6 +252,10 @@ Properties, all properties are read-only unless specified:
 Methods :
 
 
+  * **getStation** (station=None) : Find a station by it's station name or station ID
+    * Input : Station name or ID to lookup (str)
+    * Output : station dictionary or None
+
   * **stationByName** (station=None) : Find a station by it's station name
     * Input : Station name to lookup (str)
     * Output : station dictionary or None

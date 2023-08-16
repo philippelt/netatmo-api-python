@@ -384,15 +384,21 @@ class WeatherStationData:
         res.append(self.stationByName(station)['module_name'])
         return res
 
-    def stationByName(self, station=None):
-        if not station : station = self.default_station
-        if station not in self.stations : return None
-        return self.stations[station]
+    # Both functions (byName and byStation) are here for historical reason,
+    # considering that chances are low that a station name could be confused with a station ID,
+    # there should be in fact a single function for getting station data
 
+    def getStation(self, station=None):
+        if not station : station = self.default_station
+        if station in self.stations : return self.stations[station]
+        if station in self.stationIds : return self.stationIds[station]
+        return None
+
+    # Functions for compatibility with previous versions
+    def stationByName(self, station=None):
+        return self.getStation(station)
     def stationById(self, sid):
-        if not sid : return self.stations[self.default_station]
-        if sid not in self.stationIds : return None
-        return self.stationIds[sid]
+        return self.getStation(sid)
 
     def moduleByName(self, module):
         for m in self.modules:
