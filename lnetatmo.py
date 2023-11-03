@@ -1048,17 +1048,30 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth()  # Test authentication method
+    authorization = ClientAuth()                                   # Test authentication method
 
     try:
         weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
     except NoDevice:
         logger.warning("No weather station available for testing")
     else:
-        weatherStation.MinMaxTH()                          # Test GETMEASUR
+        weatherStation.MinMaxTH()                                  # Test GETMEASUR
 
     try:
         homes = HomeData(authorization)
+        for k, v in homes.homes.items():
+            #print (v)
+            C = v.pop('cameras')
+            P = v.pop('persons')
+            S = v.pop('smokedetectors')
+            #
+            if C == [] and P == [] and S == []:
+                #print (v)
+                logger.info("No Cameras, Persons, Smokedetectors found")
+                # 
+            else:
+                homeid = k
+                #
     except NoDevice :
         logger.warning("No home available for testing")
 
@@ -1067,6 +1080,18 @@ if __name__ == "__main__":
     except NoDevice:
         logger.warning("No thermostat avaible for testing")
 
+    try:
+#        homesdata = lnetatmo.HomesData(authorization)
+# ERROR ; Your current token scope do not allow access to Module ?  - No Home ID given !
+        homesdata = HomesData(authorization, homeid)
+    except NoDevice:
+        logger.warning("No HomesData avaible for testing")
+            
+    try:
+        Homecoach = HomeCoach(authorization)
+    except NoDevice:
+        logger.warning("No HomeCoach avaible for testing")
+        
     # If we reach this line, all is OK
     logger.info("OK")
 
