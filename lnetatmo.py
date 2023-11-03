@@ -87,9 +87,9 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
-_HOME_STATUS           = _BASE_URL + "api/homestatus"         # Used for Home+ Control Devices 
+_HOME_STATUS           = _BASE_URL + "api/homestatus"                  # Used for Home+ Control Devices 
 _GETHOMES_DATA         = _BASE_URL + "api/homesdata"                   # New API
-
+_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"           #
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
 
@@ -889,7 +889,54 @@ class HomesData:
 #        print (self.Homes_Data)
         if not self.Homes_Data : raise NoDevice("No Devices available")
 
+class HomeCoach:
+    """
+    List the HomeCoach modules
+        
+    Args:
+        authData (clientAuth): Authentication information with a working access Token
+        home : Home name or id of the home who's HomeCoach belongs to
+    """
+    def __init__(self, authData, home=None):
+        # I don't own a HomeCoach thus I am not able to test the HomeCoach support
+        
+#        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
+#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is h$
+#                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
 
+        self.getAuthToken = authData.accessToken
+        postParams = {
+                "access_token" : self.getAuthToken
+                }
+        resp = postRequest("HomeCoach", _GETHOMECOACH, postParams)
+        self.rawData = resp['body']['devices']
+        # homecoach data
+        if not self.rawData : raise NoDevice("No HomeCoach available")
+
+        for i in range(len(self.rawData)):
+           #
+           self.HomecoachDevice = self.rawData[i]
+#           print ('Homecoach = ', self.HomecoachDevice)
+#           print (' ')
+#           print ('Homecoach_data = ', self.rawData[i]['dashboard_data'])
+#           print (' ')
+    
+    def lastData(self, _id=None, exclude=0):
+        s = self.HomecoachDevice['dashboard_data']['time_utc']
+        _id = self.HomecoachDevice['_id']
+        return {'When':s}, {'_id':_id}
+    
+    def checkNotUpdated(self, delay=3600):  
+        res = self.lastData()
+        ret = []
+        if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated')
+        return ret if ret else None
+
+    def checkUpdated(self, delay=3600):
+        res = self.lastData()
+        ret = []
+        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date')
+        return ret if ret else None
 
 # Utilities routines
 
