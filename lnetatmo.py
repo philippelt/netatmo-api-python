@@ -861,7 +861,8 @@ class WelcomeData(HomeData):
 
 class HomesData:
     """
-    List the Data of most modules
+    List the Netatmo actual topology and static information of all devices present
+    into a user account. It is also possible to specify a home_id to focus on one home.
 
     Args:
         authData (clientAuth): Authentication information with a working access Token
