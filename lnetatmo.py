@@ -87,8 +87,9 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
-_HOME_STATUS           = _BASE_URL + "api/homestatus"         # Used for Home+ Control Devices 
-
+_HOME_STATUS           = _BASE_URL + "api/homestatus"                  # Used for Home+ Control Devices 
+_GETHOMES_DATA         = _BASE_URL + "api/homesdata"                   # New API
+_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"           #
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
 
@@ -121,6 +122,59 @@ _CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"of
 # Not working yet
 #_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
 
+#Known TYPE used by Netatmo services + API,      there can be more types possible
+TYPES = {
+    'BFII'         : ["Bticino IP Indoor unit", 'Home + Security'],
+    'BFIC'         : ["Bticino IP Guard station", 'Home + Security'],
+    'BFIO'         : ["Bticino IP Entrance panel", 'Home + Security'],
+    'BFIS'         : ["Bticino Server DES", 'Home + Security'],
+    'BNS'          : ["Smarther with Netatmo Thermostat", 'Home+Control'],
+    'BNCU'         : ["Bticino Bticino Alarm Central Unit", 'Home + Security'],
+    'BNCS'         : ["Bticino module Controlled Socket", 'Home+Control'],
+    'BNCX'         : ["Bticino Class 300 EOS", 'Home + Security'],
+    'BNDL'         : ["Bticino Doorlock", 'Home + Security'],
+    'BNEU'         : ["Bticino external unit", 'Home + Security'],
+    'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
+    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],  # also API Home+Control  GATEWAY
+    'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
+    'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
+    'BNTH'         : ["Bticino Thermostat", 'Home+Control'],
+    'BNTR'         : ["Bticino module towel rail", 'Home+Control'],
+    'BNXM'         : ["Bticino X meter", 'Home+Control'],
+
+        'NACamera'     : ["indoor camera", 'Home + Security'],
+    'NACamDoorTag' : ["door tag", 'Home + Security'],
+    'NAMain'       : ["weather station", 'Weather'],
+    'NAModule1'    : ["outdoor unit", 'Weather'],
+    'NAModule2'    : ["wind unit", 'Weather'],
+    'NAModule3'    : ["rain unit", 'Weather'],
+    'NAModule4'    : ["indoor unit", 'Weather'],
+    'NAPlug'       : ["thermostat relais station", 'Energy'],          # A smart thermostat exist of a thermostat$
+                                                                       # The relais module is also the bridge bet$
+    'NATherm1'     : ["thermostat",  'Energy'],
+    'NCO'          : ["co2 sensor", 'Home + Security'],                # The same API as smoke sensor
+    'NDB'          : ["doorbell", 'Home + Security'],
+    'NOC'          : ["outdoor camera", 'Home + Security'],
+    'NRV'          : ["thermostat valves", 'Energy'],                  # also API Home+Control
+    'NSD'          : ["smoke sensor", 'Home + Security'],
+    'NHC'          : ["home coach", 'Aircare'],
+        'NIS'          : ["indoor sirene", 'Home + Security'],
+
+    'NLC'          : ["Cable Outlet", 'Home+Control'],
+    'NLE'          : ["Ecometer", 'Home+Control'],
+    'NLG'          : ["Gateway", 'Home+Control'],
+    'NLGS'         : ["Standard DIN Gateway", 'Home+Control'],
+    'NLP'          : ["Power Outlet", 'Home+Control'],
+    'NLPC'         : ["DIN Energy meter", 'Home+Control'],
+    'NLPD'         : ["Dry contact", 'Home+Control'],
+    'NLPM'         : ["Mobile Socket", 'Home+Control'],
+    'NLPO'         : ["Contactor", 'Home+Control'],
+    'NLPT'         : ["Teleruptor", 'Home+Control'],
+
+    'OTH'          : ["Opentherm Thermostat Relay", 'Home+Control'],
+    'OTM'          : ["Smart modulating Thermostat", 'Home+Control']
+    }
+
 # UNITS used by Netatmo services
 UNITS = {
     "unit" : {
@@ -138,6 +192,18 @@ UNITS = {
         0: "mbar",
         1: "inHg",
         2: "mmHg"
+    },
+    "Health index" : {                                                 # Homecoach
+        0: "Healthy",
+        1: "Fine",
+        2: "Fair",
+        3: "Poor",
+        4: "Unhealthy"
+    },
+    "Wifi status" : {                                                  # Wifi Signal quality
+        86: "Bad",
+        71: "Average",
+        56: "Good"
     }
 }
 
@@ -317,11 +383,11 @@ class ThermostatData:
         else: return
         return self.thermostat[self.defaultThermostatId]
 
-    def moduleNamesList(self, name=None, tid=None):
+    def moduleNamesList(self, name=None, tid=None):                                 # ERROR   getThermostat() got an unexpected keyword argument 'tid'
         thermostat = self.getThermostat(name=name, tid=tid)
         return [m['name'] for m in thermostat['modules']] if thermostat else None
 
-    def getModuleByName(self, name, thermostatId=None):
+    def getModuleByName(self, name, thermostatId=None):                             # ERROR  'NoneType' object is not subscriptable
         thermostat = self.getThermostat(tid=thermostatId)
         for m in thermostat['modules']:
             if m['name'] == name: return m
@@ -792,6 +858,87 @@ class WelcomeData(HomeData):
     warnings.warn("The 'WelcomeData' class was renamed 'HomeData' to handle new Netatmo Home capabilities",
             DeprecationWarning )
     pass
+
+class HomesData:
+    """
+    List the Netatmo actual topology and static information of all devices present
+    into a user account. It is also possible to specify a home_id to focus on one home.
+
+    Args:
+        authData (clientAuth): Authentication information with a working access Token
+        home : Home name or id of the home who's module belongs to
+    """
+    def __init__(self, authData, home=None):
+        #
+        self.getAuthToken = authData.accessToken
+        postParams = {
+                "access_token" : self.getAuthToken,
+                "home_id": home
+                }
+        #
+        resp = postRequest("Module", _GETHOMES_DATA, postParams)
+#        self.rawData = resp['body']['devices']
+        self.rawData = resp['body']['homes']
+        if not self.rawData : raise NoHome("No home %s found" % home)
+        #
+        if home:
+            # Find a home who's home id or name is the one requested
+            for h in self.rawData:
+                #print (h.keys())
+                if h["name"] == home or h["id"] == home:
+                   self.Homes_Data = h
+#        print (self.Homes_Data)
+        if not self.Homes_Data : raise NoDevice("No Devices available")
+
+class HomeCoach:
+    """
+    List the HomeCoach modules
+        
+    Args:
+        authData (clientAuth): Authentication information with a working access Token
+        home : Home name or id of the home who's HomeCoach belongs to
+    """
+    def __init__(self, authData, home=None):
+        # I don't own a HomeCoach thus I am not able to test the HomeCoach support
+        
+#        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
+#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is h$
+#                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
+
+        self.getAuthToken = authData.accessToken
+        postParams = {
+                "access_token" : self.getAuthToken
+                }
+        resp = postRequest("HomeCoach", _GETHOMECOACH, postParams)
+        self.rawData = resp['body']['devices']
+        # homecoach data
+        if not self.rawData : raise NoDevice("No HomeCoach available")
+
+        for i in range(len(self.rawData)):
+           #
+           self.HomecoachDevice = self.rawData[i]
+#           print ('Homecoach = ', self.HomecoachDevice)
+#           print (' ')
+#           print ('Homecoach_data = ', self.rawData[i]['dashboard_data'])
+#           print (' ')
+    
+    def lastData(self, _id=None, exclude=0):
+        s = self.HomecoachDevice['dashboard_data']['time_utc']
+        _id = self.HomecoachDevice['_id']
+        return {'When':s}, {'_id':_id}
+    
+    def checkNotUpdated(self, delay=3600):  
+        res = self.lastData()
+        ret = []
+        if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated')
+        return ret if ret else None
+
+    def checkUpdated(self, delay=3600):
+        res = self.lastData()
+        ret = []
+        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date')
+        return ret if ret else None
+
 # Utilities routines
 
 def rawAPI(authData, url, parameters={}):
@@ -902,17 +1049,30 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth()  # Test authentication method
+    authorization = ClientAuth()                                   # Test authentication method
 
     try:
         weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
     except NoDevice:
         logger.warning("No weather station available for testing")
     else:
-        weatherStation.MinMaxTH()                          # Test GETMEASUR
+        weatherStation.MinMaxTH()                                  # Test GETMEASUR
 
     try:
         homes = HomeData(authorization)
+        for k, v in homes.homes.items():
+            #print (v)
+            C = v.pop('cameras')
+            P = v.pop('persons')
+            S = v.pop('smokedetectors')
+            #
+            if C == [] and P == [] and S == []:
+                #print (v)
+                logger.info("No Cameras, Persons, Smokedetectors found")
+                # 
+            else:
+                homeid = k
+                #
     except NoDevice :
         logger.warning("No home available for testing")
 
@@ -921,6 +1081,18 @@ if __name__ == "__main__":
     except NoDevice:
         logger.warning("No thermostat avaible for testing")
 
+    try:
+#        homesdata = lnetatmo.HomesData(authorization)
+# ERROR ; Your current token scope do not allow access to Module ?  - No Home ID given !
+        homesdata = HomesData(authorization, homeid)
+    except NoDevice:
+        logger.warning("No HomesData avaible for testing")
+            
+    try:
+        Homecoach = HomeCoach(authorization)
+    except NoDevice:
+        logger.warning("No HomeCoach avaible for testing")
+        
     # If we reach this line, all is OK
     logger.info("OK")
 
