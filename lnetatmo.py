@@ -929,14 +929,16 @@ class HomeCoach:
     
     def checkNotUpdated(self, delay=3600):  
         res = self.lastData()
+        _id = res['_id']
         ret = []
         if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated'})
         return ret if ret else None
 
     def checkUpdated(self, delay=3600):
         res = self.lastData()
+        _id = res['_id']
         ret = []
-        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date'})
+        if time.time()-res['When'] < delay : ret.update({_id['_id']: 'Device up-to-date'})
         return ret if ret else None
 
 # Utilities routines
