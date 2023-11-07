@@ -149,8 +149,8 @@ TYPES = {
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],          # A smart thermostat exist of a thermostat$
-                                                                       # The relais module is also the bridge bet$
+    'NAPlug'       : ["thermostat relais station", 'Energy'],          # A smart thermostat exist of a thermostat and a Relais module
+                                                                       # The relais module is also the bridge for thermostat and Valves
     'NATherm1'     : ["thermostat",  'Energy'],
     'NCO'          : ["co2 sensor", 'Home + Security'],                # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
@@ -902,7 +902,7 @@ class HomeCoach:
         # I don't own a HomeCoach thus I am not able to test the HomeCoach support
         
 #        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
-#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is h$
+#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
 #                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
 
         self.getAuthToken = authData.accessToken
@@ -930,13 +930,13 @@ class HomeCoach:
     def checkNotUpdated(self, delay=3600):  
         res = self.lastData()
         ret = []
-        if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated')
+        if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated'})
         return ret if ret else None
 
     def checkUpdated(self, delay=3600):
         res = self.lastData()
         ret = []
-        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date')
+        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date'})
         return ret if ret else None
 
 # Utilities routines
