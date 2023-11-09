@@ -12,7 +12,7 @@ coding=utf-8
 """
 
 import warnings
-if __name__ == "__main__": warnings.filterwarnings("ignore") # For installation test only
+if __name__ == "__main__": warnings.filterwarnings("ignore")                              # For installation test only
 
 from sys import version_info
 from os import getenv
@@ -87,20 +87,20 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
-_HOME_STATUS           = _BASE_URL + "api/homestatus"                  # Used for Home+ Control Devices 
-_GETHOMES_DATA         = _BASE_URL + "api/homesdata"                   # New API
-_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"           #
+_HOME_STATUS           = _BASE_URL + "api/homestatus"                                     # Used for Home+ Control Devices 
+_GETHOMES_DATA         = _BASE_URL + "api/homesdata"                                      # New API
+_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"                              #
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
 
 _POST_UPDATE_HOME_REQ  = _BASE_URL + "/api/updatehome"
 
 # For presence setting (POST BODY):
-# _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"   # (HomeId, DetectionKind, DetectionSetup.index)
+# _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"          # (HomeId, DetectionKind, DetectionSetup.index)
 _PRES_DETECTION_KIND   = ("humans", "animals", "vehicles", "movements")
 _PRES_DETECTION_SETUP  = ("ignore", "record", "record & notify")
 
-# _PRES_BODY_ALERT_TIME  = "home_id=%s&presence_settings[presence_notify_%s]=%s"   # (HomeID, "from"|"to", "hh:mm")
+# _PRES_BODY_ALERT_TIME  = "home_id=%s&presence_settings[presence_notify_%s]=%s"          # (HomeID, "from"|"to", "hh:mm")
 
 # Regular (documented) commands (both cameras)
 
@@ -113,14 +113,14 @@ _PRES_CDE_GET_SNAP     = "/live/snapshot_720.jpg"
 
 _PRES_CDE_GET_LIGHT    = "/command/floodlight_get_config"
 # Not working yet, probably due to scope restriction
-#_PRES_CDE_SET_LIGHT    = "/command/floodlight_set_config?config=mode:%s"    # "auto"|"on"|"off"
+#_PRES_CDE_SET_LIGHT    = "/command/floodlight_set_config?config=mode:%s"                 # "auto"|"on"|"off"
 
 
 # For all cameras
 
-_CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"off"
+_CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"                                # "on"|"off"
 # Not working yet
-#_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
+#_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"                      # "on"|"off"
 
 #Known TYPE used by Netatmo services + API,      there can be more types possible
 TYPES = {
@@ -135,30 +135,30 @@ TYPES = {
     'BNDL'         : ["Bticino Doorlock", 'Home + Security'],
     'BNEU'         : ["Bticino external unit", 'Home + Security'],
     'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
-    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],  # also API Home+Control  GATEWAY
+    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],                     # also API Home+Control  GATEWAY
     'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
     'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
     'BNTH'         : ["Bticino Thermostat", 'Home+Control'],
     'BNTR'         : ["Bticino module towel rail", 'Home+Control'],
     'BNXM'         : ["Bticino X meter", 'Home+Control'],
 
-        'NACamera'     : ["indoor camera", 'Home + Security'],
+    'NACamera'     : ["indoor camera", 'Home + Security'],
     'NACamDoorTag' : ["door tag", 'Home + Security'],
     'NAMain'       : ["weather station", 'Weather'],
     'NAModule1'    : ["outdoor unit", 'Weather'],
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],          # A smart thermostat exist of a thermostat and a Relais module
-                                                                       # The relais module is also the bridge for thermostat and Valves
+    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat and a Relais module
+                                                                                          # The relais module is also the bridge for thermostat and Valves
     'NATherm1'     : ["thermostat",  'Energy'],
-    'NCO'          : ["co2 sensor", 'Home + Security'],                # The same API as smoke sensor
+    'NCO'          : ["co2 sensor", 'Home + Security'],                                   # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
     'NOC'          : ["outdoor camera", 'Home + Security'],
-    'NRV'          : ["thermostat valves", 'Energy'],                  # also API Home+Control
+    'NRV'          : ["thermostat valves", 'Energy'],                                     # also API Home+Control
     'NSD'          : ["smoke sensor", 'Home + Security'],
     'NHC'          : ["home coach", 'Aircare'],
-        'NIS'          : ["indoor sirene", 'Home + Security'],
+    'NIS'          : ["indoor sirene", 'Home + Security'],
 
     'NLC'          : ["Cable Outlet", 'Home+Control'],
     'NLE'          : ["Ecometer", 'Home+Control'],
@@ -193,14 +193,14 @@ UNITS = {
         1: "inHg",
         2: "mmHg"
     },
-    "Health index" : {                                                 # Homecoach
+    "Health index" : {                                                                    # Homecoach
         0: "Healthy",
         1: "Fine",
         2: "Fair",
         3: "Poor",
         4: "Unhealthy"
     },
-    "Wifi status" : {                                                  # Wifi Signal quality
+    "Wifi status" : {                                                                     # Wifi Signal quality
         86: "Bad",
         71: "Average",
         56: "Good"
@@ -371,10 +371,10 @@ class ThermostatData:
         if not self.rawData : raise NoDevice("No thermostat available")
         self.thermostatData = filter_home_data(self.rawData, home)
         if not self.thermostatData : raise NoHome("No home %s found" % home)
-        self.thermostatData['name'] = self.thermostatData['home_name']
+        self.thermostatData['name'] = self.thermostatData['home_name']                    #
         for m in self.thermostatData['modules']:
             m['name'] = m['module_name']
-        self.defaultThermostat = self.thermostatData['home_name']
+        self.defaultThermostat = self.thermostatData['home_name']                         # 
         self.defaultThermostatId = self.thermostatData['_id']
         self.defaultModule = self.thermostatData['modules'][0]
 
@@ -383,11 +383,11 @@ class ThermostatData:
         else: return
         return self.thermostat[self.defaultThermostatId]
 
-    def moduleNamesList(self, name=None, tid=None):                                 # ERROR   getThermostat() got an unexpected keyword argument 'tid'
+    def moduleNamesList(self, name=None, tid=None):                                       # ERROR   getThermostat() got an unexpected keyword argument 'tid'
         thermostat = self.getThermostat(name=name, tid=tid)
         return [m['name'] for m in thermostat['modules']] if thermostat else None
 
-    def getModuleByName(self, name, thermostatId=None):                             # ERROR  'NoneType' object is not subscriptable
+    def getModuleByName(self, name, thermostatId=None):                                   # ERROR  'NoneType' object is not subscriptable
         thermostat = self.getThermostat(tid=thermostatId)
         for m in thermostat['modules']:
             if m['name'] == name: return m
@@ -1051,14 +1051,14 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth()                                   # Test authentication method
+    authorization = ClientAuth()                                                          # Test authentication method
 
     try:
-        weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
+        weatherStation = WeatherStationData(authorization)                                # Test DEVICELIST
     except NoDevice:
         logger.warning("No weather station available for testing")
     else:
-        weatherStation.MinMaxTH()                                  # Test GETMEASUR
+        weatherStation.MinMaxTH()                                                         # Test GETMEASUR
 
     try:
         homes = HomeData(authorization)
