@@ -226,6 +226,7 @@ class AuthFailure( Exception ):
 class outOfScope( Exception ):
     pass
 
+
 class ClientAuth:
     """
     Request authentication and keep access token available through token method. Renew it automatically if necessary
@@ -562,6 +563,7 @@ class WeatherStationData:
         else:
             return None
 
+
 class DeviceList(WeatherStationData):
     """
     This class is now deprecated. Use WeatherStationData directly instead
@@ -569,6 +571,7 @@ class DeviceList(WeatherStationData):
     warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
             DeprecationWarning )
     pass
+
 
 class HomeData:
     """
@@ -586,35 +589,56 @@ class HomeData:
         self.rawData = resp['body']
         # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
-        if not self.homes : raise NoDevice("No home available")
-        self.default_home = home or list(self.homes.values())[0]['name']
-        # Split homes data by category
-        self.persons = dict()
-        self.events = dict()
-        self.cameras = dict()
-        self.lastEvent = dict()
-        for i in range(len(self.rawData['homes'])):
-            curHome = self.rawData['homes'][i]
-            nameHome = curHome['name']
-            if nameHome not in self.cameras:
-                self.cameras[nameHome] = dict()
-            if 'persons' in curHome:
-                for p in curHome['persons']:
-                    self.persons[ p['id'] ] = p
-            if 'events' in curHome:
+        for k, v in self.homes.items():
+            self.homeid = k
+            C = v.get('cameras')
+            P = v.get('persons')
+            S = v.get('smokedetectors')
+            E = v.get('events')
+            if not S:
+                logger.warning('No Smokedetectors found')
+#                raise NoDevice("No Devices available")
+            if not C:
+                logger.warning('No Cameras found')
+#                raise NoDevice("No Cameras available")
+            if not P:
+                logger.warning('No Persons found')
+#                raise NoDevice("No Persons available")
+            if not E:
+                logger.warning('No events found')
+#                raise NoDevice("No Events available")
+        if S or C or P or E:
+            self.default_home = home or list(self.homes.values())[0]['name']
+            # Split homes data by category
+            self.persons = dict()
+            self.events = dict()
+            self.cameras = dict()
+            self.lastEvent = dict()
+            for i in range(len(self.rawData['homes'])):
+                curHome = self.rawData['homes'][i]
+                nameHome = curHome['name']
+                if nameHome not in self.cameras:
+                    self.cameras[nameHome] = dict()
+                if 'persons' in curHome:
+                    for p in curHome['persons']:
+                        self.persons[ p['id'] ] = p
+                if 'events' in curHome:
                     for e in curHome['events']:
                         if e['camera_id'] not in self.events:
                             self.events[ e['camera_id'] ] = dict()
                         self.events[ e['camera_id'] ][ e['time'] ] = e
-            if 'cameras' in curHome:
-                for c in curHome['cameras']:
-                    self.cameras[nameHome][ c['id'] ] = c
-                    c["home_id"] = curHome['id']
-        for camera in self.events:
-            self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
-        if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
-        self.default_camera = list(self.cameras[self.default_home].values())[0]
-
+                if 'cameras' in curHome:
+                    for c in curHome['cameras']:
+                        self.cameras[nameHome][ c['id'] ] = c
+                        c["home_id"] = curHome['id']
+            for camera in self.events:
+                self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
+            if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
+            self.default_camera = list(self.cameras[self.default_home].values())[0]
+        else:
+            pass
+#            raise NoDevice("No Devices available")
+    
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
 
@@ -859,6 +883,7 @@ class WelcomeData(HomeData):
             DeprecationWarning )
     pass
 
+
 class HomesData:
     """
     List the Netatmo actual topology and static information of all devices present
@@ -889,6 +914,7 @@ class HomesData:
                    self.Homes_Data = h
 #        print (self.Homes_Data)
         if not self.Homes_Data : raise NoDevice("No Devices available")
+
 
 class HomeCoach:
     """
@@ -940,6 +966,7 @@ class HomeCoach:
         ret = []
         if time.time()-res['When'] < delay : ret.append({_id['_id']: 'Device up-to-date'})
         return ret if ret else None
+
 
 # Utilities routines
 
@@ -1062,19 +1089,7 @@ if __name__ == "__main__":
 
     try:
         homes = HomeData(authorization)
-        for k, v in homes.homes.items():
-            #print (v)
-            C = v.pop('cameras')
-            P = v.pop('persons')
-            S = v.pop('smokedetectors')
-            #
-            if C == [] and P == [] and S == []:
-                #print (v)
-                logger.info("No Cameras, Persons, Smokedetectors found")
-                # 
-            else:
-                homeid = k
-                #
+        homeid = homes.homeid
     except NoDevice :
         logger.warning("No home available for testing")
 
