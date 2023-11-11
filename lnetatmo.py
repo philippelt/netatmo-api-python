@@ -397,7 +397,7 @@ class ThermostatData:
             return thermostat
             
     def getThermostat(self, name=None, tid=None):
-        if ['name'] != name: return None
+        if self.rawData[0]['station_name'] != name: return None                           # OLD ['name']
         else: return
         return self.thermostat[self.defaultThermostatId]
 
