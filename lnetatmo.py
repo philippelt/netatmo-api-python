@@ -370,21 +370,38 @@ class ThermostatData:
         resp = postRequest("Thermostat", _GETTHERMOSTATDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
-        self.thermostatData = filter_home_data(self.rawData, home)
-        if not self.thermostatData : raise NoHome("No home %s found" % home)
-        self.thermostatData['name'] = self.thermostatData['home_name']                    #
-        for m in self.thermostatData['modules']:
-            m['name'] = m['module_name']
-        self.defaultThermostat = self.thermostatData['home_name']                         # 
-        self.defaultThermostatId = self.thermostatData['_id']
-        self.defaultModule = self.thermostatData['modules'][0]
+        #
+        # keeping OLD code for Reference
+#        self.thermostatData = filter_home_data(self.rawData, home)
+#        if not self.thermostatData : raise NoHome("No home %s found" % home)
+#        self.thermostatData['name'] = self.thermostatData['home_name']                    # New key = 'station_name'
+#        for m in self.thermostatData['modules']:
+#            m['name'] = m['module_name']
+#        self.defaultThermostat = self.thermostatData['home_name']                         # New key = 'station_name'
+#        self.defaultThermostatId = self.thermostatData['_id']
+#        self.defaultModule = self.thermostatData['modules'][0]
+        # Standard the first Relaystation and Thermostat is returned
+        # self.rawData is list all stations
 
-    def getThermostat(self, name=None):
+    def Relay_Plug(self, _id=None):
+        for Relay in self.rawData:
+            if _id in Relay:
+                return Relay
+            else:
+                #print (Relay['_id'])
+                return Relay
+
+    def Thermostat_Data(self):
+        for thermostat in self.Relay_Plug()['modules']:
+            #
+            return thermostat
+            
+    def getThermostat(self, name=None, tid=None):
         if ['name'] != name: return None
         else: return
         return self.thermostat[self.defaultThermostatId]
 
-    def moduleNamesList(self, name=None, tid=None):                                       # ERROR   getThermostat() got an unexpected keyword argument 'tid'
+    def moduleNamesList(self, name=None, tid=None):
         thermostat = self.getThermostat(name=name, tid=tid)
         return [m['name'] for m in thermostat['modules']] if thermostat else None
 
@@ -1096,6 +1113,8 @@ if __name__ == "__main__":
 
     try:
         thermostat = ThermostatData(authorization)
+        Default_relay = thermostat.Relay_Plug()
+        Default_thermostat = thermostat.Thermostat_Data()
     except NoDevice:
         logger.warning("No thermostat avaible for testing")
 
