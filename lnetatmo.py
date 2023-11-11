@@ -556,7 +556,7 @@ class WeatherStationData:
                     mtype      = "Temperature,Humidity",
                     date_begin = start,
                     date_end   = end)
-        if resp:
+        if resp and resp['body']:
             T = [v[0] for v in resp['body'].values()]
             H = [v[1] for v in resp['body'].values()]
             return min(T), max(T), min(H), max(H)
@@ -1057,7 +1057,8 @@ def getStationMinMaxTH(station=None, module=None, home=None):
         for m in lastD.keys():
             if time.time()-lastD[m]['When'] > 3600 : continue
             r = devList.MinMaxTH(module=m)
-            result[m] = (r[0], lastD[m]['Temperature'], r[1])
+            if r:
+                result[m] = (r[0], lastD[m]['Temperature'], r[1])
     else:
         if time.time()-lastD[module]['When'] > 3600 : result = ["-", "-"]
         else :
