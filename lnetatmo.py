@@ -12,7 +12,7 @@ coding=utf-8
 """
 
 import warnings
-if __name__ == "__main__": warnings.filterwarnings("ignore") # For installation test only
+if __name__ == "__main__": warnings.filterwarnings("ignore")                              # For installation test only
 
 from sys import version_info
 from os import getenv
@@ -87,20 +87,20 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
-_HOME_STATUS           = _BASE_URL + "api/homestatus"                  # Used for Home+ Control Devices 
-_GETHOMES_DATA         = _BASE_URL + "api/homesdata"                   # New API
-_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"           #
+_HOME_STATUS           = _BASE_URL + "api/homestatus"                                     # Used for Home+ Control Devices 
+_GETHOMES_DATA         = _BASE_URL + "api/homesdata"                                      # New API
+_GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"                              #
 
 #TODO# Undocumented (but would be very usefull) API : Access currently forbidden (403)
 
 _POST_UPDATE_HOME_REQ  = _BASE_URL + "/api/updatehome"
 
 # For presence setting (POST BODY):
-# _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"   # (HomeId, DetectionKind, DetectionSetup.index)
+# _PRES_BODY_REC_SET     = "home_id=%s&presence_settings[presence_record_%s]=%s"          # (HomeId, DetectionKind, DetectionSetup.index)
 _PRES_DETECTION_KIND   = ("humans", "animals", "vehicles", "movements")
 _PRES_DETECTION_SETUP  = ("ignore", "record", "record & notify")
 
-# _PRES_BODY_ALERT_TIME  = "home_id=%s&presence_settings[presence_notify_%s]=%s"   # (HomeID, "from"|"to", "hh:mm")
+# _PRES_BODY_ALERT_TIME  = "home_id=%s&presence_settings[presence_notify_%s]=%s"          # (HomeID, "from"|"to", "hh:mm")
 
 # Regular (documented) commands (both cameras)
 
@@ -113,14 +113,14 @@ _PRES_CDE_GET_SNAP     = "/live/snapshot_720.jpg"
 
 _PRES_CDE_GET_LIGHT    = "/command/floodlight_get_config"
 # Not working yet, probably due to scope restriction
-#_PRES_CDE_SET_LIGHT    = "/command/floodlight_set_config?config=mode:%s"    # "auto"|"on"|"off"
+#_PRES_CDE_SET_LIGHT    = "/command/floodlight_set_config?config=mode:%s"                 # "auto"|"on"|"off"
 
 
 # For all cameras
 
-_CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"            # "on"|"off"
+_CAM_CHANGE_STATUS     = "/command/changestatus?status=%s"                                # "on"|"off"
 # Not working yet
-#_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"   # "on"|"off"
+#_CAM_FTP_ACTIVE        = "/command/ftp_set_config?config=on_off:%s"                      # "on"|"off"
 
 #Known TYPE used by Netatmo services + API,      there can be more types possible
 TYPES = {
@@ -135,30 +135,30 @@ TYPES = {
     'BNDL'         : ["Bticino Doorlock", 'Home + Security'],
     'BNEU'         : ["Bticino external unit", 'Home + Security'],
     'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
-    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],  # also API Home+Control  GATEWAY
+    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],                     # also API Home+Control  GATEWAY
     'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
     'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
     'BNTH'         : ["Bticino Thermostat", 'Home+Control'],
     'BNTR'         : ["Bticino module towel rail", 'Home+Control'],
     'BNXM'         : ["Bticino X meter", 'Home+Control'],
 
-        'NACamera'     : ["indoor camera", 'Home + Security'],
+    'NACamera'     : ["indoor camera", 'Home + Security'],
     'NACamDoorTag' : ["door tag", 'Home + Security'],
     'NAMain'       : ["weather station", 'Weather'],
     'NAModule1'    : ["outdoor unit", 'Weather'],
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],          # A smart thermostat exist of a thermostat$
-                                                                       # The relais module is also the bridge bet$
+    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat and a Relais module
+                                                                                          # The relais module is also the bridge for thermostat and Valves
     'NATherm1'     : ["thermostat",  'Energy'],
-    'NCO'          : ["co2 sensor", 'Home + Security'],                # The same API as smoke sensor
+    'NCO'          : ["co2 sensor", 'Home + Security'],                                   # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
     'NOC'          : ["outdoor camera", 'Home + Security'],
-    'NRV'          : ["thermostat valves", 'Energy'],                  # also API Home+Control
+    'NRV'          : ["thermostat valves", 'Energy'],                                     # also API Home+Control
     'NSD'          : ["smoke sensor", 'Home + Security'],
     'NHC'          : ["home coach", 'Aircare'],
-        'NIS'          : ["indoor sirene", 'Home + Security'],
+    'NIS'          : ["indoor sirene", 'Home + Security'],
 
     'NLC'          : ["Cable Outlet", 'Home+Control'],
     'NLE'          : ["Ecometer", 'Home+Control'],
@@ -193,14 +193,14 @@ UNITS = {
         1: "inHg",
         2: "mmHg"
     },
-    "Health index" : {                                                 # Homecoach
+    "Health index" : {                                                                    # Homecoach
         0: "Healthy",
         1: "Fine",
         2: "Fair",
         3: "Poor",
         4: "Unhealthy"
     },
-    "Wifi status" : {                                                  # Wifi Signal quality
+    "Wifi status" : {                                                                     # Wifi Signal quality
         86: "Bad",
         71: "Average",
         56: "Good"
@@ -225,6 +225,7 @@ class AuthFailure( Exception ):
 
 class outOfScope( Exception ):
     pass
+
 
 class ClientAuth:
     """
@@ -369,25 +370,42 @@ class ThermostatData:
         resp = postRequest("Thermostat", _GETTHERMOSTATDATA_REQ, postParams)
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
-        self.thermostatData = filter_home_data(self.rawData, home)
-        if not self.thermostatData : raise NoHome("No home %s found" % home)
-        self.thermostatData['name'] = self.thermostatData['home_name']
-        for m in self.thermostatData['modules']:
-            m['name'] = m['module_name']
-        self.defaultThermostat = self.thermostatData['home_name']
-        self.defaultThermostatId = self.thermostatData['_id']
-        self.defaultModule = self.thermostatData['modules'][0]
+        #
+        # keeping OLD code for Reference
+#        self.thermostatData = filter_home_data(self.rawData, home)
+#        if not self.thermostatData : raise NoHome("No home %s found" % home)
+#        self.thermostatData['name'] = self.thermostatData['home_name']                    # New key = 'station_name'
+#        for m in self.thermostatData['modules']:
+#            m['name'] = m['module_name']
+#        self.defaultThermostat = self.thermostatData['home_name']                         # New key = 'station_name'
+#        self.defaultThermostatId = self.thermostatData['_id']
+#        self.defaultModule = self.thermostatData['modules'][0]
+        # Standard the first Relaystation and Thermostat is returned
+        # self.rawData is list all stations
 
-    def getThermostat(self, name=None):
-        if ['name'] != name: return None
+    def Relay_Plug(self, _id=None):
+        for Relay in self.rawData:
+            if _id in Relay:
+                return Relay
+            else:
+                #print (Relay['_id'])
+                return Relay
+
+    def Thermostat_Data(self):
+        for thermostat in self.Relay_Plug()['modules']:
+            #
+            return thermostat
+            
+    def getThermostat(self, name=None, tid=None):
+        if self.rawData[0]['station_name'] != name: return None                           # OLD ['name']
         else: return
         return self.thermostat[self.defaultThermostatId]
 
-    def moduleNamesList(self, name=None, tid=None):                                 # ERROR   getThermostat() got an unexpected keyword argument 'tid'
+    def moduleNamesList(self, name=None, tid=None):
         thermostat = self.getThermostat(name=name, tid=tid)
         return [m['name'] for m in thermostat['modules']] if thermostat else None
 
-    def getModuleByName(self, name, thermostatId=None):                             # ERROR  'NoneType' object is not subscriptable
+    def getModuleByName(self, name, thermostatId=None):                                   # ERROR  'NoneType' object is not subscriptable
         thermostat = self.getThermostat(tid=thermostatId)
         for m in thermostat['modules']:
             if m['name'] == name: return m
@@ -562,6 +580,7 @@ class WeatherStationData:
         else:
             return None
 
+
 class DeviceList(WeatherStationData):
     """
     This class is now deprecated. Use WeatherStationData directly instead
@@ -569,6 +588,7 @@ class DeviceList(WeatherStationData):
     warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
             DeprecationWarning )
     pass
+
 
 class HomeData:
     """
@@ -586,35 +606,56 @@ class HomeData:
         self.rawData = resp['body']
         # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
-        if not self.homes : raise NoDevice("No home available")
-        self.default_home = home or list(self.homes.values())[0]['name']
-        # Split homes data by category
-        self.persons = dict()
-        self.events = dict()
-        self.cameras = dict()
-        self.lastEvent = dict()
-        for i in range(len(self.rawData['homes'])):
-            curHome = self.rawData['homes'][i]
-            nameHome = curHome['name']
-            if nameHome not in self.cameras:
-                self.cameras[nameHome] = dict()
-            if 'persons' in curHome:
-                for p in curHome['persons']:
-                    self.persons[ p['id'] ] = p
-            if 'events' in curHome:
+        for k, v in self.homes.items():
+            self.homeid = k
+            C = v.get('cameras')
+            P = v.get('persons')
+            S = v.get('smokedetectors')
+            E = v.get('events')
+            if not S:
+                logger.warning('No Smokedetectors found')
+#                raise NoDevice("No Devices available")
+            if not C:
+                logger.warning('No Cameras found')
+#                raise NoDevice("No Cameras available")
+            if not P:
+                logger.warning('No Persons found')
+#                raise NoDevice("No Persons available")
+            if not E:
+                logger.warning('No events found')
+#                raise NoDevice("No Events available")
+        if S or C or P or E:
+            self.default_home = home or list(self.homes.values())[0]['name']
+            # Split homes data by category
+            self.persons = dict()
+            self.events = dict()
+            self.cameras = dict()
+            self.lastEvent = dict()
+            for i in range(len(self.rawData['homes'])):
+                curHome = self.rawData['homes'][i]
+                nameHome = curHome['name']
+                if nameHome not in self.cameras:
+                    self.cameras[nameHome] = dict()
+                if 'persons' in curHome:
+                    for p in curHome['persons']:
+                        self.persons[ p['id'] ] = p
+                if 'events' in curHome:
                     for e in curHome['events']:
                         if e['camera_id'] not in self.events:
                             self.events[ e['camera_id'] ] = dict()
                         self.events[ e['camera_id'] ][ e['time'] ] = e
-            if 'cameras' in curHome:
-                for c in curHome['cameras']:
-                    self.cameras[nameHome][ c['id'] ] = c
-                    c["home_id"] = curHome['id']
-        for camera in self.events:
-            self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
-        if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
-        self.default_camera = list(self.cameras[self.default_home].values())[0]
-
+                if 'cameras' in curHome:
+                    for c in curHome['cameras']:
+                        self.cameras[nameHome][ c['id'] ] = c
+                        c["home_id"] = curHome['id']
+            for camera in self.events:
+                self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
+            if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
+            self.default_camera = list(self.cameras[self.default_home].values())[0]
+        else:
+            pass
+#            raise NoDevice("No Devices available")
+    
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
 
@@ -859,6 +900,7 @@ class WelcomeData(HomeData):
             DeprecationWarning )
     pass
 
+
 class HomesData:
     """
     List the Netatmo actual topology and static information of all devices present
@@ -890,6 +932,7 @@ class HomesData:
 #        print (self.Homes_Data)
         if not self.Homes_Data : raise NoDevice("No Devices available")
 
+
 class HomeCoach:
     """
     List the HomeCoach modules
@@ -902,7 +945,7 @@ class HomeCoach:
         # I don't own a HomeCoach thus I am not able to test the HomeCoach support
         
 #        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
-#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is h$
+#                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
 #                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
 
         self.getAuthToken = authData.accessToken
@@ -929,15 +972,18 @@ class HomeCoach:
     
     def checkNotUpdated(self, delay=3600):  
         res = self.lastData()
+        _id = res['_id']
         ret = []
-        if time.time()-res['When'] > delay : ret.update({_id['_id']: 'Device Not Updated')
+        if time.time()-res['When'] > delay : ret.append({_id['_id']: 'Device Not Updated'})
         return ret if ret else None
 
     def checkUpdated(self, delay=3600):
         res = self.lastData()
+        _id = res['_id']
         ret = []
-        if time.time()-res['When'] < delay : rret.update({_id['_id']: 'Device up-to-date')
+        if time.time()-res['When'] < delay : ret.append({_id['_id']: 'Device up-to-date'})
         return ret if ret else None
+
 
 # Utilities routines
 
@@ -1050,35 +1096,25 @@ if __name__ == "__main__":
            stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
            exit(1)
 
-    authorization = ClientAuth()                                   # Test authentication method
+    authorization = ClientAuth()                                                          # Test authentication method
 
     try:
-        weatherStation = WeatherStationData(authorization)         # Test DEVICELIST
+        weatherStation = WeatherStationData(authorization)                                # Test DEVICELIST
     except NoDevice:
         logger.warning("No weather station available for testing")
     else:
-        weatherStation.MinMaxTH()                                  # Test GETMEASUR
+        weatherStation.MinMaxTH()                                                         # Test GETMEASUR
 
     try:
         homes = HomeData(authorization)
-        for k, v in homes.homes.items():
-            #print (v)
-            C = v.pop('cameras')
-            P = v.pop('persons')
-            S = v.pop('smokedetectors')
-            #
-            if C == [] and P == [] and S == []:
-                #print (v)
-                logger.info("No Cameras, Persons, Smokedetectors found")
-                # 
-            else:
-                homeid = k
-                #
+        homeid = homes.homeid
     except NoDevice :
         logger.warning("No home available for testing")
 
     try:
         thermostat = ThermostatData(authorization)
+        Default_relay = thermostat.Relay_Plug()
+        Default_thermostat = thermostat.Thermostat_Data()
     except NoDevice:
         logger.warning("No thermostat avaible for testing")
 
