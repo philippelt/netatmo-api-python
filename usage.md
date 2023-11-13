@@ -440,7 +440,7 @@ Constructor
 
 Requires : 
 - an authorization object (ClientAuth instance)
-- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
 
 Return : a homeStatus object. This object contains most administration properties of Home+ Control devices such as Smarther thermostat, Socket, Cable Output, Centralized fan, Micromodules, ...
 
@@ -480,7 +480,7 @@ Constructor
 
 Requires : 
 - an authorization object (ClientAuth instance)
-- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
 
 Return : a device object. This object contains the Relay_Plug with Thermostat and temperature modules.
 
@@ -507,7 +507,7 @@ Constructor
 
 Requires : 
 - an authorization object (ClientAuth instance)
-- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
 
 Return : a homesdata object. This object contains the Netatmo actual topology and static information of
          all devices present into a user account. It is also possible to specify a home_id to focus on one home.
@@ -529,7 +529,7 @@ Constructor
 
 Requires : 
 - an authorization object (ClientAuth instance)
-- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
 
 Return : a homecoach object. This object contains all Homecoach Data.
 
