@@ -352,7 +352,6 @@ Requires : an authorization object (ClientAuth instance)
 
 Return : a homeData object. This object contains most administration properties of home security products and notably Welcome & Presence cameras.
 
-Raise a lnetatmo.NoDevice exception if no camera is available for the given account.
 
 Note : the is_local property of camera is most of the time unusable if your IP changes, use cameraUrls to try to get a local IP as a replacement.
 
@@ -470,7 +469,84 @@ Methods :
     * Output : value
 
 
-#### 4-7 Utilities functions ####
+#### 4-7 ThermostatData class ####
+
+
+Constructor
+
+```python
+    homesData = lnetatmo.HomeStatus( authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+
+Return : a homesData object. This object contains the Relay_Plug with Thermostat and temperature modules.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of IDs of every relay_plug
+
+  * **Relay_Plug** : 
+    * Output : Dictionairy of First Relay object  
+
+  * **Thermostat_Data** : 
+    * Output : Dictionairy of Thermostat object in First Relay [Modules].
+
+
+#### 4-8 HomesData class ####
+
+
+Constructor
+
+```python
+    homesData = lnetatmo.HomeStatus( authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+
+Return : a homesData object. This object contains the Netatmo actual topology and static information of
+         all devices present into a user account. It is also possible to specify a home_id to focus on one home.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of IDs of every devices
+
+
+#### 4-9 Homecoach class ####
+
+
+Constructor
+
+```python
+    homecoach = lnetatmo.HomeCoach(authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+
+Return : a homecoach object. This object contains all Homecoach Data.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of all Homecoach in user account
+
+  * **checkNotUpdated** :
+    * Output : list of modules name for which last data update is older than specified delay (default 1 hour).
+
+
+  * **checkUpdated** :
+    * Output : list of modules name for which last data update is newer than specified delay (default 1 hour).
+   
+
+#### 4-10 Utilities functions ####
 
 
   * **rawAPI** (authentication, APIkeyword, parameters) : Direct call an APIkeyword from Netatmo and return a dictionary with the raw response the APIkeywork is the path without the / before as specified in the documentation (eg. "gethomesdata" or "homestatus")
@@ -479,7 +555,7 @@ Methods :
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
 
 
-#### 4-8 All-in-One function ####
+#### 4-11 All-in-One function ####
 
 
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
