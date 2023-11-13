@@ -475,14 +475,14 @@ Methods :
 Constructor
 
 ```python
-    homesData = lnetatmo.HomeStatus( authorization, home_id )
+    device = lnetatmo.ThermostatData ( authorization, home_id )
 ```
 
 Requires : 
 - an authorization object (ClientAuth instance)
 - home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
 
-Return : a homesData object. This object contains the Relay_Plug with Thermostat and temperature modules.
+Return : a device object. This object contains the Relay_Plug with Thermostat and temperature modules.
 
 Methods :
 
@@ -493,7 +493,7 @@ Methods :
     * Output : Dictionairy of First Relay object  
 
   * **Thermostat_Data** : 
-    * Output : Dictionairy of Thermostat object in First Relay [Modules].
+    * Output : Dictionairy of Thermostat object in First Relay[Modules].
 
 
 #### 4-8 HomesData class ####
@@ -502,14 +502,14 @@ Methods :
 Constructor
 
 ```python
-    homesData = lnetatmo.HomeStatus( authorization, home_id )
+    homesData = lnetatmo.HomesData ( authorization, home_id )
 ```
 
 Requires : 
 - an authorization object (ClientAuth instance)
 - home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
 
-Return : a homesData object. This object contains the Netatmo actual topology and static information of
+Return : a homesdata object. This object contains the Netatmo actual topology and static information of
          all devices present into a user account. It is also possible to specify a home_id to focus on one home.
 
 Methods :
