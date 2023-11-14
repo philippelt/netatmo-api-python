@@ -544,7 +544,25 @@ Methods :
 
   * **checkUpdated** :
     * Output : list of modules name for which last data update is newer than specified delay (default 1 hour).
-   
+
+Example :
+
+'''
+    homecoach = lnetatmo.HomeCoach(authorization, homeid)
+    #
+    Not_updated = []
+    updated = []
+    d = {}
+    for device in homecoach.rawData:
+        _id = device['_id']
+        d.update({'When': device['dashboard_data']['time_utc']})
+        a = homecoach.checkNotUpdated(d, _id)
+        b = homecoach.checkUpdated(d, _id)
+        Not_updated.append(a)
+        updated.append(b)
+        print (Not_updated)
+        print (updated)
+'''    
 
 #### 4-10 Utilities functions ####
 
