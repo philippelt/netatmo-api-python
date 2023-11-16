@@ -427,6 +427,31 @@ Methods :
   * **getLiveSnapshot** (camera=None, home=None, cid=None) : Get a jpeg of current live view of the camera
     * Input : camera name and optional home name or cameraID to lookup (str)
     * Output : jpeg binary content
+
+```
+    homedata = lnetatmo.HomeData(authorization)    
+    for k, v in homedata.homes.items():
+        homeid = k
+        S = v.get('smokedetectors')
+        C = v.get('cameras')
+        P = v.get('persons')
+        E = v.get('events')
+    if S or C or P or E:
+        print ('devices in HomeData')
+        for smokedetector in homedata.homes[homeid].get('smokedetectors'):
+            print (smokedetector['name'])
+        for camera in homedata.homes[homeid].get('cameras'):
+            print (camera['name'])
+        for persons in homedata.homes[homeid].get('persons'):
+            print (persons['name'])
+        for events in homedata.homes[homeid].get('events'):
+            print (events['name'])
+        return homeid
+    else:
+        homeid = k
+        return homeid
+
+```
   
 
 #### 4-6 HomeStatus class ####
@@ -434,8 +459,9 @@ Methods :
 
 Constructor
 
-```python
+```
     homeStatus = lnetatmo.HomeStatus( authorization, home_id )
+
 ```
 
 Requires : 
@@ -468,6 +494,10 @@ Methods :
     * Input : module ID and parameter
     * Output : value
 
+```
+    device = lnetatmo.ThermostatData ( authorization, home_id )
+```
+
 
 #### 4-7 ThermostatData class ####
 
@@ -475,7 +505,102 @@ Methods :
 Constructor
 
 ```python
-    device = lnetatmo.ThermostatData ( authorization, home_id )
+    homestatus = lnetatmo.HomeStatus(authorization, homeid)
+    print ('Rooms in Homestatus')
+    for r in homestatus.rooms:
+        print (r)
+    print ('Persons in Homestatus')
+    if 'persons' in homestatus.rawData.keys():
+        for pp in homestatus.rawData['persons']:
+             print (pp)
+    print ('Modules in Homestatus')
+    for m in homestatus.modules:
+        for kt, vt in m.items():
+            if kt == 'type':
+                if vt == 'NSD':
+                    #
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'firmware_revision', 'last_seen', 'wifi_strength'])
+                    print (m['wifi_strength'])
+                elif vt == 'NACamDoorTag':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'last_activity', 'reachable', 'bridge', 'status'])
+                    print (m['battery_state'])
+                    print (m['rf_strength'])
+                elif vt == 'NRV':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_strength', 'reachable', 'bridge'])
+                    homesdata = lnetatmo.HomesData(authorization, homeid)
+                    for mod in homesdata.Homes_Data['modules']:
+                        #print ('mod = ',mod['id'],lnetatmo.TYPES[mod['type']])
+                        #print ('mm  = ',mm['id'])
+                        #print ('m   = ',m['id'])
+                        #
+                        if m['id'] == mod['id']:
+                            print ('Name = ',mod['name'])
+                elif vt == 'NAPlug':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'firmware_revision', 'rf_strength', 'wifi_strength'])
+                    print (m['wifi_strength'])
+                    print (m['rf_strength'])
+                elif vt == 'NATherm1':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_strength', 'reachable', 'boiler_valve_comfort_boost', 'bridge', 'boiler_status'])
+                    print (m['battery_state'])
+                    print (m['rf_strength'])
+                elif vt == 'NACamera':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'firmware_revision', 'wifi_state', 'wifi_strength', 'sd_status', 'alim_status', 'vpn_url', 'is_local', 'monitoring'])
+                    # dict_keys(['id', 'type', 'firmware_revision', 'sd_status', 'alim_status', 'vpn_url', 'is_local', 'monitoring'])
+                    print (m['sd_status'])
+                elif vt == 'NHC':                              # Homecoach in other scope !
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['_id', 'station_name', 'date_setup', 'last_setup', 'type', 'last_status_store', 'firmware', 'last_upgrade', 'wifi_status', 'reachable', '
+                    print (m['wifi_strength'])
+                elif vt == 'NAMain':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'firmware_revision', 'wifi_state', 'wifi_strength', 'ts', 'temperature', 'co2', 'humidity', 'noise', 'pressure', 'absolute_pressure'])
+                    print (m['wifi_strength'])
+                elif vt == 'NAModule1':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'temperature', 'humidity'])
+                elif vt == 'NAModule2':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'wind_strength', 'wind_angle', 'wind_gust', 'wind_gust_angle'])
+                elif vt == 'NAModule3':
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'rain', 'sum_rain_1', 'sum_rain_24'])
+                elif vt == 'NAModule4':         # indoor unit
+                    print (m['id'])
+                    print (lnetatmo.TYPES[vt], m['reachable'])
+                    print (m.keys())
+                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'temperature', 'co2', 'humidity'])
+
+
+
+    
 ```
 
 Requires : 
@@ -494,7 +619,28 @@ Methods :
 
   * **Thermostat_Data** : 
     * Output : Dictionairy of Thermostat object in First Relay[Modules].
+   
+Example :  
 
+```
+    device = lnetatmo.ThermostatData(authorization, homeid)
+    for i in device.rawData:
+        print ('rawData')
+        print (i['_id'])
+        print (i['station_name'])
+        print (dir(i))
+        print ('modules in rawData')
+        print (i['modules'][0]['_id'])
+        print (i['modules'][0]['module_name'])
+        print (' ')
+    print ('Relay Data')
+    Relay = device.Relay_Plug()
+    print (Relay.keys())
+    print ('Thermostat Data')
+    TH = device.Thermostat_Data()
+    print (TH.keys())
+
+```
 
 #### 4-8 HomesData class ####
 
@@ -517,6 +663,29 @@ Methods :
   * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
     * Output : list of IDs of every devices
 
+Example :  
+
+```
+    homesData = lnetatmo.HomesData ( authorization, home_id )
+    print (homesdata.Homes_Data['name'])
+    print (homesdata.Homes_Data['altitude'])
+    print (homesdata.Homes_Data['coordinates'])
+    print (homesdata.Homes_Data['country'])
+    print (homesdata.Homes_Data['timezone'])
+    print ('rooms in HomesData')
+    for r in homesdata.Homes_Data.get('rooms'):
+        print (r)
+    print ('Devices in HomesData')
+    for m in homesdata.Homes_Data.get('modules'):
+        print (m)
+    print ('Persons in HomesData')
+    if 'persons' in homesdata.Homes_Data.keys():
+        for P in homesdata.Homes_Data.get('persons'):
+            print (P)
+    print ('Schedules in HomesData')
+    print (homesdata.Homes_Data['schedules'][0].keys())
+
+```
 
 #### 4-9 Homecoach class ####
 
@@ -547,7 +716,8 @@ Methods :
 
 Example :
 
-'''
+
+```
     homecoach = lnetatmo.HomeCoach(authorization, homeid)
     #
     Not_updated = []
@@ -558,11 +728,26 @@ Example :
         d.update({'When': device['dashboard_data']['time_utc']})
         a = homecoach.checkNotUpdated(d, _id)
         b = homecoach.checkUpdated(d, _id)
+        print (device['station_name'])
+        print (device['date_setup'])
+        print (device['last_setup'])
+        print (device['type'])
+        print (device['last_status_store'])
+        print (device['firmware'])
+        print (device['last_upgrade'])
+        print (device['wifi_status'])
+        print (device['reachable'])
+        print (device['co2_calibrating'])
+        print (device['data_type'])
+        print (device['place'])
+        print (device['dashboard_data'])
         Not_updated.append(a)
         updated.append(b)
         print (Not_updated)
         print (updated)
-'''    
+
+```
+
 
 #### 4-10 Utilities functions ####
 
