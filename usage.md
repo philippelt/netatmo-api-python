@@ -495,16 +495,6 @@ Methods :
     * Output : value
 
 ```
-    device = lnetatmo.ThermostatData ( authorization, home_id )
-```
-
-
-#### 4-7 ThermostatData class ####
-
-
-Constructor
-
-```python
     homestatus = lnetatmo.HomeStatus(authorization, homeid)
     print ('Rooms in Homestatus')
     for r in homestatus.rooms:
@@ -517,89 +507,22 @@ Constructor
     for m in homestatus.modules:
         for kt, vt in m.items():
             if kt == 'type':
-                if vt == 'NSD':
-                    #
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'firmware_revision', 'last_seen', 'wifi_strength'])
-                    print (m['wifi_strength'])
-                elif vt == 'NACamDoorTag':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'last_activity', 'reachable', 'bridge', 'status'])
-                    print (m['battery_state'])
-                    print (m['rf_strength'])
-                elif vt == 'NRV':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_strength', 'reachable', 'bridge'])
-                    homesdata = lnetatmo.HomesData(authorization, homeid)
-                    for mod in homesdata.Homes_Data['modules']:
-                        #print ('mod = ',mod['id'],lnetatmo.TYPES[mod['type']])
-                        #print ('mm  = ',mm['id'])
-                        #print ('m   = ',m['id'])
-                        #
-                        if m['id'] == mod['id']:
-                            print ('Name = ',mod['name'])
-                elif vt == 'NAPlug':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'firmware_revision', 'rf_strength', 'wifi_strength'])
-                    print (m['wifi_strength'])
-                    print (m['rf_strength'])
-                elif vt == 'NATherm1':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_strength', 'reachable', 'boiler_valve_comfort_boost', 'bridge', 'boiler_status'])
-                    print (m['battery_state'])
-                    print (m['rf_strength'])
-                elif vt == 'NACamera':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'firmware_revision', 'wifi_state', 'wifi_strength', 'sd_status', 'alim_status', 'vpn_url', 'is_local', 'monitoring'])
-                    # dict_keys(['id', 'type', 'firmware_revision', 'sd_status', 'alim_status', 'vpn_url', 'is_local', 'monitoring'])
-                    print (m['sd_status'])
-                elif vt == 'NHC':                              # Homecoach in other scope !
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['_id', 'station_name', 'date_setup', 'last_setup', 'type', 'last_status_store', 'firmware', 'last_upgrade', 'wifi_status', 'reachable', '
-                    print (m['wifi_strength'])
-                elif vt == 'NAMain':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'firmware_revision', 'wifi_state', 'wifi_strength', 'ts', 'temperature', 'co2', 'humidity', 'noise', 'pressure', 'absolute_pressure'])
-                    print (m['wifi_strength'])
-                elif vt == 'NAModule1':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'temperature', 'humidity'])
-                elif vt == 'NAModule2':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'wind_strength', 'wind_angle', 'wind_gust', 'wind_gust_angle'])
-                elif vt == 'NAModule3':
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'rain', 'sum_rain_1', 'sum_rain_24'])
-                elif vt == 'NAModule4':         # indoor unit
-                    print (m['id'])
-                    print (lnetatmo.TYPES[vt], m['reachable'])
-                    print (m.keys())
-                    # dict_keys(['id', 'type', 'battery_state', 'battery_level', 'firmware_revision', 'rf_state', 'rf_strength', 'last_seen', 'reachable', 'bridge', 'ts', 'temperature', 'co2', 'humidity'])
+                print (m['type'])
+                print (m['id'])
+                print (lnetatmo.TYPES[vt])
+                print (m.keys())
 
 
+```
 
+
+#### 4-7 ThermostatData class ####
+
+
+Constructor
+
+```
+    device = lnetatmo.ThermostatData ( authorization, home_id )
     
 ```
 
@@ -743,8 +666,11 @@ Example :
         print (device['dashboard_data'])
         Not_updated.append(a)
         updated.append(b)
-        print (Not_updated)
-        print (updated)
+    D = homecoach.HomecoachDevice['dashboard_data']
+    print (D.keys())
+    # dict_keys(['time_utc', 'Temperature', 'CO2', 'Humidity', 'Noise', 'Pressure', 'AbsolutePressure', 'health_idx', 'min_temp', 'max_temp', 'date_max_temp', 'date_min_temp'])
+    print (Not_updated)
+    print (updated)
 
 ```
 
