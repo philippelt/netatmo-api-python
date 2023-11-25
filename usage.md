@@ -40,6 +40,12 @@ Before being able to use the module you will need :
 
 In the netatmo philosophy, both the application itself and the user have to be registered thus have authentication credentials to be able to access any station. Registration is free for both.
 
+Possible NETATMO_SCOPES ;
+"read_station read_smarther write_smarther read_thermostat write_thermostat read_camera write_camera access_camera read_doorbell access_doorbell 
+read_presence write_precense access_precense read_homecoach read_carbonmonoxidedetector read_smokedetector read_magellen write_magellan 
+read_bubendorff write_bubendorff read_mx write_mx read_mhs1 write_mhs1"
+
+
 
 
 ### 2 Setup your authentication information ###
