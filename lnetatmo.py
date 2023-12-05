@@ -455,7 +455,7 @@ class WeatherStationData:
     def modulesNamesList(self, station=None, home=None):
         res = [m['module_name'] for m in self.modules.values()]
         station = self.stationByName(station) or self.stationById(station)
-        res.append(self.stationByName(station)['module_name'])
+        res.append(station['module_name'])
         return res
 
     # Both functions (byName and byStation) are here for historical reason,
