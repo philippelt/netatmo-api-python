@@ -948,30 +948,33 @@ class HomeCoach:
         if not self.rawData : raise NoDevice("No HomeCoach available")
 
         for i in range(len(self.rawData)):
-           #
-           self.HomecoachDevice = self.rawData[i]
+            #
+            self.HomecoachDevice = self.rawData[i]
 #           print ('Homecoach = ', self.HomecoachDevice)
 #           print (' ')
 #           print ('Homecoach_data = ', self.rawData[i]['dashboard_data'])
 #           print (' ')
-    
-    def lastData(self, _id=None, exclude=0):
-        s = self.HomecoachDevice['dashboard_data']['time_utc']
-        _id = self.HomecoachDevice['_id']
-        return {'When':s}, {'_id':_id}
-    
-    def checkNotUpdated(self, delay=3600):  
-        res = self.lastData()
-        _id = res['_id']
+
+    def Dashboard(self):
+        D = self.HomecoachDevice['dashboard_data']
+        return D
+
+    def lastData(self, id=None, exclude=0):
+        if id is not None:
+                s = self.HomecoachDevice['dashboard_data']['time_utc']
+                _id = self.HomecoachDevice['_id']
+                return {'When':s}, {'_id':_id}
+        else:
+            return {'When': 0 }, {'_id': id}
+
+    def checkNotUpdated(self, res, _id, delay=3600):
         ret = []
-        if time.time()-res['When'] > delay : ret.append({_id['_id']: 'Device Not Updated'})
+        if time.time()-res['When'] > delay : ret.append({_id: 'Device Not Updated'})
         return ret if ret else None
 
-    def checkUpdated(self, delay=3600):
-        res = self.lastData()
-        _id = res['_id']
+    def checkUpdated(self, res, _id, delay=3600):
         ret = []
-        if time.time()-res['When'] < delay : ret.append({_id['_id']: 'Device up-to-date'})
+        if time.time()-res['When'] < delay : ret.append({_id: 'Device up-to-date'})
         return ret if ret else None
 
 
