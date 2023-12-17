@@ -17,6 +17,8 @@ Python Netatmo API programmers guide
 
 >2023-07-24, Adding rawAPI call to direct access the netatmo API when no additional support is provided by the library
 
+>2023-12-04, New update to Netatmo authentication rules, no longer long lived refresh token -> credentials MUST be writable, Hard coding credentials in the library no longer possible (bad luck for small home automation device)
+
 No additional library other than standard Python library is required.
 
 Both Python V2.7x and V3.x.x are supported without change.
@@ -38,13 +40,13 @@ Before being able to use the module you will need :
   * An application registered from the user account (see http://dev.netatmo.com/dev/createapp) to obtain application credentials.
   * Create a couple access_token/refresh_token at the same time with your required scope (depending of your intents on library use)
 
+
 In the netatmo philosophy, both the application itself and the user have to be registered thus have authentication credentials to be able to access any station. Registration is free for both.
 
 Possible NETATMO_SCOPES ;
-"read_station read_smarther write_smarther read_thermostat write_thermostat read_camera write_camera access_camera read_doorbell access_doorbell 
-read_presence write_precense access_precense read_homecoach read_carbonmonoxidedetector read_smokedetector read_magellen write_magellan 
-read_bubendorff write_bubendorff read_mx write_mx read_mhs1 write_mhs1"
-
+read_station read_smarther write_smarther read_thermostat write_thermostat read_camera write_camera read_doorbell 
+read_presence write_precense read_homecoach read_carbonmonoxidedetector read_smokedetector read_magellen write_magellan 
+read_bubendorff write_bubendorff read_mx write_mx read_mhs1 write_mhs1
 
 
 
@@ -54,10 +56,9 @@ read_bubendorff write_bubendorff read_mx write_mx read_mhs1 write_mhs1"
 
 Copy the lnetatmo.py file in your work directory (or use pip install lnetatmo).
 
-Authentication data can be supplied with 4 different methods (each method override any settings of previous methods) : 
+Authentication data can be supplied with 3 different methods (each method override any settings of previous methods) : 
 
- 1. Some or all values can be hard coded in the library source (and default to empty strings). If you use this method, you are back to the initial suggested method. It would be nice to switch to other methods to isolate credentials and ease library upgrades.
- 2. Some or all values can be overriden in a ~/.netatmo.credentials (in your platform home directory) file containing the keys in JSON format  
+ 1. Some or all values can stored in ~/.netatmo.credentials (in your platform home directory) file containing the keys in JSON format  
  
         $ cat .netatmo.credentials   # Here all values are defined but it is not mandatory
         {
@@ -67,19 +68,21 @@ Authentication data can be supplied with 4 different methods (each method overri
         }
         $
 
- 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker. It also allow you to do some testing with other accounts without touching your current ~/.netatmo.credentials file 
+> Due to Netatmo continuous changes, this method is the only one available for production use as the refresh token will be frequently refreshed and this file MUST be writable by the library to keep a usable refresh token.
+
+ 2. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker. It also allow you to do some testing with other accounts without touching your current ~/.netatmo.credentials file 
  
         $ export REFRESH_TOKEN="yyy"
         $ python3 MyCodeUsingLnetatmo.py
         ...
         
- 4. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
+ 3. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
  
         # Example: REFRESH_TOKEN supposed to be defined by one of the previous methods
         authData = lnetatmo.ClientAuth( clientId="netatmo-client-id",
                                         clientSecret="secret" )
 
-If you provide all the values, using any method or mix except 4, you can test that everything is working properly by simply running the package as a standalone program.
+If you provide all the values, using any method or mix except 3, you can test that everything is working properly by simply running the package as a standalone program.
 
 This will run a full access test to the account and stations and return 0 as return code if everything works well. If run interactively, it will also display an OK message.
 

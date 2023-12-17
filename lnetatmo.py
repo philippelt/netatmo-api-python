@@ -42,34 +42,22 @@ else:
 
 # To ease Docker packaging of your application, you can setup your authentication parameters through env variables
 
-# Authentication use :
-#  1 - Values hard coded in the library
-#  2 - The .netatmo.credentials file in JSON format in your home directory
-#  3 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
+# Authentication:
+#  1 - The .netatmo.credentials file in JSON format in your home directory (now mandatory for regular use)
+#  2 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
 
-# Each level override values defined in the previous level. You could define CLIENT_ID and CLIENT_SECRET hard coded in the library
-# and REFRESH_TOKEN in .netatmo.credentials or environment variables
+# Note that the refresh token being short lived, using envvar will be restricted to speific testing use case
 
-# 1 : Embedded credentials
-cred = {                           # You can hard code authentication information in the following lines
-        "CLIENT_ID" :  "",         #   Your client ID from Netatmo app registration at http://dev.netatmo.com
-        "CLIENT_SECRET" : "",      #   Your client app secret   '     '
-        "REFRESH_TOKEN" : ""       #   Your scoped refresh token (generated with app credentials)
-        }
-
-# Other authentication setup management (optionals)
-
+# Note: this file will be rewritten by the library to record refresh_token change
+# If you run your application in container, remember to persist this file
 CREDENTIALS = expanduser("~/.netatmo.credentials")
+with open(CREDENTIALS, "r") as f:
+    cred = {k.upper():v for k,v in json.loads(f.read()).items()}
 
 def getParameter(key, default):
-    return getenv(key, default[key])
+    return getenv(key, default.get(key, None))
 
-# 2 : Override hard coded values with credentials file if any
-if exists(CREDENTIALS) :
-    with open(CREDENTIALS, "r") as f:
-        cred.update({k.upper():v for k,v in json.loads(f.read()).items()})
-
-# 3 : Override final value with content of env variables if defined
+# Override values with content of env variables if defined
 _CLIENT_ID     = getParameter("CLIENT_ID", cred)
 _CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
 _REFRESH_TOKEN = getParameter("REFRESH_TOKEN", cred)
@@ -261,9 +249,11 @@ class ClientAuth:
                 }
         resp = postRequest("authentication", _AUTH_REQ, postParams)
         if self.refreshToken != resp['refresh_token']:
-            print("New refresh token:", resp['refresh_token'])
+            self.refreshToken = resp['refresh_token']
+            cred["REFRESH_TOKEN"] = self.refreshToken
+            with open(CREDENTIALS, "w") as f:
+                f.write(json.dumps(cred, indent=True))
         self._accessToken = resp['access_token']
-        self.refreshToken = resp['refresh_token']
         self.expiration = int(resp['expire_in'] + time.time())
 
 
@@ -465,7 +455,7 @@ class WeatherStationData:
     def modulesNamesList(self, station=None, home=None):
         res = [m['module_name'] for m in self.modules.values()]
         station = self.stationByName(station) or self.stationById(station)
-        res.append(self.stationByName(station)['module_name'])
+        res.append(station['module_name'])
         return res
 
     # Both functions (byName and byStation) are here for historical reason,
