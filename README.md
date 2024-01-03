@@ -13,6 +13,8 @@ I am trying to make this library survive to continuous Netatmo changes but their
 
 >NEW MAJOR BREAKING CHANGE (december 2023): Web generated refresh_tokens are no more long lived tokens, they will be automatically refreshed. Consequences : No more static authentication in the library source and ~/.netatmo-credentials file will be updated to reflect change in the refresh token. This file MUST be writable and if you run Netatmo tools in container, remember to persist this file between container run. **This new token policy will completely forbid you to use your credentials on two or more systems if you can't share the .netatmo-credentials file**.
 
+There is no longer credential load at library import, credentials are loaded at `ClientAuth` class initialization and a new parameter `credentialFile` allow to specify private name and location for the credential file.
+
 ### Install ###
 
 To install lnetatmo simply run:

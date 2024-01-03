@@ -19,6 +19,8 @@ Python Netatmo API programmers guide
 
 >2023-12-04, New update to Netatmo authentication rules, no longer long lived refresh token -> credentials MUST be writable, Hard coding credentials in the library no longer possible (bad luck for small home automation device)
 
+>2024-01-03, New authentication method priorities, credential file as a parameter
+
 No additional library other than standard Python library is required.
 
 Both Python V2.7x and V3.x.x are supported without change.
@@ -50,8 +52,17 @@ Copy the lnetatmo.py file in your work directory (or use pip install lnetatmo).
 
 Authentication data can be supplied with 3 different methods (each method override any settings of previous methods) : 
 
- 1. Some or all values can stored in ~/.netatmo.credentials (in your platform home directory) file containing the keys in JSON format  
+ 1. Some or all values can be defined by explicit call to initializer of ClientAuth class  
  
+        ̀```bash
+        # Example: REFRESH_TOKEN supposed to be defined by an other method
+        authData = lnetatmo.ClientAuth( clientId="netatmo-client-id",
+                                        clientSecret="secret" )
+        ```
+
+ 2. Some or all values can stored in ~/.netatmo.credentials (in your platform home directory) or a file path specified using the ̀`credentialFile` parameter. The file containing the keys in JSON format  
+ 
+        ̀̀```bash
         $ cat .netatmo.credentials   # Here all values are defined but it is not mandatory
         {
             "CLIENT_ID" : "`xxx",
@@ -59,22 +70,18 @@ Authentication data can be supplied with 3 different methods (each method overri
             "REFRESH_TOKEN" : "xxx"
         }
         $
+        ̀̀```
 
-> Due to Netatmo continuous changes, this method is the only one available for production use as the refresh token will be frequently refreshed and this file MUST be writable by the library to keep a usable refresh token.
-
- 2. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker. It also allow you to do some testing with other accounts without touching your current ~/.netatmo.credentials file 
+ 3. Some or all values can be overriden by environment variables. This is the easiest method if your are packaging your application with Docker.
  
+        ̀̀```bash
         $ export REFRESH_TOKEN="yyy"
         $ python3 MyCodeUsingLnetatmo.py
-        ...
+        ̀̀```
         
- 3. Some or all values can be overriden by explicit call to initializer of ClientAuth class  
- 
-        # Example: REFRESH_TOKEN supposed to be defined by one of the previous methods
-        authData = lnetatmo.ClientAuth( clientId="netatmo-client-id",
-                                        clientSecret="secret" )
+> Due to Netatmo continuous changes, the credential file is the recommended method for production use as the refresh token will be frequently refreshed and this file MUST be writable by the library to keep a usable refresh token. You can also recover the `authorization.refreshToken` before your program termination and save it to be able to pass it back when your program restart.
 
-If you provide all the values, using any method or mix except 3, you can test that everything is working properly by simply running the package as a standalone program.
+If you provide all the values in a credential file, you can test that everything is working properly by simply running the package as a standalone program.
 
 This will run a full access test to the account and stations and return 0 as return code if everything works well. If run interactively, it will also display an OK message.
 
@@ -171,6 +178,7 @@ Constructor
     authorization = lnetatmo.ClientAuth( clientId = _CLIENT_ID,
                                          clientSecret = _CLIENT_SECRET,
                                          refreshToken = _REFRESH_TOKEN,
+                                         credentialFile = "~/.netatmo.credentials"
                                         )
 ```
 

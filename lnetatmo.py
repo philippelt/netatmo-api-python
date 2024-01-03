@@ -43,24 +43,11 @@ else:
 # To ease Docker packaging of your application, you can setup your authentication parameters through env variables
 
 # Authentication:
-#  1 - The .netatmo.credentials file in JSON format in your home directory (now mandatory for regular use)
-#  2 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
+#  1 - Values defined in environment variables : CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
+#  2 - Parameters passed to ClientAuth initialization
+#  3 - The .netatmo.credentials file in JSON format in your home directory (now mandatory for regular use)
 
 # Note that the refresh token being short lived, using envvar will be restricted to speific testing use case
-
-# Note: this file will be rewritten by the library to record refresh_token change
-# If you run your application in container, remember to persist this file
-CREDENTIALS = expanduser("~/.netatmo.credentials")
-with open(CREDENTIALS, "r") as f:
-    cred = {k.upper():v for k,v in json.loads(f.read()).items()}
-
-def getParameter(key, default):
-    return getenv(key, default.get(key, None))
-
-# Override values with content of env variables if defined
-_CLIENT_ID     = getParameter("CLIENT_ID", cred)
-_CLIENT_SECRET = getParameter("CLIENT_SECRET", cred)
-_REFRESH_TOKEN = getParameter("REFRESH_TOKEN", cred)
 
 #########################################################################
 
@@ -225,14 +212,28 @@ class ClientAuth:
         refreshToken (str) : Scoped refresh token
     """
 
-    def __init__(self, clientId=_CLIENT_ID,
-                       clientSecret=_CLIENT_SECRET,
-                       refreshToken=_REFRESH_TOKEN):
+    def __init__(self, clientId=None,
+                       clientSecret=None,
+                       refreshToken=None,
+                       credentialFile=None):
+        
+        # replace values with content of env variables if defined
+        clientId = getenv("CLIENT_ID", clientId)
+        clientSecret = getenv("CLIENT_SECRET", clientSecret)
+        refreshToken = getenv("REFRESH_TOKEN", refreshToken)
 
-        self._clientId = clientId
-        self._clientSecret = clientSecret
-        self._accessToken = None
-        self.refreshToken = refreshToken
+        # Look for credentials in file if not already provided
+        # Note: this file will be rewritten by the library to record refresh_token change
+        # If you run your application in container, remember to persist this file
+        if not (clientId and clientSecret and refreshToken):
+            credentialFile = credentialFile or expanduser("~/.netatmo.credentials")
+            self._credentialFile = credentialFile
+            with open(self._credentialFile, "r") as f:
+                cred = {k.upper():v for k,v in json.loads(f.read()).items()}
+
+        self._clientId = clientId or cred["CLIENT_ID"]
+        self._clientSecret = clientSecret or cred["CLIENT_SECRET"]
+        self.refreshToken = refreshToken or cred["REFRESH_TOKEN"]
         self.expiration = 0 # Force refresh token
 
     @property
@@ -250,8 +251,10 @@ class ClientAuth:
         resp = postRequest("authentication", _AUTH_REQ, postParams)
         if self.refreshToken != resp['refresh_token']:
             self.refreshToken = resp['refresh_token']
-            cred["REFRESH_TOKEN"] = self.refreshToken
-            with open(CREDENTIALS, "w") as f:
+            cred = {"CLIENT_ID":self._clientId,
+                    "CLIENT_SECRET":self._clientSecret,
+                    "REFRESH_TOKEN":self.refreshToken }
+            with open(self._credentialFile, "w") as f:
                 f.write(json.dumps(cred, indent=True))
         self._accessToken = resp['access_token']
         self.expiration = int(resp['expire_in'] + time.time())
@@ -451,10 +454,16 @@ class WeatherStationData:
             else:
                 setattr(self.user, k, v)
 
-
-    def modulesNamesList(self, station=None, home=None):
+    def modulesNamesList(self, station=None):
+        s = self.getStation(station)
+        if not s: raise NoDevice("No station with name or id %s" % station)
+        self.default_station = station
+        self.default_station_data = s
+        self.modules = dict()
+        if 'modules' in self.default_station_data:
+            for m in self.default_station_data['modules']:
+                self.modules[ m['_id'] ] = m
         res = [m['module_name'] for m in self.modules.values()]
-        station = self.stationByName(station) or self.stationById(station)
         res.append(station['module_name'])
         return res
 
@@ -468,21 +477,21 @@ class WeatherStationData:
         if station in self.stationIds : return self.stationIds[station]
         return None
 
+    def getModule(self, module):
+        if module in self.modules: return self.modules[module]
+        for m in self.modules.values():
+            if m['module_name'] == module : return m
+        return None
+    
     # Functions for compatibility with previous versions
     def stationByName(self, station=None):
         return self.getStation(station)
     def stationById(self, sid):
         return self.getStation(sid)
-
     def moduleByName(self, module):
-        for m in self.modules:
-            mod = self.modules[m]
-            if mod['module_name'] == module :
-                return mod
-        return None
-
+        return self.getModule(module)
     def moduleById(self, mid):
-        return self.modules.get(mid)
+        return self.getModule(mid)
 
     def lastData(self, station=None, exclude=0):
         s = self.stationByName(station) or self.stationById(station)
@@ -1081,10 +1090,6 @@ if __name__ == "__main__":
     from sys import exit, stdout, stderr
 
     logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
-
-    if not _CLIENT_ID or not _CLIENT_SECRET or not _REFRESH_TOKEN :
-           stderr.write("Library source missing identification arguments to check lnetatmo.py (user/password/etc...)")
-           exit(1)
 
     authorization = ClientAuth()                                                          # Test authentication method
 
