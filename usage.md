@@ -43,6 +43,14 @@ Before being able to use the module you will need :
   * Create a couple access_token/refresh_token at the same time with your required scope (depending of your intents on library use)
 
 
+In the netatmo philosophy, both the application itself and the user have to be registered thus have authentication credentials to be able to access any station. Registration is free for both.
+
+Possible NETATMO_SCOPES ;
+read_station read_smarther write_smarther read_thermostat write_thermostat read_camera write_camera read_doorbell 
+read_presence write_precense read_homecoach read_carbonmonoxidedetector read_smokedetector read_magellen write_magellan 
+read_bubendorff write_bubendorff read_mx write_mx read_mhs1 write_mhs1
+
+
 
 ### 2 Setup your authentication information ###
 
@@ -361,7 +369,6 @@ Requires : an authorization object (ClientAuth instance)
 
 Return : a homeData object. This object contains most administration properties of home security products and notably Welcome & Presence cameras.
 
-Raise a lnetatmo.NoDevice exception if no camera is available for the given account.
 
 Note : the is_local property of camera is most of the time unusable if your IP changes, use cameraUrls to try to get a local IP as a replacement.
 
@@ -437,6 +444,31 @@ Methods :
   * **getLiveSnapshot** (camera=None, home=None, cid=None) : Get a jpeg of current live view of the camera
     * Input : camera name and optional home name or cameraID to lookup (str)
     * Output : jpeg binary content
+
+```
+    homedata = lnetatmo.HomeData(authorization)    
+    for k, v in homedata.homes.items():
+        homeid = k
+        S = v.get('smokedetectors')
+        C = v.get('cameras')
+        P = v.get('persons')
+        E = v.get('events')
+    if S or C or P or E:
+        print ('devices in HomeData')
+        for smokedetector in homedata.homes[homeid].get('smokedetectors'):
+            print (smokedetector['name'])
+        for camera in homedata.homes[homeid].get('cameras'):
+            print (camera['name'])
+        for persons in homedata.homes[homeid].get('persons'):
+            print (persons['name'])
+        for events in homedata.homes[homeid].get('events'):
+            print (events['name'])
+        return homeid
+    else:
+        homeid = k
+        return homeid
+
+```
   
 
 #### 4-6 HomeStatus class ####
@@ -444,13 +476,14 @@ Methods :
 
 Constructor
 
-```python
+```
     homeStatus = lnetatmo.HomeStatus( authorization, home_id )
+
 ```
 
 Requires : 
 - an authorization object (ClientAuth instance)
-- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "GET homesdata"
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
 
 Return : a homeStatus object. This object contains most administration properties of Home+ Control devices such as Smarther thermostat, Socket, Cable Output, Centralized fan, Micromodules, ...
 
@@ -478,8 +511,188 @@ Methods :
     * Input : module ID and parameter
     * Output : value
 
+```
+    homestatus = lnetatmo.HomeStatus(authorization, homeid)
+    print ('Rooms in Homestatus')
+    for r in homestatus.rooms:
+        print (r)
+    print ('Persons in Homestatus')
+    if 'persons' in homestatus.rawData.keys():
+        for pp in homestatus.rawData['persons']:
+             print (pp)
+    print ('Modules in Homestatus')
+    for m in homestatus.modules:
+        for kt, vt in m.items():
+            if kt == 'type':
+                print (m['type'])
+                print (m['id'])
+                print (lnetatmo.TYPES[vt])
+                print (m.keys())
 
-#### 4-7 Utilities functions ####
+
+```
+
+
+#### 4-7 ThermostatData class ####
+
+
+Constructor
+
+```
+    device = lnetatmo.ThermostatData ( authorization, home_id )
+    
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
+
+Return : a device object. This object contains the Relay_Plug with Thermostat and temperature modules.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of IDs of every relay_plug
+
+  * **Relay_Plug** : 
+    * Output : Dictionairy of First Relay object  
+
+  * **Thermostat_Data** : 
+    * Output : Dictionairy of Thermostat object in First Relay[Modules].
+   
+Example :  
+
+```
+    device = lnetatmo.ThermostatData(authorization, homeid)
+    for i in device.rawData:
+        print ('rawData')
+        print (i['_id'])
+        print (i['station_name'])
+        print (dir(i))
+        print ('modules in rawData')
+        print (i['modules'][0]['_id'])
+        print (i['modules'][0]['module_name'])
+        print (' ')
+    print ('Relay Data')
+    Relay = device.Relay_Plug()
+    print (Relay.keys())
+    print ('Thermostat Data')
+    TH = device.Thermostat_Data()
+    print (TH.keys())
+
+```
+
+#### 4-8 HomesData class ####
+
+
+Constructor
+
+```python
+    homesData = lnetatmo.HomesData ( authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
+
+Return : a homesdata object. This object contains the Netatmo actual topology and static information of
+         all devices present into a user account. It is also possible to specify a home_id to focus on one home.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of IDs of every devices
+
+Example :  
+
+```
+    homesData = lnetatmo.HomesData ( authorization, home_id )
+    print (homesdata.Homes_Data['name'])
+    print (homesdata.Homes_Data['altitude'])
+    print (homesdata.Homes_Data['coordinates'])
+    print (homesdata.Homes_Data['country'])
+    print (homesdata.Homes_Data['timezone'])
+    print ('rooms in HomesData')
+    for r in homesdata.Homes_Data.get('rooms'):
+        print (r)
+    print ('Devices in HomesData')
+    for m in homesdata.Homes_Data.get('modules'):
+        print (m)
+    print ('Persons in HomesData')
+    if 'persons' in homesdata.Homes_Data.keys():
+        for P in homesdata.Homes_Data.get('persons'):
+            print (P)
+    print ('Schedules in HomesData')
+    print (homesdata.Homes_Data['schedules'][0].keys())
+
+```
+
+#### 4-9 Homecoach class ####
+
+
+Constructor
+
+```python
+    homecoach = lnetatmo.HomeCoach(authorization, home_id )
+```
+
+Requires : 
+- an authorization object (ClientAuth instance)
+- home_id which can be found in https://dev.netatmo.com/apidocumentation/control by using "class homedata"
+
+Return : a homecoach object. This object contains all Homecoach Data.
+
+Methods :
+
+  * **rawData** : Full dictionary of the returned JSON DEVICELIST Netatmo API service
+    * Output : list of all Homecoach in user account
+
+  * **checkNotUpdated** :
+    * Output : list of modules name for which last data update is older than specified delay (default 1 hour).
+
+
+  * **checkUpdated** :
+    * Output : list of modules name for which last data update is newer than specified delay (default 1 hour).
+
+Example :
+
+
+```
+    homecoach = lnetatmo.HomeCoach(authorization, homeid)
+    #
+    Not_updated = []
+    updated = []
+    d = {}
+    for device in homecoach.rawData:
+        _id = device['_id']
+        d.update({'When': device['dashboard_data']['time_utc']})
+        a = homecoach.checkNotUpdated(d, _id)
+        b = homecoach.checkUpdated(d, _id)
+        print (device['station_name'])
+        print (device['date_setup'])
+        print (device['last_setup'])
+        print (device['type'])
+        print (device['last_status_store'])
+        print (device['firmware'])
+        print (device['last_upgrade'])
+        print (device['wifi_status'])
+        print (device['reachable'])
+        print (device['co2_calibrating'])
+        print (device['data_type'])
+        print (device['place'])
+        print (device['dashboard_data'])
+        Not_updated.append(a)
+        updated.append(b)
+    D = homecoach.HomecoachDevice['dashboard_data']
+    print (D.keys())
+    # dict_keys(['time_utc', 'Temperature', 'CO2', 'Humidity', 'Noise', 'Pressure', 'AbsolutePressure', 'health_idx', 'min_temp', 'max_temp', 'date_max_temp', 'date_min_temp'])
+    print (Not_updated)
+    print (updated)
+
+```
+
+
+#### 4-10 Utilities functions ####
 
 
   * **rawAPI** (authentication, APIkeyword, parameters) : Direct call an APIkeyword from Netatmo and return a dictionary with the raw response the APIkeywork is the path without the / before as specified in the documentation (eg. "gethomesdata" or "homestatus")
@@ -488,7 +701,7 @@ Methods :
   * **todayStamps**() : Return a couple of epoch time (start, end) for the current day
 
 
-#### 4-8 All-in-One function ####
+#### 4-11 All-in-One function ####
 
 
 If you just need the current temperature and humidity reported by a sensor with associated min and max values on the last 24 hours, you can get it all with only one call that handle all required steps including authentication :
