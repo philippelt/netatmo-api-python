@@ -7,13 +7,9 @@ For more detailed information see http://dev.netatmo.com
 I have no relation with the netatmo company, I wrote this because I needed it myself,
 and published it to save time to anyone who would have same needs.
 
-I am trying to make this library survive to continuous Netatmo changes but their habbit to introduce breaking changes anytime without notice make this target hard to reach.
-
->BREAKING CHANGE (july 2023): Netatmo seems no longer (july 2023) to allow grant_type "password", even for an app credentials that belong to the same account than the home. They have added the capability of creating access_token/refresh_token couple from the dev page (the location where app are created). As a consequence, the username/password credentials can no longer be used and you must replace them with a new parameter REFRESH_TOKEN that you will get from the web interface. To get this token, you are required to specify the scope you want to allow to this token. Select all that apply for your library use.
-
->NEW MAJOR BREAKING CHANGE (december 2023): Web generated refresh_tokens are no more long lived tokens, they will be automatically refreshed. Consequences : No more static authentication in the library source and ~/.netatmo.credentials file will be updated to reflect change in the refresh token. This file MUST be writable and if you run Netatmo tools in container, remember to persist this file between container run. **This new token policy will completely forbid you to use your credentials on two or more systems if you can't share the .netatmo.credentials file**.
-
-There is no longer credential load at library import, credentials are loaded at `ClientAuth` class initialization and a new parameter `credentialFile` allow to specify private name and location for the credential file.
+There is no longer credential load at library import, credentials are loaded at `ClientAuth` class initialization and a new parameter `credentialFile` allow to specify private name and location for the credential file. It is recommended to use this parameter to specify the location of the credential file using absolute path to be able to be independant of the account used to run the program.
+>[!CAUTION]
+> Remember that the program using the library **must** be able to rewrite the credential file to be able to save the new refresh token that netatmo may provide at the authentication step. Check the file permission according to the account the program is running.
 
 ### Install ###
 
