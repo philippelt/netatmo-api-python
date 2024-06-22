@@ -11,6 +11,11 @@ There is no longer credential load at library import, credentials are loaded at 
 >[!CAUTION]
 > Remember that the program using the library **must** be able to rewrite the credential file to be able to save the new refresh token that netatmo may provide at the authentication step. Check the file permission according to the account the program is running.
 
+>[!NOTE]
+> Several users reported that Netatmo is now asking for a DPO (Data Protection Officer) mail address to deliver application credentials. Netatmo is requesting this to comply with RGPD European regulation for the case of your application would be able to access other customers account and you would hold responsibility to protect others potentially confidential informations.  
+> For most users (if not all) of this library, this is totally useless as we are accessing only OUR devices thus are not concerned by RGPD. You can then put your netatmo account email address, just in case some mail would be sent to it.  
+> It is only an information for the Netatmo records, there is absolutely no use of this information by the library.
+
 ### Install ###
 
 To install lnetatmo simply run:
