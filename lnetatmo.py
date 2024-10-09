@@ -464,7 +464,7 @@ class WeatherStationData:
             for m in self.default_station_data['modules']:
                 self.modules[ m['_id'] ] = m
         res = [m['module_name'] for m in self.modules.values()]
-        res.append(station['module_name'])
+        res.append(s['module_name'])
         return res
 
     # Both functions (byName and byStation) are here for historical reason,
