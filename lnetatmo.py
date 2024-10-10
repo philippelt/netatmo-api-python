@@ -254,8 +254,9 @@ class ClientAuth:
             cred = {"CLIENT_ID":self._clientId,
                     "CLIENT_SECRET":self._clientSecret,
                     "REFRESH_TOKEN":self.refreshToken }
-            with open(self._credentialFile, "w") as f:
-                f.write(json.dumps(cred, indent=True))
+            if hasattr(type(self), "_credentialFile"):
+                with open(self._credentialFile, "w") as f:
+                    f.write(json.dumps(cred, indent=True))
         self._accessToken = resp['access_token']
         self.expiration = int(resp['expire_in'] + time.time())
 
