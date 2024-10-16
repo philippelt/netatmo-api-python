@@ -16,15 +16,13 @@ if __name__ == "__main__": warnings.filterwarnings("ignore")                    
 
 from sys import version_info
 from os import getenv
-from os.path import expanduser, exists
-import platform
+from os.path import expanduser
 import json, time
 import imghdr
-import warnings
 import logging
 
 # Just in case method could change
-PYTHON3 = (version_info.major > 2)
+PYTHON3 = version_info.major > 2
 
 # HTTP libraries depends upon Python 2 or 3
 if PYTHON3 :
@@ -62,7 +60,7 @@ _GETTHERMOSTATDATA_REQ = _BASE_URL + "api/getthermostatsdata"
 _GETHOMEDATA_REQ       = _BASE_URL + "api/gethomedata"
 _GETCAMERAPICTURE_REQ  = _BASE_URL + "api/getcamerapicture"
 _GETEVENTSUNTIL_REQ    = _BASE_URL + "api/geteventsuntil"
-_HOME_STATUS           = _BASE_URL + "api/homestatus"                                     # Used for Home+ Control Devices 
+_HOME_STATUS           = _BASE_URL + "api/homestatus"                                     # Used for Home+ Control Devices
 _GETHOMES_DATA         = _BASE_URL + "api/homesdata"                                      # New API
 _GETHOMECOACH          = _BASE_URL + "api/gethomecoachsdata"                              #
 
@@ -187,20 +185,18 @@ logger = logging.getLogger("lnetatmo")
 
 
 class NoDevice( Exception ):
-    pass
+    """No device available in the user account"""
 
 
 class NoHome( Exception ):
-    pass
+    """No home defined in the user account"""
 
 
 class AuthFailure( Exception ):
-    pass
+    """Credentials where rejected by Netatmo (or netatmo server unavailability)"""
 
-
-class outOfScope( Exception ):
-    pass
-
+class OutOfScope( Exception ):
+    """Your current auth scope do not allow access to this resource"""
 
 class ClientAuth:
     """
@@ -216,7 +212,7 @@ class ClientAuth:
                        clientSecret=None,
                        refreshToken=None,
                        credentialFile=None):
-        
+
         # replace values with content of env variables if defined
         clientId = getenv("CLIENT_ID", clientId)
         clientSecret = getenv("CLIENT_SECRET", clientSecret)
@@ -226,15 +222,19 @@ class ClientAuth:
         # Note: this file will be rewritten by the library to record refresh_token change
         # If you run your application in container, remember to persist this file
         if not (clientId and clientSecret and refreshToken):
-            credentialFile = credentialFile or expanduser("~/.netatmo.credentials")
-            self._credentialFile = credentialFile
-            with open(self._credentialFile, "r") as f:
+            self._credentialFile = credentialFile or expanduser("~/.netatmo.credentials")
+            with open(self._credentialFile, "r", encoding="utf-8") as f:
                 cred = {k.upper():v for k,v in json.loads(f.read()).items()}
+        else:
+            # Calling program will need to handle the returned refresh_token for futur call
+            # by getting refreshToken property of the ClientAuth instance and persist it somewhere
+            self._credentialFile = None
 
         self._clientId = clientId or cred["CLIENT_ID"]
         self._clientSecret = clientSecret or cred["CLIENT_SECRET"]
         self.refreshToken = refreshToken or cred["REFRESH_TOKEN"]
         self.expiration = 0 # Force refresh token
+        self._accessToken = None # Will be refreshed before any use
 
     @property
     def accessToken(self):
@@ -254,8 +254,8 @@ class ClientAuth:
             cred = {"CLIENT_ID":self._clientId,
                     "CLIENT_SECRET":self._clientSecret,
                     "REFRESH_TOKEN":self.refreshToken }
-            if hasattr(type(self), "_credentialFile"):
-                with open(self._credentialFile, "w") as f:
+            if self._credentialFile:
+                with open(self._credentialFile, "w", encoding="utf-8") as f:
                     f.write(json.dumps(cred, indent=True))
         self._accessToken = resp['access_token']
         self.expiration = int(resp['expire_in'] + time.time())
@@ -282,10 +282,9 @@ class User:
 
 class UserInfo:
     """
-    This class is populated with data from various Netatmo requests to provide
+    This class is dynamicaly populated with data from various Netatmo requests to provide
     complimentary data (eg Units for Weatherdata)
     """
-    pass
 
 
 class HomeStatus:
@@ -315,8 +314,8 @@ class HomeStatus:
 
     def getListRoomParam(self, room_id):
         for room in self.rooms:
-            if(room['id'] == room_id):
-                return [param for param in room]
+            if room['id'] == room_id:
+                return list(room)
         return None
 
     def getRoomParam(self, room_id, param):
@@ -330,13 +329,13 @@ class HomeStatus:
 
     def getListModuleParam(self, module_id):
         for module in self.modules:
-            if(module['id'] == module_id):
-                return [param for param in module]
+            if module['id'] == module_id:
+                return list(module)
         return None
 
     def getModuleParam(self, module_id, param):
         for module in self.modules:
-            if(module['id'] == module_id and param in module):
+            if module['id'] == module_id and param in module:
                 return module[param]
         return None
 
@@ -377,6 +376,8 @@ class ThermostatData:
         # Standard the first Relaystation and Thermostat is returned
         # self.rawData is list all stations
 
+    # FIXME : This code is wrong as it will always return the first Relay
+    # I don't own a thermostat I can't fix this code, help welcome
     def Relay_Plug(self, _id=None):
         for Relay in self.rawData:
             if _id in Relay:
@@ -385,14 +386,15 @@ class ThermostatData:
                 #print (Relay['_id'])
                 return Relay
 
+    # FIXME : Probably wrong again, always returning "first" thermostat ?
     def Thermostat_Data(self):
         for thermostat in self.Relay_Plug()['modules']:
             #
             return thermostat
-            
+
     def getThermostat(self, name=None, tid=None):
         if self.rawData[0]['station_name'] != name: return None                           # OLD ['name']
-        else: return
+        # FIXME: No thermostat property !!
         return self.thermostat[self.defaultThermostatId]
 
     def moduleNamesList(self, name=None, tid=None):
@@ -440,7 +442,7 @@ class WeatherStationData:
             self.default_station = station
         else:
             self.default_station =  [v["station_name"] for k,v in self.stations.items() if v["home_name"] == self.default_home][0]
-        self.modules = dict()
+        self.modules = {}
         self.default_station_data = self.stationByName(self.default_station)
         if 'modules' in self.default_station_data:
             for m in self.default_station_data['modules']:
@@ -460,7 +462,7 @@ class WeatherStationData:
         if not s: raise NoDevice("No station with name or id %s" % station)
         self.default_station = station
         self.default_station_data = s
-        self.modules = dict()
+        self.modules = {}
         if 'modules' in self.default_station_data:
             for m in self.default_station_data['modules']:
                 self.modules[ m['_id'] ] = m
@@ -483,7 +485,7 @@ class WeatherStationData:
         for m in self.modules.values():
             if m['module_name'] == module : return m
         return None
-    
+
     # Functions for compatibility with previous versions
     def stationByName(self, station=None):
         return self.getStation(station)
@@ -498,7 +500,7 @@ class WeatherStationData:
         s = self.stationByName(station) or self.stationById(station)
         # Breaking change from Netatmo : dashboard_data no longer available if station lost
         if not s or 'dashboard_data' not in s : return None
-        lastD = dict()
+        lastD = {}
         # Define oldest acceptable sensor measure event
         limit = (time.time() - exclude) if exclude else 0
         ds = s['dashboard_data']
@@ -577,8 +579,7 @@ class WeatherStationData:
             T = [v[0] for v in resp['body'].values()]
             H = [v[1] for v in resp['body'].values()]
             return min(T), max(T), min(H), max(H)
-        else:
-            return None
+        return None
 
 
 class DeviceList(WeatherStationData):
@@ -587,7 +588,6 @@ class DeviceList(WeatherStationData):
     """
     warnings.warn("The 'DeviceList' class was renamed 'WeatherStationData'",
             DeprecationWarning )
-    pass
 
 
 class HomeData:
@@ -606,56 +606,51 @@ class HomeData:
         self.rawData = resp['body']
         # Collect homes
         self.homes = { d['id'] : d for d in self.rawData['homes'] }
+        # FIXME : Doesn't use the home parameter to select the appropriate home !
         for k, v in self.homes.items():
             self.homeid = k
             C = v.get('cameras')
             P = v.get('persons')
             S = v.get('smokedetectors')
             E = v.get('events')
-            if not S:
-                logger.warning('No Smokedetectors found')
-#                raise NoDevice("No Devices available")
-            if not C:
-                logger.warning('No Cameras found')
-#                raise NoDevice("No Cameras available")
-            if not P:
-                logger.warning('No Persons found')
-#                raise NoDevice("No Persons available")
-            if not E:
-                logger.warning('No events found')
-#                raise NoDevice("No Events available")
+            S or logger.warning('No smoke detector found')
+            C or logger.warning('No Cameras found')
+            P or logger.warning('No Persons found')
+            E or logger.warning('No events found')
+            if not (C or P or S or E):
+                raise NoDevice("No device found in home %s" % k)
         if S or C or P or E:
             self.default_home = home or list(self.homes.values())[0]['name']
             # Split homes data by category
-            self.persons = dict()
-            self.events = dict()
-            self.cameras = dict()
-            self.lastEvent = dict()
+            self.persons = {}
+            self.events = {}
+            self.cameras = {}
+            self.lastEvent = {}
             for i in range(len(self.rawData['homes'])):
                 curHome = self.rawData['homes'][i]
                 nameHome = curHome['name']
                 if nameHome not in self.cameras:
-                    self.cameras[nameHome] = dict()
+                    self.cameras[nameHome] = {}
                 if 'persons' in curHome:
                     for p in curHome['persons']:
                         self.persons[ p['id'] ] = p
                 if 'events' in curHome:
                     for e in curHome['events']:
                         if e['camera_id'] not in self.events:
-                            self.events[ e['camera_id'] ] = dict()
+                            self.events[ e['camera_id'] ] = {}
                         self.events[ e['camera_id'] ][ e['time'] ] = e
                 if 'cameras' in curHome:
                     for c in curHome['cameras']:
                         self.cameras[nameHome][ c['id'] ] = c
                         c["home_id"] = curHome['id']
-            for camera in self.events:
-                self.lastEvent[camera] = self.events[camera][sorted(self.events[camera])[-1]]
+            for camera,e in self.events.items():
+                self.lastEvent[camera] = e[sorted(e)[-1]]
             if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
             self.default_camera = list(self.cameras[self.default_home].values())[0]
         else:
             pass
 #            raise NoDevice("No Devices available")
-    
+
     def homeById(self, hid):
         return None if hid not in self.homes else self.homes[hid]
 
@@ -666,9 +661,9 @@ class HomeData:
                 return self.homes[key]
 
     def cameraById(self, cid):
-        for home,cam in self.cameras.items():
-            if cid in self.cameras[home]:
-                return self.cameras[home][cid]
+        for cam in self.cameras.values():
+            if cid in cam:
+                return cam[cid]
         return None
 
     def cameraByName(self, camera=None, home=None):
@@ -681,12 +676,12 @@ class HomeData:
                 if self.cameras[home][cam_id]['name'] == camera:
                     return self.cameras[home][cam_id]
         elif not home and camera:
-            for home, cam_ids in self.cameras.items():
+            for h, cam_ids in self.cameras.items():
                 for cam_id in cam_ids:
-                    if self.cameras[home][cam_id]['name'] == camera:
-                        return self.cameras[home][cam_id]
+                    if self.cameras[h][cam_id]['name'] == camera:
+                        return self.cameras[h][cam_id]
         else:
-            return list(self.cameras[home].values())[0]
+            return list(self.cameras[self.default_home].values())[0]
         return None
 
     def cameraUrls(self, camera=None, home=None, cid=None):
@@ -750,11 +745,11 @@ class HomeData:
         """
         Retrieve the face of a given person
         """
-        for p in self.persons:
-            if 'pseudo' in self.persons[p]:
-                if name == self.persons[p]['pseudo']:
-                    image_id = self.persons[p]['face']['id']
-                    key = self.persons[p]['face']['key']
+        for p in self.persons.values():
+            if 'pseudo' in p:
+                if name == p['pseudo']:
+                    image_id = p['face']['id']
+                    key = p['face']['key']
                     return self.getCameraPicture(image_id, key)
         return None, None
 
@@ -765,9 +760,9 @@ class HomeData:
         if not home: home=self.default_home
         if not event:
             #If not event is provided we need to retrieve the oldest of the last event seen by each camera
-            listEvent = dict()
-            for cam_id in self.lastEvent:
-                listEvent[self.lastEvent[cam_id]['time']] = self.lastEvent[cam_id]
+            listEvent = {}
+            for e in self.lastEvent.values():
+                listEvent[e['time']] = e
             event = listEvent[sorted(listEvent)[0]]
 
         home_data = self.homeByName(home)
@@ -780,8 +775,8 @@ class HomeData:
         eventList = resp['body']['events_list']
         for e in eventList:
             self.events[ e['camera_id'] ][ e['time'] ] = e
-        for camera in self.events:
-            self.lastEvent[camera]=self.events[camera][sorted(self.events[camera])[-1]]
+        for camera,v in self.events.items():
+            self.lastEvent[camera]=v[sorted(v)[-1]]
 
     def personSeenByCamera(self, name, home=None, camera=None):
         """
@@ -801,7 +796,7 @@ class HomeData:
         return False
 
     def _knownPersons(self):
-        known_persons = dict()
+        known_persons = {}
         for p_id,p in self.persons.items():
             if 'pseudo' in p:
                 known_persons[ p_id ] = p
@@ -850,11 +845,11 @@ class HomeData:
             return True
         return False
 
-    def presenceUrl(self, camera=None, home=None, cid=None, setting=None):
+    def presenceUrl(self, camera=None, home=None, cid=None):
         camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
         if camera["type"] != "NOC": return None # Not a presence camera
         vpnUrl, localUrl = self.cameraUrls(cid=camera["id"])
-        return localUrl
+        return localUrl or vpnUrl
 
     def presenceLight(self, camera=None, home=None, cid=None, setting=None):
         url = self.presenceUrl(home=home, camera=camera) or self.cameraById(cid=cid)
@@ -873,16 +868,16 @@ class HomeData:
 
     def presenceSetAction(self, camera=None, home=None, cid=None,
                           eventType=_PRES_DETECTION_KIND[0], action=2):
-        return "Currently unsupported"
-        if eventType not in _PRES_DETECTION_KIND or \
-           action not in _PRES_DETECTION_SETUP : return None
-        camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
-        postParams = { "access_token" : self.getAuthToken,
-                       "home_id" : camera["home_id"],
-                       "presence_settings[presence_record_%s]" % eventType : _PRES_DETECTION_SETUP.index(action)
-                     }
-        resp = postRequest("Camera", _POST_UPDATE_HOME_REQ, postParams)
-        self.rawData = resp['body']
+        raise NotImplementedError
+        # if eventType not in _PRES_DETECTION_KIND or \
+        #    action not in _PRES_DETECTION_SETUP : return None
+        # camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
+        # postParams = { "access_token" : self.getAuthToken,
+        #                "home_id" : camera["home_id"],
+        #                "presence_settings[presence_record_%s]" % eventType : _PRES_DETECTION_SETUP.index(action)
+        #              }
+        # resp = postRequest("Camera", _POST_UPDATE_HOME_REQ, postParams)
+        # self.rawData = resp['body']
 
     def getLiveSnapshot(self, camera=None, home=None, cid=None):
         camera = self.cameraByName(home=home, camera=camera) or self.cameraById(cid=cid)
@@ -898,7 +893,6 @@ class WelcomeData(HomeData):
     """
     warnings.warn("The 'WelcomeData' class was renamed 'HomeData' to handle new Netatmo Home capabilities",
             DeprecationWarning )
-    pass
 
 
 class HomesData:
@@ -927,9 +921,8 @@ class HomesData:
             # Find a home who's home id or name is the one requested
             for h in self.rawData:
                 #print (h.keys())
-                if h["name"] == home or h["id"] == home:
-                   self.Homes_Data = h
-#        print (self.Homes_Data)
+                if home in (h["name"], h["id"]):
+                    self.Homes_Data = h
         if not self.Homes_Data : raise NoDevice("No Devices available")
 
 
@@ -941,9 +934,10 @@ class HomeCoach:
         authData (clientAuth): Authentication information with a working access Token
         home : Home name or id of the home who's HomeCoach belongs to
     """
+    # FIXME: home parameter not used, unpredictible behavior
     def __init__(self, authData, home=None):
         # I don't own a HomeCoach thus I am not able to test the HomeCoach support
-        
+
 #        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
 #                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
 #                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
@@ -957,9 +951,9 @@ class HomeCoach:
         # homecoach data
         if not self.rawData : raise NoDevice("No HomeCoach available")
 
-        for i in range(len(self.rawData)):
-            #
-            self.HomecoachDevice = self.rawData[i]
+        for h in self.rawData:
+            # FIXME: This loop is nonsense (always end with the last value)
+            self.HomecoachDevice = h
 #           print ('Homecoach = ', self.HomecoachDevice)
 #           print (' ')
 #           print ('Homecoach_data = ', self.rawData[i]['dashboard_data'])
@@ -969,13 +963,13 @@ class HomeCoach:
         D = self.HomecoachDevice['dashboard_data']
         return D
 
-    def lastData(self, id=None, exclude=0):
-        if id is not None:
-                s = self.HomecoachDevice['dashboard_data']['time_utc']
-                _id = self.HomecoachDevice['_id']
-                return {'When':s}, {'_id':_id}
-        else:
-            return {'When': 0 }, {'_id': id}
+    # FIXME: Exclusion of outdated info is not handled (exclude parameter unused)
+    def lastData(self, hid=None, exclude=0):
+        if hid is not None:
+            s = self.HomecoachDevice['dashboard_data']['time_utc']
+            _id = self.HomecoachDevice[hid]
+            return {'When':s}, {'_id':_id}
+        return {'When': 0 }, {'_id': hid}
 
     def checkNotUpdated(self, res, _id, delay=3600):
         ret = []
@@ -990,8 +984,9 @@ class HomeCoach:
 
 # Utilities routines
 
-def rawAPI(authData, url, parameters={}):
+def rawAPI(authData, url, parameters=None):
     fullUrl = _BASE_URL + "api/" + url
+    if parameters is None: parameters = {}
     parameters["access_token"] = authData.accessToken
     resp = postRequest("rawAPI", fullUrl, parameters)
     return resp["body"] if "body" in resp else None
@@ -1000,7 +995,7 @@ def filter_home_data(rawData, home):
     if home:
         # Find a home who's home id or name is the one requested
         for h in rawData:
-            if h["home_name"] == home or h["home_id"] == home:
+            if home in (h['home_name'], h['home_id']):
                 return h
         return None
     # By default, the first home is returned
@@ -1023,6 +1018,7 @@ def postRequest(topic, url, params=None, timeout=10):
         except urllib.error.HTTPError as err:
             if err.code == 403:
                 logger.warning("Your current token scope do not allow access to %s" % topic)
+                raise OutOfScope("Your current token scope do not allow access to %s" % topic) from None
             else:
                 logger.error("code=%s, reason=%s, body=%s" % (err.code, err.reason, err.fp.read()))
             return None
@@ -1068,17 +1064,17 @@ def getStationMinMaxTH(station=None, module=None, home=None):
     elif module:
         module = devList.moduleById(module) or devList.moduleByName(module)
         if not module: raise NoDevice("No such module %s" % module)
-        else: module = module["module_name"]
+        module = module["module_name"]
     else:
         module = list(devList.modules.values())[0]["module_name"]
     lastD = devList.lastData()
     if module == "*":
-        result = dict()
-        for m in lastD.keys():
-            if time.time()-lastD[m]['When'] > 3600 : continue
+        result = {}
+        for m,v in lastD.items():
+            if time.time()-v['When'] > 3600 : continue
             r = devList.MinMaxTH(module=m)
             if r:
-                result[m] = (r[0], lastD[m]['Temperature'], r[1])
+                result[m] = (r[0], v['Temperature'], r[1])
     else:
         if time.time()-lastD[module]['When'] > 3600 : result = ["-", "-"]
         else :
@@ -1091,44 +1087,44 @@ def getStationMinMaxTH(station=None, module=None, home=None):
 
 if __name__ == "__main__":
 
-    from sys import exit, stdout, stderr
-
     logging.basicConfig(format='%(name)s - %(levelname)s: %(message)s', level=logging.INFO)
 
     authorization = ClientAuth()                                                          # Test authentication method
 
     try:
-        weatherStation = WeatherStationData(authorization)                                # Test DEVICELIST
-    except NoDevice:
-        logger.warning("No weather station available for testing")
-    else:
-        weatherStation.MinMaxTH()                                                         # Test GETMEASUR
+        try:
+            weatherStation = WeatherStationData(authorization)                                # Test DEVICELIST
+        except NoDevice:
+            logger.warning("No weather station available for testing")
+        else:
+            weatherStation.MinMaxTH()                                                         # Test GETMEASUR
 
-    try:
-        homes = HomeData(authorization)
-        homeid = homes.homeid
-    except NoDevice :
-        logger.warning("No home available for testing")
+        try:
+            homes = HomeData(authorization)
+            homeid = homes.homeid
+        except NoDevice :
+            logger.warning("No home available for testing")
 
-    try:
-        thermostat = ThermostatData(authorization)
-        Default_relay = thermostat.Relay_Plug()
-        Default_thermostat = thermostat.Thermostat_Data()
-    except NoDevice:
-        logger.warning("No thermostat avaible for testing")
+        try:
+            thermostat = ThermostatData(authorization)
+            Default_relay = thermostat.Relay_Plug()
+            Default_thermostat = thermostat.Thermostat_Data()
+        except NoDevice:
+            logger.warning("No thermostat avaible for testing")
 
-    try:
-#        homesdata = lnetatmo.HomesData(authorization)
-# ERROR ; Your current token scope do not allow access to Module ?  - No Home ID given !
-        homesdata = HomesData(authorization, homeid)
-    except NoDevice:
-        logger.warning("No HomesData avaible for testing")
-            
-    try:
-        Homecoach = HomeCoach(authorization)
-    except NoDevice:
-        logger.warning("No HomeCoach avaible for testing")
-        
+        try:
+            homesdata = HomesData(authorization)
+        except NoDevice:
+            logger.warning("No HomesData avaible for testing")
+
+        try:
+            Homecoach = HomeCoach(authorization)
+        except NoDevice:
+            logger.warning("No HomeCoach avaible for testing")
+
+    except OutOfScope:
+        logger.warning("Your current scope do not allow such access")
+
     # If we reach this line, all is OK
     logger.info("OK")
 
