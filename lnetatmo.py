@@ -18,7 +18,6 @@ from sys import version_info
 from os import getenv
 from os.path import expanduser
 import json, time
-import imghdr
 import logging
 
 # Just in case method could change
@@ -738,8 +737,7 @@ class HomeData:
             "key" : key
             }
         resp = postRequest("Camera", _GETCAMERAPICTURE_REQ, postParams)
-        image_type = imghdr.what('NONE.FILE',resp)
-        return resp, image_type
+        return resp, "jpeg"
 
     def getProfileImage(self, name):
         """
