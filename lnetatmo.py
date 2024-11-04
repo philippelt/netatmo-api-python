@@ -987,7 +987,7 @@ def rawAPI(authData, url, parameters=None):
     if parameters is None: parameters = {}
     parameters["access_token"] = authData.accessToken
     resp = postRequest("rawAPI", fullUrl, parameters)
-    return resp["body"] if "body" in resp else None
+    return resp["body"] if "body" in resp else resp
 
 def filter_home_data(rawData, home):
     if home:
