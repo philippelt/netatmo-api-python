@@ -631,8 +631,11 @@ class HomeData:
 
     Args:
         authData (ClientAuth): Authentication information with a working access Token
+        home : Home name of the home where's devices are installed
     """
     def __init__(self, authData, home=None):
+        warnings.warn("The 'HomeData' class is deprecated'",
+            DeprecationWarning )
         self.getAuthToken = authData.accessToken
         postParams = {
             "access_token" : self.getAuthToken
@@ -647,13 +650,29 @@ class HomeData:
             C = v.get('cameras')
             P = v.get('persons')
             S = v.get('smokedetectors')
+        for d in self.rawData['homes'] :
+            if home == d['name']:
+                self.homes = d
+            else:
+                pass
+        #
+        C = self.homes['cameras']
+        P = self.homes['persons']
+        S = self.homes['smokedetectors']
+        E = None
+        # events not always in self.homes
+        if 'events' in self.homes.keys():
             E = v.get('events')
-            S or logger.warning('No smoke detector found')
-            C or logger.warning('No Cameras found')
-            P or logger.warning('No Persons found')
-            E or logger.warning('No events found')
-            if not (C or P or S or E):
-                raise NoDevice("No device found in home %s" % k)
+        if not S:
+            logger.warning('No smoke detector found')
+        if not C:
+            logger.warning('No Cameras found')
+        if not P:
+            logger.warning('No Persons found')
+        if not E:
+            logger.warning('No events found')
+        #    if not (C or P or S or E):
+        #        raise NoDevice("No device found in home %s" % k)
         if S or C or P or E:
             self.default_home = home or list(self.homes.values())[0]['name']
             # Split homes data by category
@@ -680,6 +699,7 @@ class HomeData:
                         c["home_id"] = curHome['id']
             for camera,e in self.events.items():
                 self.lastEvent[camera] = e[sorted(e)[-1]]
+            #self.default_home has no key homeId use homeName instead!
             if not self.cameras[self.default_home] : raise NoDevice("No camera available in default home")
             self.default_camera = list(self.cameras[self.default_home].values())[0]
         else:
