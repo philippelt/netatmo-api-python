@@ -932,10 +932,10 @@ class HomeCoach:
         authData (clientAuth): Authentication information with a working access Token
         home : Home name or id of the home who's HomeCoach belongs to
     """
-    # FIXME: home parameter not used, unpredictible behavior
-    def __init__(self, authData, home=None):
-        # I don't own a HomeCoach thus I am not able to test the HomeCoach support
 
+    def __init__(self, authData):
+        # I don't own a HomeCoach thus I am not able to test the HomeCoach support
+        # Homecoach does not need or use HomeID parameter
 #        warnings.warn("The HomeCoach code is not tested due to the lack of test environment.\n",  RuntimeWarning )
 #                      "As Netatmo is continuously breaking API compatibility, risk that current bindings are wrong is high.\n" \
 #                      "Please report found issues (https://github.com/philippelt/netatmo-api-python/issues)"
@@ -949,34 +949,40 @@ class HomeCoach:
         # homecoach data
         if not self.rawData : raise NoDevice("No HomeCoach available")
 
-        for h in self.rawData:
-            # FIXME: This loop is nonsense (always end with the last value)
-            self.HomecoachDevice = h
-#           print ('Homecoach = ', self.HomecoachDevice)
-#           print (' ')
-#           print ('Homecoach_data = ', self.rawData[i]['dashboard_data'])
-#           print (' ')
+    def HomecoachDevice(self, id=""):
+        for device in self.rawData:
+           if id in device['_id']:
+                return device
+           self.HomecoachDevice = device
 
-    def Dashboard(self):
-        D = self.HomecoachDevice['dashboard_data']
-        return D
+    def Dashboard(self, id=""):
+        #D = self.HomecoachDevice['dashboard_data']
+        for device in self.rawData:
+            if id in device['_id']:
+                D = device['dashboard_data']
+                return D
 
-    # FIXME: Exclusion of outdated info is not handled (exclude parameter unused)
     def lastData(self, hid=None, exclude=0):
-        if hid is not None:
-            s = self.HomecoachDevice['dashboard_data']['time_utc']
-            _id = self.HomecoachDevice[hid]
-            return {'When':s}, {'_id':_id}
-        return {'When': 0 }, {'_id': hid}
+        for device in self.rawData:
+            if id == device['_id']:
+            #s = self.HomecoachDevice['dashboard_data']['time_utc']
+                # Define oldest acceptable sensor measure event
+                limit = (time.time() - exclude) if exclude else 0
+                ds = self.HomecoachDevice['dashboard_data']
+                if ds.get('time_utc',limit+10) > limit :
+                    _id = s[id]
+                    return {'When':s, '_id':_id}
+            else:
+                return {'When': 0, 'id': id}
 
-    def checkNotUpdated(self, res, _id, delay=3600):
+    def checkNotUpdated(self, res, hid, delay=3600):
         ret = []
-        if time.time()-res['When'] > delay : ret.append({_id: 'Device Not Updated'})
+        if time.time()-res['When'] > delay : ret.append({hid: 'Device Not Updated'})
         return ret if ret else None
 
-    def checkUpdated(self, res, _id, delay=3600):
+    def checkUpdated(self, res, hid, delay=3600):
         ret = []
-        if time.time()-res['When'] < delay : ret.append({_id: 'Device up-to-date'})
+        if time.time()-res['When'] < delay : ret.append({hid: 'Device up-to-date'})
         return ret if ret else None
 
 
