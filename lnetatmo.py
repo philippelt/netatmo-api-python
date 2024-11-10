@@ -1006,8 +1006,8 @@ class HomeCoach:
                 limit = (time.time() - exclude) if exclude else 0
                 ds = self.HomecoachDevice['dashboard_data']
                 if ds.get('time_utc',limit+10) > limit :
-                    _id = s[id]
-                    return {'When':s, '_id':_id}
+                    _id = ds[id]
+                    return {'When':ds, '_id':_id}
             else:
                 return {'When': 0, 'id': id}
 
