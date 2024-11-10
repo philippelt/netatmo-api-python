@@ -341,8 +341,8 @@ class HomeStatus:
 
 class ThermostatData:
     """
-    List the Thermostat and temperature modules
-
+    List the Relay station and Thermostat modules
+    Valves are controlled by HomesData and HomeStatus in new API
     Args:
         authData (clientAuth): Authentication information with a working access Token
         home : Home name or id of the home who's thermostat belongs to
@@ -375,36 +375,72 @@ class ThermostatData:
         # Standard the first Relaystation and Thermostat is returned
         # self.rawData is list all stations
 
-    # FIXME : This code is wrong as it will always return the first Relay
-    # I don't own a thermostat I can't fix this code, help welcome
-    def Relay_Plug(self, _id=None):
+# if no ID is given the Relaystation at index 0 is returned
+    def Relay_Plug(self, Rid=""):
         for Relay in self.rawData:
-            if _id in Relay:
-                return Relay
-            else:
+            if Rid in Relay['_id']:
+                print ('Relay ', Rid, 'in rawData')
+                #print (Relay.keys())
                 #print (Relay['_id'])
                 return Relay
+#dict_keys(['_id', 'applications', 'cipher_id', 'command', 'config_version', 'd_amount', 'date_creation', 'dev_has_init', 'device_group', 'firmware', 'firmware_private', 'homekit_nb_pairing', 'last_bilan', 'last_day_extremum', 'last_fw_update', 'last_measure_stored', 'last_setup', 'last_status_store', 'last_sync_asked', 'last_time_boiler_on', 'mg_station_name', 'migration_date', 'module_history', 'netcom_transport', 'new_historic_data', 'place', 'plug_connected_boiler', 'recompute_outdoor_time', 'record_storage', 'rf_amb_status', 'setpoint_order_history', 'skip_module_history_creation', 'subtype', 'type', 'u_amount', 'update_device', 'upgrade_record_ts', 'wifi_status', 'room', 'modules', 'station_name', 'udp_conn', 'last_plug_seen'])
 
-    # FIXME : Probably wrong again, always returning "first" thermostat ?
-    def Thermostat_Data(self):
-        for thermostat in self.Relay_Plug()['modules']:
-            #
-            return thermostat
+# if no ID is given the Thermostatmodule at index 0 is returned
+    def Thermostat_Data(self, tid=""):
+        for Relay in self.rawData:
+            for thermostat in Relay['modules']:
+                if tid in thermostat['_id']:
+                    print ('Thermostat ',tid, 'in Relay', Relay['_id'], Relay['station_name'])
+                    #print (thermostat['_id'])
+                    #print (thermostat.keys())
+                    return thermostat
+#dict_keys(['_id', 'module_name', 'type', 'firmware', 'last_message', 'rf_status', 'battery_vp', 'therm_orientation', 'therm_relay_cmd', 'anticipating', 'battery_percent', 'event_history', 'last_therm_seen', 'setpoint', 'therm_program_list', 'measured'])
 
-    def getThermostat(self, name=None, tid=None):
-        if self.rawData[0]['station_name'] != name: return None                           # OLD ['name']
-        # FIXME: No thermostat property !!
-        return self.thermostat[self.defaultThermostatId]
+
+    def getThermostat(self, name=None, id=""):
+        for Relay in self.rawData:
+            for module in Relay['modules']:
+                if id == Relay['_id']:
+                        print ('Relay ', id, 'found')
+                        return Relay
+                elif name == Relay['station_name']:
+                        print ('Relay ', name, 'found')
+                        return Relay
+                elif id == module['_id']:
+                        print ('Thermostat ', id, 'found in Relay', Relay['_id'], Relay['station_name'])
+                        return module
+                elif name == module['module_name']:
+                        print ('Thermostat ', name, 'found in Relay', Relay['_id'], Relay['station_name'])
+                        return module
+                else:
+                    #print ('Device NOT Found')
+                    pass
 
     def moduleNamesList(self, name=None, tid=None):
-        thermostat = self.getThermostat(name=name, tid=tid)
-        return [m['name'] for m in thermostat['modules']] if thermostat else None
+        l = []
+        for Relay in self.rawData:
+            if id == Relay['_id'] or name == Relay['station_name']:
+                RL = []
+                for module in Relay['modules']:
+                    RL.append(module['module_name'])
+                return RL
+            else:
+                #print ("Cloud Data")
+                for module in Relay['modules']:
+                    l.append(module['module_name'])
+                    #This return a list off all connected Thermostat in the cloud.
+        return l
 
-    def getModuleByName(self, name, thermostatId=None):                                   # ERROR  'NoneType' object is not subscriptable
-        thermostat = self.getThermostat(tid=thermostatId)
-        for m in thermostat['modules']:
-            if m['name'] == name: return m
-        return None
+    def getModuleByName(self, name, tid=""):
+        for Relay in self.rawData:
+            for module in Relay['modules']:
+                #print (module['module_name'], module['_id'])
+                if module['module_name'] == name:
+                    return module
+                elif module['_id'] == tid:
+                    return module
+                else:
+                    pass
 
 
 class WeatherStationData:
