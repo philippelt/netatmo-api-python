@@ -976,6 +976,9 @@ class HomesData:
                 #print (h.keys())
                 if home in (h["name"], h["id"]):
                     self.Homes_Data = h
+        else:
+            self.Homes_Data = self.rawData[0]
+        self.homeid = self.Homes_Data['id']
         if not self.Homes_Data : raise NoDevice("No Devices available")
 
 
@@ -1160,7 +1163,6 @@ if __name__ == "__main__":
 
         try:
             homes = HomeData(authorization)
-            homeid = homes.homeid
         except NoDevice :
             logger.warning("No home available for testing")
 
@@ -1175,11 +1177,24 @@ if __name__ == "__main__":
             logger.warning("No thermostat avaible for testing")
 
         try:
+            print (' ')
+            logger.info("Homes Data")
+            #homesdata = HomesData(authorization, homeid)
             homesdata = HomesData(authorization)
+            homeid = homesdata.homeid
         except NoDevice:
             logger.warning("No HomesData avaible for testing")
 
         try:
+            print (' ')
+            logger.info("Home Status")
+            HomeStatus(authorization, homeid)
+        except NoDevice:
+            logger.warning("No Home available for testing")
+
+        try:
+            print (' ')
+            logger.info("HomeCoach")
             Homecoach = HomeCoach(authorization)
         except NoDevice:
             logger.warning("No HomeCoach avaible for testing")
