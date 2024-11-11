@@ -660,7 +660,7 @@ class HomeData:
         E = None
         # events not always in self.homes
         if 'events' in self.homes.keys():
-            E = v.get('events')
+            E = self.homes['events']
         #
         if not S:
             logger.warning('No smoke detector found')
