@@ -1011,7 +1011,7 @@ class HomeCoach:
         for device in self.rawData:
            if id in device['_id']:
                 return device
-           self.HomecoachDevice = device
+           return None
 
     def Dashboard(self, id=""):
         #D = self.HomecoachDevice['dashboard_data']
@@ -1023,15 +1023,17 @@ class HomeCoach:
     def lastData(self, hid=None, exclude=0):
         for device in self.rawData:
             if id == device['_id']:
-            #s = self.HomecoachDevice['dashboard_data']['time_utc']
+                # LastData in HomeCoach
+                #s = self.HomecoachDevice['dashboard_data']['time_utc']
                 # Define oldest acceptable sensor measure event
                 limit = (time.time() - exclude) if exclude else 0
-                ds = self.HomecoachDevice['dashboard_data']
-                if ds.get('time_utc',limit+10) > limit :
-                    _id = ds[id]
-                    return {'When':ds, '_id':_id}
+                ds = device['dashboard_data']['time_utc']
+                if device.get('time_utc',limit+10) > limit :
+                    return {'When': ds, '_id': id}
+                else:
+                    return {'When': 0, 'id': hid}
             else:
-                return {'When': 0, 'id': id}
+                pass
 
     def checkNotUpdated(self, res, hid, delay=3600):
         ret = []
