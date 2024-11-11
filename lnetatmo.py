@@ -131,6 +131,7 @@ TYPES = {
     'NSD'          : ["smoke sensor", 'Home + Security'],
     'NHC'          : ["home coach", 'Aircare'],
     'NIS'          : ["indoor sirene", 'Home + Security'],
+    'NDL'          : ["Doorlock", 'Home + Security'],
 
     'NLC'          : ["Cable Outlet", 'Home+Control'],
     'NLE'          : ["Ecometer", 'Home+Control'],
@@ -643,19 +644,16 @@ class HomeData:
         resp = postRequest("Home data", _GETHOMEDATA_REQ, postParams)
         self.rawData = resp['body']
         # Collect homes
-        self.homes = { d['id'] : d for d in self.rawData['homes'] }
-        # FIXME : Doesn't use the home parameter to select the appropriate home !
-        for k, v in self.homes.items():
-            self.homeid = k
-            C = v.get('cameras')
-            P = v.get('persons')
-            S = v.get('smokedetectors')
+        self.homes = self.rawData['homes'][0]
         for d in self.rawData['homes'] :
             if home == d['name']:
                 self.homes = d
             else:
                 pass
         #
+        #print (self.homes.keys())
+        #dict_keys(['id', 'name', 'persons', 'place', 'cameras', 'smokedetectors', 'events'])
+        self.homeid = self.homes['id']
         C = self.homes['cameras']
         P = self.homes['persons']
         S = self.homes['smokedetectors']
@@ -663,6 +661,7 @@ class HomeData:
         # events not always in self.homes
         if 'events' in self.homes.keys():
             E = v.get('events')
+        #
         if not S:
             logger.warning('No smoke detector found')
         if not C:
@@ -674,7 +673,7 @@ class HomeData:
         #    if not (C or P or S or E):
         #        raise NoDevice("No device found in home %s" % k)
         if S or C or P or E:
-            self.default_home = home or list(self.homes.values())[0]['name']
+            self.default_home = home or self.homes['name']
             # Split homes data by category
             self.persons = {}
             self.events = {}
@@ -1169,6 +1168,9 @@ if __name__ == "__main__":
             thermostat = ThermostatData(authorization)
             Default_relay = thermostat.Relay_Plug()
             Default_thermostat = thermostat.Thermostat_Data()
+            thermostat.getThermostat()
+            print (thermostat.moduleNamesList())
+            #print (thermostat.getModuleByName(name))
         except NoDevice:
             logger.warning("No thermostat avaible for testing")
 
