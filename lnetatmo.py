@@ -1009,27 +1009,27 @@ class HomeCoach:
 
     def HomecoachDevice(self, id=""):
         for device in self.rawData:
-           if id in device['_id']:
+           if id == device['_id']:
                 return device
            return None
 
     def Dashboard(self, id=""):
         #D = self.HomecoachDevice['dashboard_data']
         for device in self.rawData:
-            if id in device['_id']:
+            if id == device['_id']:
                 D = device['dashboard_data']
                 return D
 
     def lastData(self, hid=None, exclude=0):
         for device in self.rawData:
-            if id == device['_id']:
+            if hid == device['_id']:
                 # LastData in HomeCoach
                 #s = self.HomecoachDevice['dashboard_data']['time_utc']
                 # Define oldest acceptable sensor measure event
                 limit = (time.time() - exclude) if exclude else 0
                 ds = device['dashboard_data']['time_utc']
                 if device.get('time_utc',limit+10) > limit :
-                    return {'When': ds, '_id': id}
+                    return {'When': ds, '_id': hid}
                 else:
                     return {'When': 0, 'id': hid}
             else:
