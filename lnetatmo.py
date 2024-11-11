@@ -121,8 +121,8 @@ TYPES = {
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat and a Relais module
-                                                                                          # The relais module is also the bridge for thermostat and Valves
+    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat module and a Relay device
+                                                                                          # The relay device is also the bridge for thermostat and Valves
     'NATherm1'     : ["thermostat",  'Energy'],
     'NCO'          : ["co2 sensor", 'Home + Security'],                                   # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
