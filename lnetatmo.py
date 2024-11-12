@@ -1028,10 +1028,7 @@ class HomeCoach:
                 # Define oldest acceptable sensor measure event
                 limit = (time.time() - exclude) if exclude else 0
                 ds = device['dashboard_data']['time_utc']
-                if device.get('time_utc',limit+10) > limit :
-                    return {'When': ds, '_id': hid}
-                else:
-                    return {'When': 0, 'id': hid}
+                return { '_id': hid, 'When': ds if device.get('time_utc',limit+10) > limit else 0}
             else:
                 pass
 
