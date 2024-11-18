@@ -3,7 +3,7 @@
 # Multiple contributors : see https://github.com/philippelt/netatmo-api-python
 # License : GPL V3
 """
-This API provides access to the Netatmo weather station or/and the Welcome camera
+This API provides access to the Netatmo weather station or/and other installed devices
 This package can be used with Python2 or Python3 applications and do not
 require anything else than standard libraries
 
@@ -210,12 +210,14 @@ class ClientAuth:
 
     def __init__(self, clientId=None,
                        clientSecret=None,
+                       accessToken=None,
                        refreshToken=None,
                        credentialFile=None):
 
         # replace values with content of env variables if defined
         clientId = getenv("CLIENT_ID", clientId)
         clientSecret = getenv("CLIENT_SECRET", clientSecret)
+        accessToken = getenv("ACCESS_TOKEN", accessToken)
         refreshToken = getenv("REFRESH_TOKEN", refreshToken)
 
         # Look for credentials in file if not already provided
@@ -232,9 +234,9 @@ class ClientAuth:
 
         self._clientId = clientId or cred["CLIENT_ID"]
         self._clientSecret = clientSecret or cred["CLIENT_SECRET"]
+        self._accessToken = accessToken or cred["ACCESS_TOKEN"] # Will be refreshed before any use
         self.refreshToken = refreshToken or cred["REFRESH_TOKEN"]
         self.expiration = 0 # Force refresh token
-        self._accessToken = None # Will be refreshed before any use
 
     @property
     def accessToken(self):
@@ -253,6 +255,7 @@ class ClientAuth:
             self.refreshToken = resp['refresh_token']
             cred = {"CLIENT_ID":self._clientId,
                     "CLIENT_SECRET":self._clientSecret,
+                    "ACCESS_TOKEN" : self._accessToken,
                     "REFRESH_TOKEN":self.refreshToken }
             if self._credentialFile:
                 with open(self._credentialFile, "w", encoding="utf-8") as f:
@@ -1007,16 +1010,16 @@ class HomeCoach:
         # homecoach data
         if not self.rawData : raise NoDevice("No HomeCoach available")
 
-    def HomecoachDevice(self, id=""):
+    def HomecoachDevice(self, hid=""):
         for device in self.rawData:
-           if id == device['_id']:
+           if hid == device['_id']:
                 return device
            return None
 
-    def Dashboard(self, id=""):
+    def Dashboard(self, hid=""):
         #D = self.HomecoachDevice['dashboard_data']
         for device in self.rawData:
-            if id == device['_id']:
+            if hid == device['_id']:
                 D = device['dashboard_data']
                 return D
 
