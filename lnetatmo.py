@@ -210,14 +210,12 @@ class ClientAuth:
 
     def __init__(self, clientId=None,
                        clientSecret=None,
-                       accessToken=None,
                        refreshToken=None,
                        credentialFile=None):
 
         # replace values with content of env variables if defined
         clientId = getenv("CLIENT_ID", clientId)
         clientSecret = getenv("CLIENT_SECRET", clientSecret)
-        accessToken = getenv("ACCESS_TOKEN", accessToken)
         refreshToken = getenv("REFRESH_TOKEN", refreshToken)
 
         # Look for credentials in file if not already provided
@@ -234,7 +232,7 @@ class ClientAuth:
 
         self._clientId = clientId or cred["CLIENT_ID"]
         self._clientSecret = clientSecret or cred["CLIENT_SECRET"]
-        self._accessToken = accessToken or cred["ACCESS_TOKEN"] # Will be refreshed before any use
+        self._accessToken = None #accessToken or cred["ACCESS_TOKEN"] # Will be refreshed before any use
         self.refreshToken = refreshToken or cred["REFRESH_TOKEN"]
         self.expiration = 0 # Force refresh token
 
@@ -255,7 +253,6 @@ class ClientAuth:
             self.refreshToken = resp['refresh_token']
             cred = {"CLIENT_ID":self._clientId,
                     "CLIENT_SECRET":self._clientSecret,
-                    "ACCESS_TOKEN" : self._accessToken,
                     "REFRESH_TOKEN":self.refreshToken }
             if self._credentialFile:
                 with open(self._credentialFile, "w", encoding="utf-8") as f:
