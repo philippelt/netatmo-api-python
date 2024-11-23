@@ -16,6 +16,9 @@ There is no longer credential load at library import, credentials are loaded at 
 > For most users (if not all) of this library, this is totally useless as we are accessing only OUR devices thus are not concerned by RGPD. You can then put your netatmo account email address, just in case some mail would be sent to it.  
 > It is only an information for the Netatmo records, there is absolutely no use of this information by the library.
 
+>[!CAUTION]
+> There are currently frequent authentication failures with Netatmo servers, returning exception ranging from 500 errors to invalid scope. Please check that you are not facing a transient failure by retrying your code some minutes later before reporting an issue.
+
 ### Install ###
 
 To install lnetatmo simply run:

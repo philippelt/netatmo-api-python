@@ -232,7 +232,7 @@ class ClientAuth:
 
         self._clientId = clientId or cred["CLIENT_ID"]
         self._clientSecret = clientSecret or cred["CLIENT_SECRET"]
-        self._accessToken = None #accessToken or cred["ACCESS_TOKEN"] # Will be refreshed before any use
+        self._accessToken = None # Will be refreshed before any use
         self.refreshToken = refreshToken or cred["REFRESH_TOKEN"]
         self.expiration = 0 # Force refresh token
 
