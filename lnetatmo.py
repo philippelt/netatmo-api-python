@@ -1066,6 +1066,13 @@ def cameraCommand(cameraUrl, commande, parameters=None, timeout=3):
     url = cameraUrl + ( commande % parameters if parameters else commande)
     return postRequest("Camera", url, timeout=timeout)
 
+def processErrorResp(resp):
+    try:
+        error_detail = json.loads(resp.fp.read().decode("utf-8"))["error"]
+        logger.error("Netatmo response error 403 : %s" % repr(error_detail))
+    except Exception as e:
+        logger.error("Error getting body of 403 HTTP error from Netatmo : %s" % e)
+
 def postRequest(topic, url, params=None, timeout=10):
     if PYTHON3:
         req = urllib.request.Request(url)
@@ -1078,8 +1085,7 @@ def postRequest(topic, url, params=None, timeout=10):
             resp = urllib.request.urlopen(req, params, timeout=timeout) if params else urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.HTTPError as err:
             if err.code == 403:
-                logger.warning("Your current token scope do not allow access to %s" % topic)
-                raise OutOfScope("Your current token scope do not allow access to %s" % topic) from None
+                processErrorResp(err)
             else:
                 logger.error("code=%s, reason=%s, body=%s" % (err.code, err.reason, err.fp.read()))
             return None
@@ -1093,10 +1099,7 @@ def postRequest(topic, url, params=None, timeout=10):
         try:
             resp = urllib2.urlopen(req, timeout=timeout)
         except urllib2.HTTPError as err:
-            if err.code == 403:
-                logger.warning("Your current token scope do not allow access to %s" % topic)
-            else:
-                logger.error("code=%s, reason=%s" % (err.code, err.reason))
+            logger.error("code=%s, reason=%s" % (err.code, err.reason))
             return None
     data = b""
     for buff in iter(lambda: resp.read(65535), b''): data += buff
