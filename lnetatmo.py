@@ -100,7 +100,7 @@ TYPES = {
     'BFIC'         : ["Bticino IP Guard station", 'Home + Security'],
     'BFIO'         : ["Bticino IP Entrance panel", 'Home + Security'],
     'BFIS'         : ["Bticino Server DES", 'Home + Security'],
-    'BN3L'         : ["Bticino 3rd party light", 'Home + Security'],
+    'BN3L'         : ["Bticino 3rd party light", 'Home+Control'],
     'BNAB'         : ["Bticino module automatic blind", 'Home+Control'],
     'BNAS'         : ["Bticino module automatic shutter", 'Home+Control'],
     'BNS'          : ["Smarther with Netatmo Thermostat", 'Home+Control'],
