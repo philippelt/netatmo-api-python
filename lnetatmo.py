@@ -100,6 +100,9 @@ TYPES = {
     'BFIC'         : ["Bticino IP Guard station", 'Home + Security'],
     'BFIO'         : ["Bticino IP Entrance panel", 'Home + Security'],
     'BFIS'         : ["Bticino Server DES", 'Home + Security'],
+    'BN3L'         : ["Bticino 3rd party light", 'Home + Security'],
+    'BNAB'         : ["Bticino module automatic blind", 'Home+Control'],
+    'BNAS'         : ["Bticino module automatic shutter", 'Home+Control'],
     'BNS'          : ["Smarther with Netatmo Thermostat", 'Home+Control'],
     'BNCU'         : ["Bticino Bticino Alarm Central Unit", 'Home + Security'],
     'BNCS'         : ["Bticino module Controlled Socket", 'Home+Control'],
@@ -107,7 +110,10 @@ TYPES = {
     'BNDL'         : ["Bticino Doorlock", 'Home + Security'],
     'BNEU'         : ["Bticino external unit", 'Home + Security'],
     'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
+    'BNIL'         : ["Bticino intelligent light", 'Home+Control'],
+    'BNLD'         : ["Bticino module lighting dimmer", 'Home+Control'],
     'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],                     # also API Home+Control  GATEWAY
+    'BNMS'         : ["Bticino module motorized shade", 'Home+Control'],
     'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
     'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
     'BNTH'         : ["Bticino Thermostat", 'Home+Control'],
@@ -133,19 +139,40 @@ TYPES = {
     'NIS'          : ["indoor sirene", 'Home + Security'],
     'NDL'          : ["Doorlock", 'Home + Security'],
 
+    'NLAO'         : ["Magellan Green power remote control on-off", 'Home+Control'],
+    'NLAS'         : ["Magellan Green Power Remote control scenarios", 'Home+Control'],
+    'NLAV'         : ["Wireless Batteryless Shutter Switch", 'Home+Control'],
     'NLC'          : ["Cable Outlet", 'Home+Control'],
+    'NLD'          : ["Wireless 2 button switch light", 'Home+Control'],
+    'NLDP'         : ["Magellan Pocket Remote", 'Home+Control'],
     'NLE'          : ["Ecometer", 'Home+Control'],
+    'NLF'          : ["Dimmer Light Switch", 'Home+Control'],
+    'NLFE'         : ["Dimmer Light Switch Evolution", 'Home+Control'],
+    'NLFN'         : ["Dimmer Light with Neutral", 'Home+Control'],
     'NLG'          : ["Gateway", 'Home+Control'],
     'NLGS'         : ["Standard DIN Gateway", 'Home+Control'],
+    'NLIS'         : ["Double Switch with Neutral", 'Home+Control'],
+    'NLIV'         : ["1/2 Gangs Shutter Switch", 'Home+Control'],
+    'NLL'          : ["Light Switch with Neutral", 'Home+Control'],
+    'NLLF'         : ["Centralized Ventilation Control", 'Home+Control'],
+    'NLLV'         : ["Roller Shutter Switch with level detection", 'Home+Control'],
+    'NLM'          : ["Light Micromodule", 'Home+Control'],
     'NLP'          : ["Power Outlet", 'Home+Control'],
+    'NLPS'         : ["Smart Load Shedder", 'Home+Control'],
     'NLPC'         : ["DIN Energy meter", 'Home+Control'],
     'NLPD'         : ["Dry contact", 'Home+Control'],
     'NLPM'         : ["Mobile Socket", 'Home+Control'],
     'NLPO'         : ["Contactor", 'Home+Control'],
     'NLPT'         : ["Teleruptor", 'Home+Control'],
+    'NLT'          : ["Magellan Remote Control", 'Home+Control'],
+    'NLTS'         : ["Magellan Remote Motion Sensor", 'Home+Control'],
+    'NLV'          : ["Roller Shutter Switch", 'Home+Control'],
 
     'OTH'          : ["Opentherm Thermostat Relay", 'Home+Control'],
-    'OTM'          : ["Smart modulating Thermostat", 'Home+Control']
+    'OTM'          : ["Smart modulating Thermostat", 'Home+Control'],
+
+    'Z3L'          : ["Zigbee 3rd party light", 'Home+Control'],
+    'Z3V'          : ["Generic window covering", 'Home+Control']
     }
 
 # UNITS used by Netatmo services
