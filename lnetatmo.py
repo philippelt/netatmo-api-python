@@ -484,6 +484,8 @@ class WeatherStationData:
                 "access_token" : self.getAuthToken
                 }
         resp = postRequest("Weather station", _GETSTATIONDATA_REQ, postParams)
+        if not resp:
+            raise AuthFailure("No response received from server.")
         self.rawData = resp['body']['devices']
         # Weather data
         if not self.rawData : raise NoDevice("No weather station in any homes")
