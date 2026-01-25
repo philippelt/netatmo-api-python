@@ -434,10 +434,9 @@ class RateLimitHandler:
 
     def get_module_df(self, newest_utctime, station_name, station_mac, module_data_overview, end_date_timestamp, dtype={}, time_z=None):
         logging.info(f'Processing {module_data_overview["module_name"]}...')
-        
-        
+
         module_name = module_data_overview["module_name"]
-        
+
         # We start by collecting new data
         keep_collecting_module_data = True
 
@@ -461,9 +460,11 @@ class RateLimitHandler:
             keep_collecting_module_data = False
         else:
             logging.info(f'Collecting data for {module_name}...')
-        
+
         while(keep_collecting_module_data):
-            
+            if (module_data_overview['data_type'] == 'wind'):
+                module_data_overview['data_type'] = ['WindStrength', 'WindAngle', 'GustStrength', 'GustAngle']
+
             # Get new data from Netatmo
             d = self._get_field_dict(station_mac,
                                module_data_overview['_id'],
@@ -500,7 +501,7 @@ class RateLimitHandler:
                     logging.error(e)
                     keep_collecting_module_data = False
                     logging.error(f'Something fishy is going on... Aborting collection for module {module_name}')
-        
+
 
         if data:
             df_module = pd.concat(data,ignore_index=True)
@@ -595,11 +596,11 @@ def main():
     else:
         logging.basicConfig(format=" %(levelname)s: %(message)s", level=verbose_dict[args.verbose])
 
-    
+
     # Handle dataframes (loading, appending, saving).
     df_handler = df_handler_dict[args.format](file_name=args.file_name, output_path=args.output_path)
 
-    
+
     # Rate handler to make sure that we don't exceed Netatmos user rate limits
     rate_limit_handler = RateLimitHandler(
             user_request_limit_per_ten_seconds=args.ten_second_rate_limit,
@@ -608,12 +609,12 @@ def main():
 
 
     for station_name, station_data_overview in rate_limit_handler.get_stations():
-    
+
         station_mac = station_data_overview['_id']
-    
+
         station_timezone = timezone(station_data_overview['place']['timezone'])
         logging.info(f'Timezone {station_timezone} extracted from data.')
-        
+
         end_datetime_timestamp = np.floor(datetime.timestamp(station_timezone.localize(args.end_datetime)))
         newest_utc = df_handler.get_newest_timestamp(station_data_overview['_id'])
         df_handler.append(
@@ -627,7 +628,7 @@ def main():
                 station_timezone))
 
         for module_data_overview in station_data_overview['modules']:
-        
+
             df_handler.append(
                 rate_limit_handler.get_module_df(
                     df_handler.get_newest_timestamp(module_data_overview['_id']),
@@ -636,8 +637,8 @@ def main():
                     module_data_overview,
                     end_datetime_timestamp,
                     df_handler.dtype_dict,
-                    station_timezone)) 
-        
+                    station_timezone))
+
 
 
 
@@ -646,4 +647,4 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
+

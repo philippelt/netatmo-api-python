@@ -112,7 +112,7 @@ TYPES = {
     'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
     'BNIL'         : ["Bticino intelligent light", 'Home+Control'],
     'BNLD'         : ["Bticino module lighting dimmer", 'Home+Control'],
-    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],                     # also API Home+Control  GATEWAY
+    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security & Home+Control'],      # GATEWAY
     'BNMS'         : ["Bticino module motorized shade", 'Home+Control'],
     'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
     'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
@@ -120,24 +120,25 @@ TYPES = {
     'BNTR'         : ["Bticino module towel rail", 'Home+Control'],
     'BNXM'         : ["Bticino X meter", 'Home+Control'],
 
-    'NACamera'     : ["indoor camera", 'Home + Security'],
+    'NACamera'     : ["indoor camera Welcome", 'Home + Security'],
     'NACamDoorTag' : ["door tag", 'Home + Security'],
     'NAMain'       : ["weather station", 'Weather'],
     'NAModule1'    : ["outdoor unit", 'Weather'],
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat module and a Relay device
+    'NAPlug'       : ["thermostat relais station", 'Home+Control & Energy'],              # A smart thermostat exist of a thermostat module and a Relay device
                                                                                           # The relay device is also the bridge for thermostat and Valves
-    'NATherm1'     : ["thermostat",  'Energy'],
+    'NATherm1'     : ["thermostat",  'Home+Control & Energy'],
     'NCO'          : ["co2 sensor", 'Home + Security'],                                   # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
     'NOC'          : ["outdoor camera", 'Home + Security'],
-    'NRV'          : ["thermostat valves", 'Energy'],                                     # also API Home+Control
+    'NRV'          : ["thermostat valves", 'Home+Control & Energy'],
     'NSD'          : ["smoke sensor", 'Home + Security'],
     'NHC'          : ["home coach", 'Aircare'],
     'NIS'          : ["indoor sirene", 'Home + Security'],
     'NDL'          : ["Doorlock", 'Home + Security'],
+    'NPC'          : ["indoor camera Advance", 'Home + Security'],
 
     'NLAO'         : ["Magellan Green power remote control on-off", 'Home+Control'],
     'NLAS'         : ["Magellan Green Power Remote control scenarios", 'Home+Control'],
@@ -276,6 +277,7 @@ class ClientAuth:
                 "client_secret" : self._clientSecret
                 }
         resp = postRequest("authentication", _AUTH_REQ, postParams)
+
         if self.refreshToken != resp['refresh_token']:
             self.refreshToken = resp['refresh_token']
             cred = {"CLIENT_ID":self._clientId,
@@ -297,11 +299,16 @@ class User:
     """
     warnings.warn("The 'User' class is no longer maintained by Netatmo",
             DeprecationWarning )
+    
     def __init__(self, authData):
+        #
+        warnings.warn("The 'User' class code is deprecated and no longer maintained by Netatmo.\n" ,
+            RuntimeWarning )
         postParams = {
                 "access_token" : authData.accessToken
                 }
-        resp = postRequest("Weather station", _GETSTATIONDATA_REQ, postParams)
+        resp = postRequest("Station User", _GETSTATIONDATA_REQ, postParams)
+
         self.rawData = resp['body']
         self.devList = self.rawData['devices']
         self.ownerMail = self.rawData['user']['mail']
@@ -330,6 +337,7 @@ class HomeStatus:
                 "home_id": home_id
                 }
         resp = postRequest("home_status", _HOME_STATUS, postParams)
+
         self.resp = resp
         self.rawData = resp['body']['home']
         if not self.rawData : raise NoHome("No home %s found" % home_id)
@@ -388,6 +396,7 @@ class ThermostatData:
                 "access_token" : self.getAuthToken
                 }
         resp = postRequest("Thermostat", _GETTHERMOSTATDATA_REQ, postParams)
+
         self.rawData = resp['body']['devices']
         if not self.rawData : raise NoDevice("No thermostat available")
         #
@@ -484,6 +493,7 @@ class WeatherStationData:
                 "access_token" : self.getAuthToken
                 }
         resp = postRequest("Weather station", _GETSTATIONDATA_REQ, postParams)
+
         self.rawData = resp['body']['devices']
         # Weather data
         if not self.rawData : raise NoDevice("No weather station in any homes")
@@ -662,13 +672,19 @@ class HomeData:
         home : Home name of the home where's devices are installed
     """
     def __init__(self, authData, home=None):
+        #
         warnings.warn("The 'HomeData' class is deprecated'",
             DeprecationWarning )
+        #
+        warnings.warn("The HomeData code is deprecated.\n" ,
+            RuntimeWarning )
+
         self.getAuthToken = authData.accessToken
         postParams = {
             "access_token" : self.getAuthToken
             }
         resp = postRequest("Home data", _GETHOMEDATA_REQ, postParams)
+
         self.rawData = resp['body']
         # Collect homes
         self.homes = self.rawData['homes'][0]
@@ -781,12 +797,13 @@ class HomeData:
         if camera_data:
             vpn_url = camera_data['vpn_url']
             resp = postRequest("Camera", vpn_url + '/command/ping')
+
             temp_local_url=resp['local_url']
             try:
                 resp = postRequest("Camera", temp_local_url + '/command/ping',timeout=1)
                 if resp and temp_local_url == resp['local_url']:
                     local_url = temp_local_url
-            except:  # On this particular request, vithout errors from previous requests, error is timeout
+            except:  # On this particular request, without errors from previous requests, error is timeout
                 local_url = None
         return vpn_url, local_url
 
@@ -819,6 +836,7 @@ class HomeData:
             "key" : key
             }
         resp = postRequest("Camera", _GETCAMERAPICTURE_REQ, postParams)
+
         return resp, "jpeg"
 
     def getProfileImage(self, name):
@@ -852,6 +870,7 @@ class HomeData:
             "event_id" : event['id']
         }
         resp = postRequest("Camera", _GETEVENTSUNTIL_REQ, postParams)
+
         eventList = resp['body']['events_list']
         for e in eventList:
             self.events[ e['camera_id'] ][ e['time'] ] = e
@@ -993,6 +1012,7 @@ class HomesData:
                 }
         #
         resp = postRequest("Module", _GETHOMES_DATA, postParams)
+
 #        self.rawData = resp['body']['devices']
         self.rawData = resp['body']['homes']
         if not self.rawData : raise NoHome("No home %s found" % home)
@@ -1030,6 +1050,7 @@ class HomeCoach:
                 "access_token" : self.getAuthToken
                 }
         resp = postRequest("HomeCoach", _GETHOMECOACH, postParams)
+
         self.rawData = resp['body']['devices']
         # homecoach data
         if not self.rawData : raise NoDevice("No HomeCoach available")
@@ -1077,6 +1098,7 @@ def rawAPI(authData, url, parameters=None):
     if parameters is None: parameters = {}
     parameters["access_token"] = authData.accessToken
     resp = postRequest("rawAPI", fullUrl, parameters)
+
     return resp["body"] if "body" in resp else resp
 
 def filter_home_data(rawData, home):
