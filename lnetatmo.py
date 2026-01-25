@@ -112,7 +112,7 @@ TYPES = {
     'BNFC'         : ["Bticino Thermostat", 'Home+Control'],
     'BNIL'         : ["Bticino intelligent light", 'Home+Control'],
     'BNLD'         : ["Bticino module lighting dimmer", 'Home+Control'],
-    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security'],                     # also API Home+Control  GATEWAY
+    'BNMH'         : ["Bticino My Home Server 1", 'Home + Security & Home+Control'],      # GATEWAY
     'BNMS'         : ["Bticino module motorized shade", 'Home+Control'],
     'BNSE'         : ["Bticino Alarm Sensor", 'Home + Security'],
     'BNSL'         : ["Bticino Staircase Light", 'Home + Security'],
@@ -127,13 +127,13 @@ TYPES = {
     'NAModule2'    : ["wind unit", 'Weather'],
     'NAModule3'    : ["rain unit", 'Weather'],
     'NAModule4'    : ["indoor unit", 'Weather'],
-    'NAPlug'       : ["thermostat relais station", 'Energy'],                             # A smart thermostat exist of a thermostat module and a Relay device
+    'NAPlug'       : ["thermostat relais station", 'Home+Control & Energy'],              # A smart thermostat exist of a thermostat module and a Relay device
                                                                                           # The relay device is also the bridge for thermostat and Valves
-    'NATherm1'     : ["thermostat",  'Energy'],
+    'NATherm1'     : ["thermostat",  'Home+Control & Energy'],
     'NCO'          : ["co2 sensor", 'Home + Security'],                                   # The same API as smoke sensor
     'NDB'          : ["doorbell", 'Home + Security'],
     'NOC'          : ["outdoor camera", 'Home + Security'],
-    'NRV'          : ["thermostat valves", 'Energy'],                                     # also API Home+Control
+    'NRV'          : ["thermostat valves", 'Home+Control & Energy'],
     'NSD'          : ["smoke sensor", 'Home + Security'],
     'NHC'          : ["home coach", 'Aircare'],
     'NIS'          : ["indoor sirene", 'Home + Security'],
