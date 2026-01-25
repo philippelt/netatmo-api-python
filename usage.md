@@ -207,7 +207,7 @@ Properties, all properties are read-only unless specified :
 
 #### 4-3 User class ####
 
-
+_!!Deprecated_
 
 Constructor
 
@@ -355,7 +355,7 @@ at all if you slip over two days as required in a shifting 24 hours window.
 
 #### 4-5 HomeData class ####
 
-
+_!!Deprecated_
 
 Constructor
 
@@ -512,6 +512,7 @@ Methods :
     * Output : value
 
 ```
+def HOMESTATUS():
     homestatus = lnetatmo.HomeStatus(authorization, homeid)
     print ('Rooms in Homestatus')
     for r in homestatus.rooms:
@@ -529,7 +530,10 @@ Methods :
                 print (lnetatmo.TYPES[vt])
                 print (m.keys())
 
-
+try:
+    HOMESTATUS()
+except Exception as e:
+    print (e)
 ```
 
 
@@ -563,6 +567,7 @@ Methods :
 Example :  
 
 ```
+def THERMOSTAT():
     device = lnetatmo.ThermostatData(authorization, homeid)
     for i in device.rawData:
         print ('rawData')
@@ -580,6 +585,10 @@ Example :
     TH = device.Thermostat_Data()
     print (TH.keys())
 
+try:
+    THERMOSTAT()
+except Exception as e:
+    print (e)
 ```
 
 #### 4-8 HomesData class ####
@@ -606,6 +615,7 @@ Methods :
 Example :  
 
 ```
+def HOMESDATA():
     homesData = lnetatmo.HomesData ( authorization, home_id )
     print (homesdata.Homes_Data['name'])
     print (homesdata.Homes_Data['altitude'])
@@ -625,6 +635,10 @@ Example :
     print ('Schedules in HomesData')
     print (homesdata.Homes_Data['schedules'][0].keys())
 
+try:
+    HOMESDATA()
+except Exception as e:
+    print (e)
 ```
 
 #### 4-9 Homecoach class ####
@@ -658,6 +672,7 @@ Example :
 
 
 ```
+def HOMECOACH():
     homecoach = lnetatmo.HomeCoach(authorization, homeid)
     #
     Not_updated = []
@@ -689,6 +704,10 @@ Example :
     print (Not_updated)
     print (updated)
 
+try:
+    HOMECOACH()
+except Exception as e:
+    print (e)
 ```
 
 
